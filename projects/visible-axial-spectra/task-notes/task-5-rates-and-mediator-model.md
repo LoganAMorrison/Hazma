@@ -70,14 +70,20 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
 - **One theory, declared coverage** (ADR-0004): `theory` is a required
   keyword; `rcht` raises `NotImplementedError`; three pions read the T3
   component of the card; rates past a provider's range raise; totals and the
-  width raise while `v v` or `eta pi pi` is open; the mixing guard binds
-  every channel.
+  width raise while `v v` or `eta pi pi` is open; the mixing guard
+  binds the axial dark-matter coupling only; a channel with identically
+  zero couplings is an exact zero that is neither range-checked nor listed
+  in `annihilation_thresholds`; a rate at an exact pole of zero width
+  raises; branching fractions come from `sigma v`.
 - **Parameters:** `mx`, `mv`, `gvxx`, `gaxx` positional; `quarks`
   (`AxialCurrent`), `leptons` (new `LeptonCouplings`, nine required
   couplings, neutrinos left-handed), `gacc` (charm triangle only), `theory`
   and `width` keyword-only. The mediator has no vector quark coupling;
   Task 11 adds the vector hadronic channels. Setters change a parameter and
   the width together or neither.
+- **Pion mass:** `pi pi pi0` opens at three neutral pion masses because the
+  LO action uses one common pion mass (ADR-0001); the class docstring and
+  the Sphinx page say so, and Task 11's physical-mass work owns the fix.
 - **Partial widths:** fermion pairs, three pions and `"x x"`; `"g g"` is
   absent (Landau-Yang). Resonances are the mediator plus each meson pole
   with a nonzero source coupling, where `"g g"` peaks at `e_cm = m_P`.
@@ -85,15 +91,18 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
 ## Files Changed
 
 - `rust/src/kernels/axial_rates.rs` — master formula, Moller velocity,
-  `sigma` from `sigma v`, fermion-pair densities, 8 unit tests.
+  `sigma` from `sigma v`, fermion-pair densities, 9 unit tests; the resonant
+  term is skipped when its numerator is zero.
 - `rust/src/axial_vector_mediator.rs`, `rust/src/lib.rs`,
   `rust/src/kernels.rs` — PyO3 boundary, registration and crate docs.
 - `hazma/axial_vector_mediator/` (`__init__.py`, `_couplings.py`,
   `_model.py`) —
-  `AxialVectorMediator` and `LeptonCouplings`.
+  `AxialVectorMediator` and `LeptonCouplings`; exact-zero channels, the
+  zero-width pole error, the conditional mixing guard and `sigma v`
+  branching fractions.
 - `test/axial_vector_mediator/spinor_oracle.py`,
   `test/axial_vector_mediator/test_axial_vector_mediator.py` — explicit-spinor
-  oracle and 33 tests.
+  oracle (its flux comment corrected) and 38 tests.
 - `test/parity/cases.py`, `test/parity/README.md` — the new submodule joins
   `_CORE_NEW_PHYSICS_MODULES`.
 - `../adrs/ADR-0004-one-hadronic-theory-and-declared-channel-coverage.md`,
@@ -102,8 +111,8 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
 - `docs/source/axial_vector_mediator.rst`, `docs/source/models.rst` — the
   Sphinx page and its toctree entry, as Tasks 1, 2 and 4 did for
   `form_factors.rst`.
-- `CHANGELOG.md` (Unreleased, Added) — the model entry; the version bump
-  stays with Task 16.
+- `CHANGELOG.md` (Unreleased, Added) — the model entry, which the fixes
+  leave true; the version bump stays with Task 16.
 - `AGENTS.md` — `axial_vector_mediator/` in the Layout tree and the Models
   layer. Its count of six `test-probes` probe submodules is about probes,
   not domains, and stays.
@@ -127,18 +136,21 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
   range, open `v v` and `eta pi pi`, the mixing guard and the continuum
   spectra each raise, under a dedicated test.
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes axial_rates`: 8 passed.
+  --features test-probes axial_rates`: 9 passed.
 - `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator`:
-  `33 passed in 1.03s`.
+  `38 passed in 0.95s`.
 - `scripts/agents/preflight.sh --paths "hazma/axial_vector_mediator
-  test/axial_vector_mediator test/parity/cases.py" --md "<the four touched
+  test/axial_vector_mediator test/parity/cases.py" --md "<the five touched
   Markdown files>"`: black, isort, ruff (0 new), cargo fmt, clippy and test,
-  pytest (`2913 passed, 16 skipped, 20 warnings, 127 subtests passed in
-  49.72s`), import and forbidden tokens PASS; markdownlint flagged two long
-  lines in this note, since wrapped. Output: `preflight-task-5.txt`.
+  pytest (`2918 passed, 16 skipped, 20 warnings, 127 subtests passed in
+  51.82s`), import and forbidden tokens PASS; markdownlint over the five
+  touched Markdown files PASS. Output: `preflight-task-5.txt`.
 - Performance on 10^4 points, including the mixing guard: `mu mu`
   0.016 us, `pi pi pi0` 0.29 us and `g g` 0.081 us per point, against
-  877 us per point for the explicit-spinor oracle.
+  877 us per point for the explicit-spinor oracle. One scalar
+  `annihilation_cross_sections` call costs about 296 us, against 1.5 us
+  for `KineticMixing`, because every channel re-evaluates the mixing guard
+  and rebuilds card objects; a thermal average stays well under a second.
 
 ## Numerical impact
 
@@ -149,6 +161,10 @@ imported from this worktree, reports 164 existing output samples and
 
 ## Open Questions
 
+- Per-call overhead of about 300 us for one scalar total
+  (`annihilation_cross_sections`) comes from per-channel mixing-guard
+  evaluation and rebuilt card objects. It affects time only; caching them
+  is left to a later task if a consumer needs it.
 - None that block the exit criteria. A model with `mv < mx` has no total
   rate until Task 14 supplies `v v`, as ADR-0004 records.
 
@@ -161,6 +177,25 @@ ADR-0004 and ADR-0005 record the two decisions the plan anticipated under
 the Task 5 text and gate, and the flat plan's other tasks, are unchanged.
 The canonical-contract diff found every gate sentence of `PLAN.md` Task 5
 and ADR-0001 to ADR-0005 true of the shipped code.
+
+## Review
+
+- N1 (accepted, fixed): a zero-coupling `tau tau` listed as a threshold
+  pushed the thermal window past a range-checked zero `g g`; exact-zero
+  channels are now neither range-checked nor thresholds.
+- N2 (accepted, fixed): `width=0.0` at an exact pole gave `inf` or NaN; the
+  kernel skips a zero-numerator resonant term and Python raises on a
+  non-finite rate.
+- N3 (accepted, fixed): the mixing guard rejected rates mixing cannot
+  affect; it now runs only when `gaxx != 0`.
+- G3 (accepted, fixed): inherited branching fractions were NaN at `2 mx`;
+  they now come from `sigma v`.
+- G1/N6 (accepted, documented): `pi pi pi0` opens at three neutral pion
+  masses by ADR-0001's common pion mass; Task 11 owns the fix.
+- G2 (accepted, fixed): docs now name both `eta pi pi` and `eta pi0 pi0`.
+- N5 (accepted, fixed): the oracle comment stated the wrong flux.
+- G4/N4 (rejected for this PR): per-call overhead costs time only, with no
+  correctness effect; recorded under Open Questions.
 
 ## Stale-state sweep
 
@@ -200,8 +235,8 @@ added by `git add -N`.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 33 model tests | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator` | `33 passed in 1.01s` | KEPT |
-| Verification, 8 kernel tests | `grep -c '#\[test\]' rust/src/kernels/axial_rates.rs` | 8 | KEPT |
+| Verification, 38 model tests | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator` | `38 passed in 0.95s` | KEPT |
+| Verification, 9 kernel tests | `grep -c '#\[test\]' rust/src/kernels/axial_rates.rs` | 9 | KEPT |
 | `lib.rs` "seven per-domain submodules" | `dir(hazma._core)` | seven | KEPT |
 | `AGENTS.md` six probe submodules | `AGENTS.md:118` vs `environment.md:71` | six probes | KEPT |
 

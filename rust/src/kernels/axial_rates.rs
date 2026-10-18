@@ -37,9 +37,10 @@ impl DarkSector {
     /// Return `σ v_Møller` in MeV⁻² for a final state with densities
     /// `(A_T, A_L)` at invariant mass `q`.
     ///
-    /// Zero below the pair threshold `q < 2m`. A final state with no
-    /// transverse density has no resonant term, so it stays finite at a
-    /// pole of zero width.
+    /// Zero below the pair threshold `q < 2m`. A vanishing resonant
+    /// numerator, such as a final state with no transverse density, gives
+    /// no resonant term, so only a nonzero one is infinite on a pole of zero
+    /// width.
     pub fn sigma_v(&self, q: f64, transverse: f64, longitudinal: f64) -> f64 {
         let m = self.dm_mass;
         if q < 2.0 * m {
@@ -47,17 +48,18 @@ impl DarkSector {
         }
         let s = q * q;
         let big = self.mediator_mass;
-        let resonant = if transverse == 0.0 {
+        // Both differences are factored so that neither cancels near its
+        // zero.
+        let above_threshold = (q - 2.0 * m) * (q + 2.0 * m);
+        let dm_factor =
+            self.dm_vector.powi(2) * (s + 2.0 * m * m) + self.dm_axial.powi(2) * above_threshold;
+        let numerator = dm_factor * transverse;
+        let resonant = if numerator == 0.0 {
             0.0
         } else {
-            // Both differences are factored so that neither cancels near
-            // its zero.
-            let above_threshold = (q - 2.0 * m) * (q + 2.0 * m);
             let off_shell = (q - big) * (q + big);
-            let dm_factor = self.dm_vector.powi(2) * (s + 2.0 * m * m)
-                + self.dm_axial.powi(2) * above_threshold;
             let propagator = off_shell * off_shell + (big * self.mediator_width).powi(2);
-            dm_factor * transverse / (s * propagator)
+            numerator / (s * propagator)
         };
         let contact = 2.0 * (m * self.dm_axial).powi(2) * longitudinal / (s * big.powi(4));
         resonant + contact
@@ -219,6 +221,18 @@ mod tests {
         let broad = sector(80.0).sigma_v(q, 0.0, 5.0e2);
         assert!(narrow.is_finite() && narrow > 0.0);
         assert_eq!(narrow, broad);
+    }
+
+    /// On a pole of zero width a vanishing numerator stays zero, here pure
+    /// axial dark matter at threshold `M = 2m`, and a nonzero one is infinite.
+    #[test]
+    fn zero_width_pole() {
+        let mut dark = sector(0.0);
+        dark.dm_vector = 0.0;
+        dark.mediator_mass = 2.0 * dark.dm_mass;
+        assert_eq!(dark.sigma_v(2.0 * dark.dm_mass, 1.0e3, 0.0), 0.0);
+        dark.dm_vector = 0.2;
+        assert_eq!(dark.sigma_v(2.0 * dark.dm_mass, 1.0e3, 0.0), f64::INFINITY);
     }
 
     #[test]

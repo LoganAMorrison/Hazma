@@ -49,7 +49,15 @@ A rate raises instead of returning zero where the model has no provider: past
 the declared range of a channel (600 MeV for three pions, 1600 MeV for two
 photons), where the first-order meson mixing treatment fails, and, for totals
 and widths, while the mediator-pair channel or an :math:`\eta\pi\pi` channel is
-open. The continuum photon and positron spectra are not yet implemented.
+open. A channel whose couplings make its rate identically zero returns zero
+without a range check and never closes a thermal-average window. The first-order
+mixing treatment is checked only when the axial dark matter coupling is
+nonzero, and a rate at an exact pole of zero width raises. The ``pi pi pi0``
+and ``pi0 pi0 pi0`` channels open at three times the neutral pion mass, because
+the leading-order action has one common pion mass; the physical charged-pion
+threshold needs the later hadronic work. The :math:`\eta\pi\pi` guard covers
+both ``eta pi pi`` and ``eta pi0 pi0``. The continuum photon and positron
+spectra are not yet implemented.
 
 Classes
 -------

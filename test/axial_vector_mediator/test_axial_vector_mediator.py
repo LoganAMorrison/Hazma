@@ -15,6 +15,7 @@ from hazma.form_factors.axial import (
     InvisibleCut,
     TriangleCouplings,
 )
+from hazma.relic_density._thermal_functions import thermal_cross_section
 
 
 def _current(gau: float, gad: float, gas: float) -> AxialCurrent:
@@ -314,3 +315,68 @@ def test_setters_recompute_the_width_or_change_nothing() -> None:
         model.mx = -1.0
     with pytest.raises(TypeError, match="AxialCurrent"):
         model.quarks = (1e-3, -1e-3, 0.0)
+
+
+ELECTRONS_ONLY = LeptonCouplings(
+    gvee=1e-2,
+    gaee=0.0,
+    gvmumu=0.0,
+    gamumu=0.0,
+    gvtautau=0.0,
+    gatautau=0.0,
+    gnue=0.0,
+    gnumu=0.0,
+    gnutau=0.0,
+)
+
+
+def test_vanishing_channels_neither_open_nor_range_check() -> None:
+    model = _model(mx=900.0, mv=5000.0, gaxx=0.0, quarks=ZERO, leptons=ELECTRONS_ONLY)
+    assert set(model.annihilation_thresholds()) == {"e e"}
+    rates = model.annihilation_sigma_v(1850.0)
+    assert rates["g g"] == 0.0
+    assert rates["pi pi pi0"] == 0.0
+    assert rates["total"] == rates["e e"] > 0.0
+
+
+def test_thermal_average_runs_and_reaches_the_s_wave() -> None:
+    # Pure vector dark matter coupled to electrons alone has an s-wave
+    # sigma v = a + b v², so the thermal average departs from its threshold
+    # value by O(1/x): -5.0e-5 measured at x = 1e4, hence 2e-4.
+    model = _model(
+        mx=10.0, mv=5000.0, gvxx=1.0, gaxx=0.0, quarks=ZERO, leptons=ELECTRONS_ONLY
+    )
+    threshold = model.annihilation_sigma_v_funcs()["e e"](20.0)
+    average = thermal_cross_section(1e4, model)
+    assert average == pytest.approx(threshold, rel=2e-4)
+    assert np.isfinite(thermal_cross_section(20.0, model))
+
+
+def test_an_exact_zero_width_pole_raises() -> None:
+    model = _model(width=0.0)
+    with pytest.raises(ValueError, match="exact pole of zero width"):
+        model.annihilation_sigma_v_funcs()["e e"](500.0)
+    # A vanishing resonant numerator stays zero on the pole: pure axial
+    # dark matter at threshold, here with M = 2 mx.
+    axial = _model(mx=150.0, mv=300.0, gvxx=0.0, quarks=ZERO, width=0.0)
+    assert np.isfinite(axial.annihilation_sigma_v_funcs()["mu mu"](300.0))
+
+
+def test_mixing_guard_spares_vector_dark_matter() -> None:
+    # Only the axial contact feels the meson poles, so pure vector dark
+    # matter has a rate at the pi0 pole where the axial model raises.
+    model = _model(mx=60.0, gaxx=0.0, quarks=HYPERCHARGE)
+    rate = model.annihilation_sigma_v_funcs()["e e"](parameters.neutral_pion_mass)
+    assert np.isfinite(rate)
+    assert rate > 0.0
+
+
+def test_branching_fractions_are_finite_at_threshold() -> None:
+    model = _model(quarks=HYPERCHARGE)
+    at_threshold = model.annihilation_branching_fractions(300.0)
+    assert all(np.isfinite(value) for value in at_threshold.values())
+    assert sum(at_threshold.values()) == pytest.approx(1.0, rel=1e-14)
+    sigmas = model.annihilation_cross_sections(400.0)
+    fractions = model.annihilation_branching_fractions(400.0)
+    for fs, fraction in fractions.items():
+        assert fraction == pytest.approx(sigmas[fs] / sigmas["total"], rel=1e-14)

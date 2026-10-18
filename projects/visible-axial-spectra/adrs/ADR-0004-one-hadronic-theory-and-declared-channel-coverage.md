@@ -31,19 +31,28 @@ while the hypercharge-aligned benchmark has both.
   scheme and scale. The provider's own rule is unchanged. A channel whose
   coupling vanishes by symmetry is an exact zero at every energy, so it is
   not range-checked.
+- **A channel with no density is an exact zero.** A final state whose
+  couplings make its rate identically zero, such as a lepton with zero
+  couplings or `g g` with `gaxx = 0` and no axial Standard Model coupling,
+  returns zero without a range check and is omitted from
+  `annihilation_thresholds`, so it cannot close the generic thermal window.
 - **A rate past its provider's range raises.** Each channel rate raises
   where its provider has no declared support, and so does a width that
-  needs one; the `width` override then supplies the total.
+  needs one; the `width` override then supplies the total. A rate at an
+  exact pole of zero width, where it is infinite, raises `ValueError`
+  rather than returning `inf` or NaN.
 - **Totals refuse open channels without a rate.** `annihilation_cross_sections`
   and `annihilation_sigma_v` raise while an unmodeled final state is open at a
   physical energy, `e_cm >= 2 mx`: `v v` above `2 M`, and `eta pi0 pi0` and
   `eta pi pi` for a card with octet or singlet directions. `partial_widths`
   does the same for the decays. Per-channel functions stay available, since
   each one is still exact.
-- **The mixing guard binds every channel.** A point where
-  `AxialMesonPoles.mixing_expansion` exceeds `MIXING_GUARD` is rejected for
-  every rate, lepton channels included, because the dropped second insertion
-  rescales the whole longitudinal propagator (ADR-0003).
+- **The mixing guard binds the axial dark-matter coupling.** With
+  `gaxx != 0`, a point where `AxialMesonPoles.mixing_expansion` exceeds
+  `MIXING_GUARD` is rejected for every rate, lepton channels included,
+  because the dropped second insertion rescales the longitudinal contact
+  (ADR-0003). With `gaxx = 0` the contact is absent and the rates are
+  unaffected, so the guard does not run.
 
 ## Consequences
 
@@ -53,7 +62,10 @@ while the hypercharge-aligned benchmark has both.
 - **Negative:** Until Task 14, a model with `M < m_chi` has no total
   annihilation rate at any energy, so the thermal average and the limit
   adapters raise for it. Above 600 MeV an isovector card has no three-pion
-  rate, and a mediator there needs an explicit width.
+  rate, and a mediator there needs an explicit width. A thermal average
+  whose window passes a channel's declared range raises, so a card with a
+  nonzero isovector coupling cannot be averaged past 600 MeV. Channels
+  with no density do not count toward that window.
 - **Mitigation:** The error names the missing final state. Tasks 11 and 14
   remove their entries from `AxialVectorMediator._unmodeled_thresholds` when
   they land, and Task 13's domain table owns the declared ranges.

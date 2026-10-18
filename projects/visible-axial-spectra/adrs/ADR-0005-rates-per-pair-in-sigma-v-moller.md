@@ -28,13 +28,14 @@ apply when they read a line.
   are per pair and per final state. The Dirac population factor and the
   per-final-state particle multiplicities belong to the consumers, which
   already apply them; a line's branching fraction is its channel's share of
-  the rate.
+  the rate, computed from `sigma v` so that it stays finite at exactly
+  `2 m`, where `sigma` is infinite.
 
 ## Consequences
 
-- **Positive:** The model plugs into the existing thermal-average, limit
-  and CMB code unchanged, and Tasks 6-9 add multiplicities and population
-  factors in one declared place each.
+- **Positive:** Within the channels' declared ranges, the model plugs into
+  the existing thermal-average, limit and CMB code unchanged, and Tasks 6-9
+  add multiplicities and population factors in one declared place each.
 - **Negative:** A caller who wants `sigma v` from `sigma` must multiply by
   `v_Moller` itself.
 - **Mitigation:** The model exposes `annihilation_sigma_v_funcs` and

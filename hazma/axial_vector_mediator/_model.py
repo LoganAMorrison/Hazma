@@ -106,13 +106,17 @@ class AxialVectorMediator(TheoryAnn):
 
     The three-pion channels read only the isovector component of
     ``quarks``: in the isospin limit G parity forbids the octet and singlet
-    directions from reaching three pions. They are declared up to 600 MeV,
-    and ``"g g"`` up to 1600 MeV; a rate past either raises. Every rate
-    raises at an energy where a meson-mixing parameter of
+    directions from reaching three pions. Their LO action has one common
+    pion mass, :data:`hazma.parameters.neutral_pion_mass`, so both open at
+    three times it. They are declared up to 600 MeV, and ``"g g"`` up to
+    1600 MeV; a rate past either raises, unless its couplings make it
+    identically zero. With an axial dark-matter coupling, every rate raises
+    at an energy where a meson-mixing parameter of
     `AxialMesonPoles.mixing_expansion` exceeds `MIXING_GUARD`, outside the
-    first-order treatment of the poles. Totals raise while a final state
-    this model does not compute is open: the mediator pair ``"v v"`` and,
-    for a source with octet or singlet directions, ``eta pi pi``.
+    first-order treatment of the poles, and a rate raises on an exact pole
+    of zero width. Totals raise while a final state this model does not
+    compute is open: the mediator pair ``"v v"`` and, for a source with
+    octet or singlet directions, ``eta pi0 pi0`` and ``eta pi pi``.
     """
 
     def __init__(  # noqa: PLR0913 - the model's parameters
@@ -259,16 +263,15 @@ class AxialVectorMediator(TheoryAnn):
         self, final_state: str, q: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
         """Return ``(A_T, A_L)`` in MeV² of a final state at 1-D energies ``q``."""
+        if self._densities_vanish(final_state):
+            return np.zeros_like(q), np.zeros_like(q)
         if final_state in _FERMION_PAIRS:
             mass, vector, axial = self._fermion_pair(final_state)
             return _rates.fermion_pair_densities(q, mass, vector, axial, 1.0)
         if final_state in _THREE_PIONS:
-            isovector = self._isovector_quarks()
-            if isovector.gau == 0.0:
-                return np.zeros_like(q), np.zeros_like(q)
             form_factor = self._three_pion_form_factors[final_state]
             self._check_support(final_state, q, form_factor.q_max)
-            result = form_factor.spectral_functions(q, isovector)
+            result = form_factor.spectral_functions(q, self._isovector_quarks())
         else:
             self._check_support(final_state, q, self._gamma_gamma.q_max)
             result = self._gamma_gamma.spectral_functions(
@@ -278,6 +281,29 @@ class AxialVectorMediator(TheoryAnn):
             np.ascontiguousarray(result.transverse, dtype=float),
             np.ascontiguousarray(result.source_longitudinal, dtype=float),
         )
+
+    def _densities_vanish(self, final_state: str) -> bool:
+        """Whether the Standard Model couplings give a final state no density.
+
+        Such a channel is an exact zero at every energy, so it is neither
+        range-checked nor listed among the thresholds.
+        """
+        if final_state in _FERMION_PAIRS:
+            _, vector, axial = self._fermion_pair(final_state)
+            return vector == 0.0 and axial == 0.0
+        if final_state in _THREE_PIONS:
+            return self._isovector_quarks().gau == 0.0
+        c = self._leptons
+        quarks = (self._quarks.gau, self._quarks.gad, self._quarks.gas)
+        return not any((*quarks, c.gaee, c.gamumu, c.gatautau, self._gacc))
+
+    def _rate_vanishes(self, final_state: str) -> bool:
+        """Whether a final state's annihilation rate is identically zero."""
+        # Landau-Yang leaves "g g" no transverse density, so it reaches the
+        # dark matter only through the axial contact.
+        needs_axial = final_state == "g g"
+        decoupled = self._gaxx == 0.0 and (needs_axial or self._gvxx == 0.0)
+        return decoupled or self._densities_vanish(final_state)
 
     def _triangles(self) -> TriangleCouplings:
         c = self._leptons
@@ -314,12 +340,21 @@ class AxialVectorMediator(TheoryAnn):
         flat = energies.reshape(-1)
         rate = np.zeros_like(flat)
         open_ = flat >= 2.0 * self._mx
-        if np.any(open_):
+        if np.any(open_) and not self._rate_vanishes(final_state):
             q = np.ascontiguousarray(flat[open_])
-            self._check_mixing(q)
+            if self._gaxx != 0.0:
+                # The dropped second mixing insertion rescales only the
+                # longitudinal contact, which needs an axial coupling.
+                self._check_mixing(q)
             transverse, longitudinal = self._densities(final_state, q)
             dark = (self._mx, self._gvxx, self._gaxx, self._mv, self._width_v)
-            rate[open_] = _rates.sigma_v(q, transverse, longitudinal, dark)
+            values = _rates.sigma_v(q, transverse, longitudinal, dark)
+            if not np.all(np.isfinite(values)):
+                raise ValueError(
+                    f"The {final_state} rate is singular at an exact pole of zero "
+                    "width."
+                )
+            rate[open_] = values
         return _scalar_or_array(rate.reshape(energies.shape))
 
     def _cross_section(
@@ -426,13 +461,38 @@ class AxialVectorMediator(TheoryAnn):
         rates["total"] = sum(rates.values())
         return rates
 
+    def annihilation_branching_fractions(self, e_cm: float) -> dict[str, float]:
+        r"""Return each final state's share of the annihilation rate.
+
+        Computed from :math:`\sigma v_\mathrm{Mol}`, whose ratios equal the
+        cross sections' and stay finite at exactly ``2 mx``.
+
+        Raises
+        ------
+        ValueError
+            If a final state this model does not compute is open.
+        """
+        rates = self.annihilation_sigma_v(e_cm)
+        total = rates.pop("total")
+        if total == 0.0:
+            return {fs: 0.0 for fs in rates}
+        return {fs: rate / total for fs, rate in rates.items()}
+
     def annihilation_thresholds(self) -> dict[str, float]:
-        """Return the center-of-mass energy in MeV at which each final state opens."""
+        """Return the center-of-mass energy in MeV at which each final state opens.
+
+        A final state whose rate vanishes identically for these couplings
+        never opens and is omitted.
+        """
         thresholds = {fs: 2.0 * self._fermion_pair(fs)[0] for fs in _FERMION_PAIRS}
         for fs, form_factor in self._three_pion_form_factors.items():
             thresholds[fs] = form_factor.threshold
         thresholds["g g"] = 0.0
-        return thresholds
+        return {
+            fs: threshold
+            for fs, threshold in thresholds.items()
+            if not self._rate_vanishes(fs)
+        }
 
     def annihilation_resonances(self) -> list[tuple[float, float]]:
         """Return ``(mass, width)`` in MeV of each annihilation resonance.

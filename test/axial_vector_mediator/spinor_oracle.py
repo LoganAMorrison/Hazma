@@ -107,5 +107,6 @@ def sigma_v_fermion_pair(  # noqa: PLR0913 - one parameter point
                     squared += abs(current @ propagator @ fermion) ** 2
         integral += weight * squared / 4.0
     beta = pf / energy
-    # dPhi_2 = beta/(8 pi) d(cos theta)/2, and 4 E1 E2 v_Mol = s in the CM.
+    # dPhi_2 = beta/(8 pi) d(cos theta)/2, and sigma v_Mol divides by
+    # 4 E1 E2 = s in the CM.
     return float(beta / (16.0 * np.pi) * integral / s)
