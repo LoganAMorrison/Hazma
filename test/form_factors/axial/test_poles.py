@@ -8,7 +8,6 @@ the mediator note (pinned values), the full-kernel NumPy oracle in
 from __future__ import annotations
 
 import axial_oracle as oracle
-import mpmath
 import numpy as np
 import pytest
 
@@ -43,9 +42,6 @@ GAMMA_GAMMA = AxialFormFactorGammaGamma()
 MASSES = np.array([POLES.pion_mass, POLES.eta_mass, POLES.eta_prime_mass])
 WIDTHS = np.array([POLES.pion_width, POLES.eta_width, POLES.eta_prime_width])
 ANGLE = np.deg2rad(POLES.mixing_angle_deg)
-# Relative distance from tau = 1 inside which arcsin's own conditioning,
-# ulp/sqrt(tau - 1), rather than the kernel, sets the triangle's error.
-TRIANGLE_THRESHOLD_EXCLUSION = 1e-4
 # Energies (MeV) on both sides of, and within a width or two of, each pole.
 Q_GRID = [1.0, 60.0, 134.9, 135.0, 300.0, 547.8, 547.9, 700.0, 957.7, 1600.0]
 SOURCES = [
@@ -457,44 +453,68 @@ def test_light_triangle_carries_the_full_anomaly() -> None:
     assert amplitude == pytest.approx(expected, rel=1e-13)
 
 
-@pytest.mark.parametrize(
-    ("name", "mass", "weight"),
-    [
-        ("electron", parameters.electron_mass, 1.0),
-        ("muon", parameters.muon_mass, 1.0),
-        ("tau", parameters.tau_mass, 1.0),
-        ("charm", parameters.charm_quark_mass, 4 / 3),
+# ``1 - tau f(tau)`` for each triangle fermion at Hazma's masses, from mpmath at
+# 40 digits with the textbook f(tau), rounded to the nearest double. The energies
+# (MeV) cover the series regime far below threshold, both sides of the series
+# switch at tau = 4 (q = m), both sides of the pair threshold, and the 1600 MeV
+# ceiling. mpmath is a regeneration-only dependency (pyproject.toml).
+TRIANGLE_REFERENCE = {
+    "electron": [
+        (1e-06, (-3.1913816610769865e-13 + 0j)),
+        (0.001, (-3.1913832906630654e-07 + 0j)),
+        (0.505888956639, (-0.09439001265884912 + 0j)),
+        (0.516108935561, (-0.09889330539284989 + 0j)),
+        (0.97089799759, (-0.7402772463059175 + 0j)),
+        (1.0, (-0.9402320184636139 + 0j)),
+        (1.07309778681, (-1.1480485242180012 - 0.8973834936781886j)),
+        (2.0439957844, (0.8167442505000742 - 1.0343363135165171j)),
+        (1600.0, (1.0000254271070486 - 1.0317149948837103e-05j)),
     ],
-)
-def test_triangle_keeps_its_relative_precision_across_the_support(
-    name: str, mass: float, weight: float
-) -> None:
+    "muon": [
+        (1e-06, (-7.464674999280613e-18 + 0j)),
+        (0.001, (-7.464674999369768e-12 + 0j)),
+        (1.0, (-7.464764154760664e-06 + 0j)),
+        (104.601790755, (-0.09439001265884911 + 0j)),
+        (106.714958245, (-0.09889330539284989 + 0j)),
+        (200.75091155, (-0.7402772463059181 + 0j)),
+        (221.88258645, (-1.1480485242180016 - 0.897383493678188j)),
+        (422.633498, (0.8167442505000742 - 1.0343363135165171j)),
+        (1600.0, (1.0853643359288592 - 0.1486801117617154j)),
+    ],
+    "tau": [
+        (1e-06, (-2.6394432717293116e-20 + 0j)),
+        (0.001, (-2.6394432717294234e-14 + 0j)),
+        (1.0, (-2.63944338319589e-08 + 0j)),
+        (1600.0, (-0.0759891165726088 + 0j)),
+    ],
+    "charm": [
+        (1e-06, (-5.166677000020666e-20 + 0j)),
+        (0.001, (-5.166677000021094e-14 + 0j)),
+        (1.0, (-5.166677427133529e-08 + 0j)),
+        (1257.3, (-0.0943900126588491 + 0j)),
+        (1282.7, (-0.09889330539284988 + 0j)),
+        (1600.0, (-0.17030156243779934 + 0j)),
+    ],
+}
+
+
+@pytest.mark.parametrize("name", list(TRIANGLE_REFERENCE))
+def test_triangle_keeps_its_relative_precision_across_the_support(name: str) -> None:
     """Each triangle against 40-digit mpmath from 1e-6 MeV to the 1600 MeV ceiling.
 
     Far below threshold the closed form 1 - tau arcsin² cancels like
-    ulp*tau, so the kernel sums the series there. The worst measured error
-    is 3.2e-15 relative (macOS/arm64), where the closed form takes over at
-    tau = 4; 1e-14 allows libm differences. Points within 1e-4 of tau = 1
-    are skipped: there arcsin's own conditioning, ulp/sqrt(tau - 1), sets
-    the error.
+    ulp*tau, which before the series left the charm triangle 29% wrong at
+    1e-4 MeV and exactly zero at 1e-6 MeV. The worst error measured on a
+    dense grid is 3.2e-15 relative (macOS/arm64), where the closed form
+    takes over at tau = 4; 1e-14 allows libm differences.
     """
     couplings = {"electron": 0.0, "muon": 0.0, "tau": 0.0, "charm": 0.0}
     couplings[name] = 1.0
-    q = np.logspace(-6, np.log10(1600.0), 400)
-    tau = 4 * mass**2 / q**2
-    q = q[np.abs(tau - 1) >= TRIANGLE_THRESHOLD_EXCLUSION]
+    weight = 4 / 3 if name == "charm" else 1.0
+    reference = np.array(TRIANGLE_REFERENCE[name])
+    q, expected = reference[:, 0].real, reference[:, 1]
     amplitude = GAMMA_GAMMA.amplitude(q, ZERO, TriangleCouplings(**couplings))
-    with mpmath.workdps(40):
-        expected = np.array([complex(_mpmath_triangle(value, mass)) for value in q])
     np.testing.assert_allclose(amplitude / weight, expected, rtol=1e-14, atol=0)
-
-
-def _mpmath_triangle(q: float, mass: float) -> mpmath.mpc:
-    tau = 4 * mpmath.mpf(mass) ** 2 / mpmath.mpf(q) ** 2
-    if tau >= 1:
-        return 1 - tau * mpmath.asin(1 / mpmath.sqrt(tau)) ** 2
-    r = mpmath.sqrt(1 - tau)
-    return 1 + tau / 4 * (mpmath.log((1 + r) / (1 - r)) - 1j * mpmath.pi) ** 2
 
 
 def test_a_meson_the_source_does_not_couple_to_drops_out_at_its_pole() -> None:

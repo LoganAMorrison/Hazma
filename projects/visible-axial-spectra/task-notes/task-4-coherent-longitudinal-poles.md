@@ -139,7 +139,7 @@ insertion is verified independently."
 | research Berends-Giele `A_L`, 8 energies | 1.4e-15 rel | 4e-15 |
 | Schur complement vs 4x4 full inverse, amplitude and self-energy | 3.0e-13 rel | 1e-11 |
 | meson-block cut vs Proca-line Dirac-trace cut | 1.7e-12 rel | 1e-11 |
-| four triangles vs 40-digit mpmath, 1e-6 to 1600 MeV | 3.2e-15 rel | 1e-14 |
+| four triangles vs 40-digit mpmath, 1e-6 to 1600 MeV (dense grid measured; 28 points pinned inline) | 3.2e-15 rel | 1e-14 |
 
 - Performance on N = 1e5 energies: the kernel takes 51 ns per point (83 ns
   with the cut). The oracle's 4x4 solve takes 15.6 us per point, about 300
@@ -157,7 +157,7 @@ Findings from a generalist (A) and a numerics (E) reviewer on PR #128.
 
 | # | Finding | Verdict | Resolution |
 |---|---|---|---|
-| E1, A4 | Triangle `1 - tau asin^2` cancels for `s << m^2` (charm 29% off at 1e-4 MeV) | Accepted | Series for `x <= 1/4`; mpmath test on all four fermions |
+| E1, A4 | Triangle `1 - tau asin^2` cancels for `s << m^2` (charm 29% off at 1e-4 MeV) | Accepted | Series for `x <= 1/4`; all four fermions pinned to an inline 40-digit mpmath table, since CI's test job does not install the regeneration-only `mpmath` |
 | E3 | 3x3 pivoted solve ill-conditioned when the cut dominates | Accepted | Sherman-Morrison closed form; solve removed |
 | E4, A1 | A decoupled zero-width pole gives `0*inf = NaN` | Accepted | Skipped exactly; a coupled zero-width pole is now singular even with a cut |
 | E2 | Per-pole guard can understate the Schur correction up to 3x | Accepted | Documented in `mixing_expansion` and ADR-0003 |
