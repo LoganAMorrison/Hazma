@@ -60,8 +60,9 @@ projects/visible-axial-spectra/references/check_public_impact.py`.
 After Task 4 the focused axial suite passed 324 tests and the Rust crate 324
 tests, with clippy `-D warnings` clean. Path-scoped preflight passed with
 2,880 tests, 16 skips and 127 subtests. Exact commands and literal summaries
-are in the completed task notes and
-`projects/visible-axial-spectra/task-notes/preflight.txt`.
+are in the completed task notes. The literal gate output for Tasks 1-2 is
+`projects/visible-axial-spectra/task-notes/preflight.txt`, and for Task 4 it
+is `projects/visible-axial-spectra/task-notes/preflight-task-4.txt`.
 
 ## Open questions
 

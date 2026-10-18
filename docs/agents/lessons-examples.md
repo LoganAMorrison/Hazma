@@ -132,6 +132,17 @@ cites a real PR.
   full, give it an explicit count, and never let "both", "each", or "the
   two" carry a population you have not enumerated.
 
+- [measurement-taken-before-the-task-ended] A review fix moves the gate's
+  counts, and the records that quote them do not all move with it. PR #128
+  (visible-axial-spectra Task 4) updated its task note and working-memory
+  README to the final head's 2,880 Python and 324 Rust tests after a
+  third commit, but the README still pointed at a shared `preflight.txt`
+  that held the Task 1-2 run (2,739), and the PR body still quoted 2,873
+  and 323. The same note said the citation checker scanned no documents;
+  re-running `check_doc_citations.py --changed-vs origin/master` scanned
+  seven. Keep one gate artifact per task, rewrite it from the final run,
+  and re-read the PR body against it before asking for review.
+
 ### partial-historical-labeling
 
 - [partial-historical-labeling] Annotating **one** measurement in a dated

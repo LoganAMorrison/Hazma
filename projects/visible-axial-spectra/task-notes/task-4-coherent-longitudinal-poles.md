@@ -128,12 +128,19 @@ insertion is verified independently."
   --features test-probes`: 324 passed (10 new), with clippy `-D warnings`
   clean.
 - `.venv/bin/python -m pytest -n 0 -q test/form_factors/axial`: 324 passed.
-- With the worktree `.venv/bin` on PATH,
-  `scripts/agents/preflight.sh --paths "hazma/form_factors/axial
-  test/form_factors/axial"`, with `--md` naming the five touched Markdown
-  files, gives `RESULT: PASS` on every row. The pytest row reads
-  `2880 passed, 16 skipped, 20 warnings, 127 subtests passed`, and ruff
-  reads `0 new, 2 fixed`.
+- With the worktree `.venv/bin` on PATH, the gate below gives
+  `RESULT: PASS` on every row. Its `--md` list is the seven Markdown files
+  in `git diff origin/master...HEAD --name-only -- '*.md'`. The literal
+  output is in
+  `projects/visible-axial-spectra/task-notes/preflight-task-4.txt`; the
+  pytest row reads `2880 passed, 16 skipped, 20 warnings, 127 subtests
+  passed`.
+
+```sh
+scripts/agents/preflight.sh --paths "hazma/form_factors/axial test/form_factors/axial" \
+    --md "$(git diff origin/master...HEAD --name-only -- '*.md' | tr '\n' ' ')"
+```
+
 - Tolerances measured on macOS/arm64:
 
 | comparison | measured max | asserted |
@@ -187,6 +194,15 @@ with a condition number up to 6e10. A Rust test and an aligned-pion
 closed-form test cover the same limit, and with the cut closed the pole
 still raises.
 
+A third generalist review (head `4f5496ce`) found no code issue and one
+blocking documentation issue, P2: the verification records predated the
+final head. The README pointed at a `preflight.txt` holding the Task 1-2
+run, the citation sweep claimed no documents were scanned, and the PR body
+quoted 2,873 Python and 323 Rust tests. The fix, accepted, records the
+final-head gate in `preflight-task-4.txt`, leaves `preflight.txt` as the
+Task 1-2 record its notes cite, replaces the `--md` placeholder with the
+command that derives the list, and pastes the checker's literal result.
+
 ## Open Questions
 
 None.
@@ -217,9 +233,11 @@ tables below are folded by hand from the commands named in each row.
   Task 4 adds a kernel module, not a submodule), and the comments in
   `lib.rs` and `_core.pyi`, which describe `axial` as holding "axial current
   kernels" and enumerate no contents (KEPT).
-- **Line-number citation sweep.** `check_doc_citations.py --changed-vs
-  origin/master` reports no docs to check (no changed Markdown cites
-  `file:line`).
+- **Line-number citation sweep.** `scripts/agents/check_doc_citations.py
+  --changed-vs origin/master` scans the seven changed documents and checks
+  one in-repo citation, which resolves by suffix. It skips one external
+  citation, `hazma/_utils/boost.pyx`, and reports no out-of-range or
+  ambiguous citation.
 - **Forward-looking phrase sweep.** The Task 3 phrase regex over the project,
   `hazma/form_factors/axial`, the new kernel and the Sphinx page hits only
   status headers and this note's handoff (KEPT).
@@ -231,6 +249,9 @@ tables below are folded by hand from the commands named in each row.
 | Files Changed "48 tests" | `pytest --collect-only test/form_factors/axial/test_poles.py` | 48 | EDITED |
 | Verification "10 new" Rust tests | `rg -c '#\[test\]' rust/src/kernels/axial_poles.rs` | 10 | EDITED |
 | README "324 Rust tests" | `cargo test` (preflight) | 324 | EDITED |
+| Verification and README "2880 passed" | `preflight.sh` pytest row (`preflight-task-4.txt`) | 2880 | EDITED |
+| Verification "seven Markdown files" | `git diff origin/master...HEAD --name-only -- '*.md' \| wc -l` | 7 | EDITED |
+| Citation sweep "seven changed documents" | `check_doc_citations.py --changed-vs origin/master` | 7 | EDITED |
 | lib.rs "six per-domain submodules" | `dir(hazma._core)` modules | six | KEPT |
 
 - **Numerical-impact statement.** No public value changes (verified:

@@ -82,7 +82,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   final tree after your last edit; take both halves of a before/after on the
   same tree and environment; derive breakdowns from the command so the parts
   sum; and never let "both", "each" or "the two" stand in for an enumerated
-  count (PR #49, #55, #64, #67, #68, #72, #86).
+  count (PR #49, #55, #64, #67, #68, #72, #86, #128).
 - [partial-historical-labeling] Label the *section* as historical, not one line
   of it — decide per claim what it is a statement about, date the block, and
   head a task note's §Files Changed / §Numerical impact with the task's own PR
