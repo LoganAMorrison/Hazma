@@ -113,6 +113,9 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
   `form_factors.rst`.
 - `CHANGELOG.md` (Unreleased, Added) — the model entry, which the fixes
   leave true; the version bump stays with Task 16.
+- `.github/workflows/ci.yml`, `.github/workflows/release.yml` — the served
+  submodule set in the probe-free import check names
+  `axial_vector_mediator`; CI's import smoke test failed without it.
 - `AGENTS.md` — `axial_vector_mediator/` in the Layout tree and the Models
   layer. Its count of six `test-probes` probe submodules is about probes,
   not domains, and stays.
