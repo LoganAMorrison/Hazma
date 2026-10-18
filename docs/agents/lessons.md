@@ -82,7 +82,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   final tree after your last edit; take both halves of a before/after on the
   same tree and environment; derive breakdowns from the command so the parts
   sum; and never let "both", "each" or "the two" stand in for an enumerated
-  count (PR #49, #55, #64, #67, #68, #72, #86).
+  count (PR #49, #55, #64, #67, #68, #72, #86, #128).
 - [partial-historical-labeling] Label the *section* as historical, not one line
   of it — decide per claim what it is a statement about, date the block, and
   head a task note's §Files Changed / §Numerical impact with the task's own PR
@@ -332,7 +332,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   zero set. Find every parameter point where the new divisor vanishes —
   thresholds such as `m = 2 m_e` are the usual ones — and evaluate there with
   the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
-  into `NaN` that no tolerance catches (PR #103, #118).
+  into `NaN` that no tolerance catches. A closed form that divides by a bare
+  factor before applying the term that regularizes it has the same zero set
+  (PR #103, #118, #128).
 - [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
   `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
   becomes a finite limit and a finite result. Clip with a comparison that
@@ -368,3 +370,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   truncate every value written into it to zero. Coerce the input to a float
   array before allocating, or allocate float explicitly, and pin an integer
   and a scalar request against the float array's values (PR #118).
+- [closed-form-cancels-where-a-series-converges] A closed form written as
+  `1 - f(x)` loses its relative precision wherever `f → 1`, and a test on
+  ordinary arguments does not see it. Sum the series where it converges
+  fast, join the two branches at a pinned point, and pin every branch
+  against a high-precision reference across the whole support (PR #128).

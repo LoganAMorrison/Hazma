@@ -1,0 +1,16 @@
+
+preflight — /Users/logan.morrison/dev/Hazma/.claude/worktrees/visible-axial-spectra-a692fe/.claude/worktrees/visible-axial-spectra/task-4-coherent-longitudinal-poles (base origin/master)
+-------------------------------------------------------------------
+PASS   black --check           hazma/form_factors/axial test/form_factors/axial
+PASS   isort --check-only      0 new (0 pre-existing at 5f23dfdcb8c6)
+PASS   ruff check              0 new, 2 fixed (0 pre-existing at 5f23dfdcb8c6)
+PASS   cargo fmt --check       rust/
+PASS   cargo clippy            rust/
+PASS   cargo test              rust/
+PASS   pytest                  2880 passed, 16 skipped, 20 warnings, 127 subtests passed in 54.50s
+PASS   import hazma            version 2.3.0
+PASS   markdownlint            CHANGELOG.md docs/agents/lessons-examples.md docs/agents/lessons.md projects/visible-axial-spectra/PLAN.md projects/visible-axial-spectra/adrs/ADR-0003-proca-embedding-of-longitudinal-meson-poles.md projects/visible-axial-spectra/task-notes/README.md projects/visible-axial-spectra/task-notes/task-4-coherent-longitudinal-poles.md
+SKIP   version bump            not a closing PR (pass --closing)
+PASS   forbidden tokens        none added
+-------------------------------------------------------------------
+RESULT: PASS

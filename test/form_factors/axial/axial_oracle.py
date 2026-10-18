@@ -1,11 +1,17 @@
-"""NumPy reference implementation of the axial tensor and LO three-pion numerics.
+"""NumPy reference implementation of the axial tensor, three-pion and pole numerics.
 
-These are the NumPy functions `hazma.form_factors.axial` evaluated before the
-numerics moved into the `hazma._core.axial` kernels, kept unchanged as the
-oracle `test_oracle.py` compares the Rust-backed public functions against.
-The tensor functions keep their validation so a test can call them with the
-same arguments as the public ones; the three-pion functions take arguments
-the public wrappers have already validated.
+The tensor and three-pion functions are the NumPy functions
+`hazma.form_factors.axial` evaluated before the numerics moved into the
+`hazma._core.axial` kernels, kept unchanged as the oracle `test_oracle.py`
+compares the Rust-backed public functions against. The tensor functions keep
+their validation so a test can call them with the same arguments as the
+public ones; the three-pion functions take arguments the public wrappers have
+already validated.
+
+The pole functions never had a NumPy predecessor. They are an independent
+formulation for `test_poles.py`: the full quadratic kernel of the
+longitudinal source and the octet-singlet mesons, inverted whole, where the
+kernel resums only the meson block in the physical basis.
 """
 
 from __future__ import annotations
@@ -359,3 +365,131 @@ def three_pi_spectral_functions(  # noqa: PLR0913 - the model parameters plus th
             transverse[mask] = np.sum(measure * value_t, axis=-1)
             longitudinal[mask] = np.sum(measure * value_l, axis=-1)
     return transverse, longitudinal
+
+
+# Generators in flavor order (u, d, s), normalized so Tr(T_a T_b) = 2 delta_ab.
+OCTET_SINGLET = np.array(
+    [[1.0, -1.0, 0.0], np.array([1.0, 1.0, -2.0]) / np.sqrt(3.0), [np.sqrt(2 / 3)] * 3]
+)
+_QUARK_CHARGES_SQUARED = np.array([4.0, 1.0, 1.0]) / 9.0
+
+
+def physical_rotation(mixing_angle: float) -> np.ndarray:
+    """Rows (pi0, eta, eta') in terms of the generators (T3, T8, T0)."""
+    cos, sin = np.cos(mixing_angle), np.sin(mixing_angle)
+    return np.array([[1.0, 0.0, 0.0], [0.0, cos, -sin], [0.0, sin, cos]])
+
+
+def longitudinal_kernel(  # noqa: PLR0913, PLR0917 - the meson block plus the source
+    q: float,
+    couplings: np.ndarray,
+    masses: np.ndarray,
+    widths: np.ndarray,
+    mixing_angle: float,
+    decay_constant: float,
+    mediator_mass: float,
+    meson_insertion: np.ndarray | None = None,
+) -> np.ndarray:
+    """Return the 4x4 kernel K over (a, pi3, eta8, eta0) in MeV², at s = q².
+
+    ``a`` is the source-longitudinal Proca mode, ``Z'_mu = (k_mu/sqrt(s)) a``,
+    whose propagator is ``i/M²``, so ``K_aa = M²``. The derivative mixing
+    ``-c_i Z'.d phi_i`` gives ``K_ai = i sqrt(s) c_i`` and ``K_ia = -i sqrt(s)
+    c_i``, Hermitian for real ``s``. The meson block is the physical
+    ``diag(s - m² + i m Gamma)`` rotated to the generator basis, plus an
+    optional complex matrix in that basis.
+    """
+    s = q * q
+    rotation = physical_rotation(mixing_angle)
+    meson = rotation.T @ np.diag(s - masses**2 + 1j * masses * widths) @ rotation
+    if meson_insertion is not None:
+        meson = meson + meson_insertion
+    c = decay_constant * (OCTET_SINGLET @ couplings)
+    kernel = np.zeros((4, 4), dtype=np.complex128)
+    kernel[0, 0] = mediator_mass**2
+    kernel[0, 1:] = 1j * q * c
+    kernel[1:, 0] = -1j * q * c
+    kernel[1:, 1:] = meson
+    return kernel
+
+
+def schur_source_amplitude(kernel: np.ndarray, h_mesons: np.ndarray) -> complex:
+    """Return ``h_eff = -K_am D^-1 h_m`` from the full inverse of ``kernel``.
+
+    Block inversion gives ``(K^-1 h)_a = h_eff/D_a`` and ``(K^-1)_aa = 1/D_a``
+    with ``D_a = K_aa - K_am D^-1 K_ma``, so their ratio is the one-insertion
+    source amplitude for any ``K_aa``.
+    """
+    h = np.concatenate([[0.0], h_mesons]).astype(np.complex128)
+    column = np.linalg.solve(kernel, h)
+    unit = np.linalg.solve(kernel, np.eye(4, dtype=np.complex128)[:, 0])
+    return column[0] / unit[0]
+
+
+def source_self_energy(kernel: np.ndarray) -> complex:
+    """Return ``s c^T D^-1 c = K_am D^-1 K_ma``, in MeV², from the full inverse.
+
+    It is minus the one-insertion amplitude of the source's own mixing
+    column. Taking it as that ratio, rather than as ``K_aa - D_a``, avoids
+    cancelling ``M²`` against itself when the mediator is heavy.
+    """
+    return -schur_source_amplitude(kernel, kernel[1:, 0])
+
+
+def photon_traces() -> np.ndarray:
+    """Return ``N_c Tr(T_i Q²)`` for (T3, T8, T0), dimensionless."""
+    return 3.0 * OCTET_SINGLET @ _QUARK_CHARGES_SQUARED
+
+
+def triangle_factor(q: float, mass: float) -> complex:
+    """Return ``1 - tau f(tau)``, ``tau = 4 m²/q²``, from the textbook ``f``."""
+    tau = 4 * mass * mass / (q * q)
+    if tau >= 1:
+        return complex(1 - tau * np.arcsin(1 / np.sqrt(tau)) ** 2)
+    r = np.sqrt(1 - tau)
+    return complex(1 + 0.25 * tau * (np.log((1 + r) / (1 - r)) - 1j * np.pi) ** 2)
+
+
+_GAMMA0 = np.diag([1.0, 1.0, -1.0, -1.0]).astype(np.complex128)
+_PAULI = [
+    np.array([[0, 1], [1, 0]], dtype=np.complex128),
+    np.array([[0, -1j], [1j, 0]], dtype=np.complex128),
+    np.array([[1, 0], [0, -1]], dtype=np.complex128),
+]
+_GAMMA = [_GAMMA0] + [
+    np.block([[np.zeros((2, 2)), sigma], [-sigma, np.zeros((2, 2))]])
+    for sigma in _PAULI
+]
+_GAMMA5 = 1j * _GAMMA[0] @ _GAMMA[1] @ _GAMMA[2] @ _GAMMA[3]
+_METRIC = np.array([1.0, -1.0, -1.0, -1.0])
+
+
+def _slash(p: np.ndarray) -> np.ndarray:
+    return sum(_METRIC[mu] * p[mu] * _GAMMA[mu] for mu in range(4))
+
+
+def longitudinal_pair_cut(
+    q: float, dm_mass: float, dm_vector: float, dm_axial: float
+) -> float:
+    """Return Im Pi_aa in MeV², the dark-matter pair cut of the Proca mode ``a``.
+
+    ``(1/2) integral dPhi_2 sum |ubar eps_L.gamma (g_V + g_A gamma5) v|²`` with
+    ``eps_L = k/sqrt(s)``, from explicit Dirac traces; the integrand is
+    isotropic, so the phase space contributes its volume ``beta/(8 pi)``.
+    """
+    s = q * q
+    if s <= 4 * dm_mass**2:
+        return 0.0
+    momentum = np.sqrt(s / 4 - dm_mass**2)
+    p1 = np.array([q / 2, 0.0, 0.0, momentum])
+    p2 = np.array([q / 2, 0.0, 0.0, -momentum])
+    vertex = _slash((p1 + p2) / q) @ (dm_vector * np.eye(4) + dm_axial * _GAMMA5)
+    conjugate = _GAMMA0 @ vertex.conj().T @ _GAMMA0
+    spin_sum = np.trace(
+        (_slash(p1) + dm_mass * np.eye(4))
+        @ vertex
+        @ (_slash(p2) - dm_mass * np.eye(4))
+        @ conjugate
+    )
+    beta = 2 * momentum / q
+    return float(0.5 * spin_sum.real * beta / (8 * np.pi))

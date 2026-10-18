@@ -76,6 +76,8 @@ note. Corrections that move existing published numbers are out of scope
   conventions](adrs/ADR-0001-current-and-tensor-contracts.md).
 - [Rust kernels and the NumPy
   oracle](adrs/ADR-0002-rust-kernels-and-numpy-oracle.md).
+- [Proca embedding of the longitudinal meson
+  poles](adrs/ADR-0003-proca-embedding-of-longitudinal-meson-poles.md).
 - [LO three-pion derivation](references/lo-three-pion.md).
 - [Scope sources and acceptance references](references/scope-and-acceptance.md):
   benchmark values with their note labels, the channel validity table, and the

@@ -132,6 +132,17 @@ cites a real PR.
   full, give it an explicit count, and never let "both", "each", or "the
   two" carry a population you have not enumerated.
 
+- [measurement-taken-before-the-task-ended] A review fix moves the gate's
+  counts, and the records that quote them do not all move with it. PR #128
+  (visible-axial-spectra Task 4) updated its task note and working-memory
+  README to the final head's 2,880 Python and 324 Rust tests after a
+  third commit, but the README still pointed at a shared `preflight.txt`
+  that held the Task 1-2 run (2,739), and the PR body still quoted 2,873
+  and 323. The same note said the citation checker scanned no documents;
+  re-running `check_doc_citations.py --changed-vs origin/master` scanned
+  seven. Keep one gate artifact per task, rewrite it from the final run,
+  and re-read the PR body against it before asking for review.
+
 ### partial-historical-labeling
 
 - [partial-historical-labeling] Annotating **one** measurement in a dated
@@ -1484,6 +1495,18 @@ branch of the underlying kernel that "any" reaches.
   `[nan, nan]`. The repair returns zeros for a mediator with no open decay,
   and `test_v_v_vanishes_for_a_stable_mediator` pins all four spectra.
 
+- PR #128 resummed the invisible cut in `axial_poles.rs` with
+  Sherman-Morrison. The expression was
+  `a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)`, and it divided by each bare
+  pole denominator `Delta_P` before the cut's width could enter. Review set
+  `pion_width = 0` with an open `InvisibleCut(20, 1, 2500)` and evaluated
+  at `q = m_pi`. The dressed matrix was invertible, with exact value
+  `-1.8893751744e10 i`, but the amplitude raised on `inf/inf`. The repair
+  multiplies both sums through by the coupled `Delta` nearest zero, so no
+  bare denominator is divided by.
+  `test_open_cut_keeps_a_stable_pole_finite` pins every zero-width pole
+  against a direct inverse, and the closed-cut case still raises.
+
 ### float-clip-swallows-nan
 
 - PR #105 clipped the charged-pion neutrino boost window at the muon
@@ -1621,3 +1644,15 @@ branch of the underlying kernel that "any" reaches.
   `0.5109989461`. With the fallback's mass set to the kernel's, the two
   agree to at most 6.3e-16. The misfiled follow-up was withdrawn, and the
   measurement joined `docs/followups/todo/consolidate-the-two-constants-tables.md`.
+
+### closed-form-cancels-where-a-series-converges
+
+- PR #128 evaluated the axial lepton and charm triangle as `1 - tau
+  arcsin²(1/√tau)` in `rust/src/kernels/axial_poles.rs`. Its tests used
+  energies near the fermion mass, where the form is accurate. Review
+  compared the charm triangle with 40-digit mpmath at small `q`: it was 29%
+  off at `q = 1e-4` MeV and exactly zero at `1e-6` MeV, because the
+  subtraction loses digits like `ε/x`, `x = s/(4m²)`. The kernel now sums
+  `tau arcsin² - 1 = Σ 2^{2n} x^{n-1}/(2 n² C(2n, n))` for `x ≤ 1/4`, and
+  `test_triangle_keeps_its_relative_precision_across_the_support` pins all
+  four fermions from `1e-6` to `1600` MeV at a worst error of 3.2e-15.

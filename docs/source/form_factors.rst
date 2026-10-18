@@ -343,6 +343,43 @@ conversion uses the opposite scale. Widths have power 1, cross sections power
 No charge, spin-average or dark-matter population factor is inferred by the
 unit helpers.
 
+The source also mixes with the neutral pseudoscalars through
+``-c_P Z'.dP``, ``c_P = f Tr(G_A lambda_P)``. ``AxialMesonPoles`` holds the
+LO U(3) ``pi0``, ``eta`` and ``eta'`` block, with the single mixing angle
+``theta_P = -15.4`` degrees and ``f = 92.2`` MeV in the isospin limit, and
+inverts its full propagator matrix. Because the mixing is proportional to the
+source momentum, it reaches only ``A_L``, where the Proca term makes it a
+non-resonant contact rather than a spin-zero mediator. One mixing insertion is
+kept; ``mixing_expansion`` returns the size of the neglected second insertion,
+and a rate must reject points above ``MIXING_GUARD = 0.1``. An
+``InvisibleCut`` inserts the dark-matter pair cut once into the meson block,
+adding exactly ``invisible_widths`` at each pole.
+
+``AxialFormFactorGammaGamma`` returns the two-photon density
+``A_L = s alpha^2 |A(s)|^2/(8 pi^3)`` in MeV squared, with ``A_T = 0``
+(Landau-Yang). The light-quark anomaly enters only through the poles and
+tends to ``N_c sum_q g_A^q Q_q^2`` far above them; leptons and charm enter
+through their triangles, whose couplings ``TriangleCouplings`` declares
+explicitly. Support ends at 1600 MeV.
+
+.. code-block:: python
+
+    from hazma.form_factors.axial import (
+        AxialCurrent,
+        AxialFormFactorGammaGamma,
+        TriangleCouplings,
+    )
+
+    source = AxialCurrent(
+        1e-3, -1e-3, -1e-3,
+        qcd_scheme="MSbar-Nf3",
+        scale_mev=2000.0,
+        provenance="hypercharge-aligned example",
+    )
+    triangles = TriangleCouplings(electron=-1e-3, muon=-1e-3, tau=-1e-3, charm=1e-3)
+    result = AxialFormFactorGammaGamma().spectral_functions(500.0, source, triangles)
+    longitudinal = result.source_longitudinal  # MeV squared
+
 .. automodule:: hazma.form_factors.axial
     :members:
     :undoc-members:

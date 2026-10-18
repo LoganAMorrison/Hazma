@@ -1,7 +1,8 @@
 //! `hazma._core.axial` — axial current kernels.
 //!
-//! Registration only: the math is in [`crate::kernels::axial_tensors`] and
-//! [`crate::kernels::axial_three_pi`], and the batch layout in
+//! Registration only: the math is in [`crate::kernels::axial_tensors`],
+//! [`crate::kernels::axial_three_pi`] and [`crate::kernels::axial_poles`],
+//! and the batch layout in
 //! [`crate::dispatch::components`]. The callers are the private wrappers in
 //! `hazma/form_factors/axial/`, which validate every argument, broadcast it
 //! and reshape it to `(components, N)`, so each entry point here takes a
@@ -17,6 +18,7 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::dispatch::{component_major, components};
+use crate::kernels::axial_poles::{self, InvisibleCut, MesonBlock, Triangles};
 use crate::kernels::axial_tensors::{self, ProjectionError};
 use crate::kernels::axial_three_pi::{Channel, Momenta, ThreePion, angular_rule};
 
@@ -227,6 +229,135 @@ fn three_pi_spectral_functions<'py>(
     ))
 }
 
+/// A meson block as `(masses, widths, mixing_angle, decay_constant)`, in
+/// MeV and radians.
+type Block = ([f64; 3], [f64; 3], f64, f64);
+/// An invisible cut as `(dm_mass, strength)`, in MeV and 1/MeV.
+type Cut = Option<(f64, f64)>;
+
+fn meson_block((masses, widths, mixing_angle, decay_constant): Block) -> MesonBlock {
+    MesonBlock {
+        masses,
+        widths,
+        mixing_angle,
+        decay_constant,
+    }
+}
+
+fn invisible_cut(cut: Cut) -> Option<InvisibleCut> {
+    cut.map(|(dm_mass, strength)| InvisibleCut { dm_mass, strength })
+}
+
+/// Return the mixing strengths `c_P` of `(π⁰, η, η′)` in MeV.
+#[pyfunction]
+fn pole_source_couplings(block: Block, couplings: [f64; 3]) -> [f64; 3] {
+    meson_block(block).source_couplings(&couplings)
+}
+
+/// Return the complex meson-pole source self-energy in MeV² at each
+/// energy of a 1-D batch (MeV).
+#[pyfunction]
+fn pole_source_self_energy<'py>(
+    py: Python<'py>,
+    energies: PyReadonlyArray1<'py, f64>,
+    block: Block,
+    couplings: [f64; 3],
+    cut: Cut,
+) -> Bound<'py, PyArray1<Complex64>> {
+    let block = meson_block(block);
+    let cut = invisible_cut(cut);
+    let values: Vec<Complex64> = energies
+        .as_array()
+        .iter()
+        .map(|&q| block.source_self_energy(q, &couplings, cut.as_ref()))
+        .collect();
+    values.into_pyarray(py)
+}
+
+/// Return the `(3, N)` mixing expansion parameters of a 1-D batch (MeV).
+#[pyfunction]
+fn pole_mixing_expansion<'py>(
+    py: Python<'py>,
+    energies: PyReadonlyArray1<'py, f64>,
+    block: Block,
+    couplings: [f64; 3],
+    mediator_mass: f64,
+) -> Bound<'py, PyArray2<f64>> {
+    let block = meson_block(block);
+    let energies = energies.as_array();
+    component_major(
+        py,
+        energies
+            .iter()
+            .map(|&q| block.mixing_expansion(q, &couplings, mediator_mass)),
+    )
+}
+
+/// Return `Γ(P → χχ̄)` of `(π⁰, η, η′)` in MeV.
+#[pyfunction]
+fn pole_invisible_widths(block: Block, couplings: [f64; 3], cut: (f64, f64)) -> [f64; 3] {
+    let (dm_mass, strength) = cut;
+    meson_block(block).invisible_widths(&couplings, &InvisibleCut { dm_mass, strength })
+}
+
+/// Return the dimensionless complex `γγ` amplitude `𝒜` at each energy of a
+/// 1-D batch (MeV); `triangles` is `(masses, couplings)` for `(e, μ, τ, c)`.
+#[pyfunction]
+fn gamma_gamma_amplitude<'py>(
+    py: Python<'py>,
+    energies: PyReadonlyArray1<'py, f64>,
+    block: Block,
+    couplings: [f64; 3],
+    triangles: ([f64; 4], [f64; 4]),
+    cut: Cut,
+) -> Bound<'py, PyArray1<Complex64>> {
+    let block = meson_block(block);
+    let (masses, triangle_couplings) = triangles;
+    let triangles = Triangles {
+        masses,
+        couplings: triangle_couplings,
+    };
+    let cut = invisible_cut(cut);
+    let values: Vec<Complex64> = energies
+        .as_array()
+        .iter()
+        .map(|&q| {
+            axial_poles::gamma_gamma_amplitude(&block, q, &couplings, &triangles, cut.as_ref())
+        })
+        .collect();
+    values.into_pyarray(py)
+}
+
+/// Return the `γγ` source-longitudinal density in MeV² at each energy of a
+/// 1-D batch (MeV); arguments as [`gamma_gamma_amplitude`] plus `alpha`.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn gamma_gamma_density<'py>(
+    py: Python<'py>,
+    energies: PyReadonlyArray1<'py, f64>,
+    block: Block,
+    couplings: [f64; 3],
+    triangles: ([f64; 4], [f64; 4]),
+    alpha: f64,
+    cut: Cut,
+) -> Bound<'py, PyArray1<f64>> {
+    let block = meson_block(block);
+    let (masses, triangle_couplings) = triangles;
+    let triangles = Triangles {
+        masses,
+        couplings: triangle_couplings,
+    };
+    let cut = invisible_cut(cut);
+    let values: Vec<f64> = energies
+        .as_array()
+        .iter()
+        .map(|&q| {
+            axial_poles::gamma_gamma_density(&block, q, &couplings, &triangles, alpha, cut.as_ref())
+        })
+        .collect();
+    values.into_pyarray(py)
+}
+
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(hadronic_tensor, module)?)?;
     module.add_function(wrap_pyfunction!(current_projections, module)?)?;
@@ -235,5 +366,11 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(three_pi_current, module)?)?;
     module.add_function(wrap_pyfunction!(three_pi_differential_weight, module)?)?;
     module.add_function(wrap_pyfunction!(three_pi_spectral_functions, module)?)?;
+    module.add_function(wrap_pyfunction!(pole_source_couplings, module)?)?;
+    module.add_function(wrap_pyfunction!(pole_source_self_energy, module)?)?;
+    module.add_function(wrap_pyfunction!(pole_mixing_expansion, module)?)?;
+    module.add_function(wrap_pyfunction!(pole_invisible_widths, module)?)?;
+    module.add_function(wrap_pyfunction!(gamma_gamma_amplitude, module)?)?;
+    module.add_function(wrap_pyfunction!(gamma_gamma_density, module)?)?;
     Ok(())
 }
