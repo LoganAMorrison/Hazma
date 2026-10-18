@@ -1370,10 +1370,16 @@ _CORE_TEST_ONLY_MODULES = frozenset(
 #: cannot outlive it. ``hazma._core.axial`` is the visible-axial-spectra
 #: project's axial current kernels, compared against the NumPy
 #: implementation in ``test/form_factors/axial/axial_oracle.py`` by
-#: ``test/form_factors/axial/test_oracle.py``. Unlike
+#: ``test/form_factors/axial/test_oracle.py``.
+#: ``hazma._core.axial_vector_mediator`` is the same project's mediator
+#: rates, compared against the explicit-spinor evaluation in
+#: ``test/axial_vector_mediator/spinor_oracle.py`` by
+#: ``test/axial_vector_mediator/test_axial_vector_mediator.py``. Unlike
 #: :data:`_CORE_TEST_ONLY_MODULES`, a wrapper under `hazma/` does import
 #: these; what exempts them is that no corpus value depends on them.
-_CORE_NEW_PHYSICS_MODULES = frozenset({"hazma._core.axial"})
+_CORE_NEW_PHYSICS_MODULES = frozenset(
+    {"hazma._core.axial", "hazma._core.axial_vector_mediator"}
+)
 
 
 def rust_core_kernels() -> list[str]:

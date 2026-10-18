@@ -115,9 +115,11 @@ there. That second exemption is held honest by
 anything under `hazma/` imports one of them — at which point it is a
 served kernel and belongs back in the count. A third exemption,
 `cases._CORE_NEW_PHYSICS_MODULES`, skips submodules whose kernels port no
-Cython and so have no corpus case: today only `hazma._core.axial`, which
+Cython and so have no corpus case: `hazma._core.axial`, which
 `test/form_factors/axial/test_oracle.py` pins against a NumPy oracle
-instead. If a swap changes a number,
+instead, and `hazma._core.axial_vector_mediator`, which
+`test/axial_vector_mediator/test_axial_vector_mediator.py` pins against an
+explicit-spinor oracle. If a swap changes a number,
 the fix is a declared tolerance in the parity suite plus an entry in the
 project's numerical record, never a regenerated array.
 

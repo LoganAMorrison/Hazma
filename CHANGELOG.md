@@ -34,6 +34,18 @@ user-facing change even when no signature did.
   inserted pair cut. `AxialFormFactorGammaGamma` returns `A_L` in MeV^2 from
   the poles plus lepton and charm triangles, with `A_T = 0`, through
   1600 MeV. Existing public values are unchanged.
+- **`hazma.axial_vector_mediator.AxialVectorMediator`**, a `TheoryAnn` model
+  of a spin-1 mediator with vector and axial couplings to Dirac dark matter,
+  axial light-quark couplings from an `AxialCurrent`, and charged-lepton and
+  neutrino couplings from the new `LeptonCouplings`. It returns
+  `sigma v_Moller` and `sigma` in MeV^-2 per `chi chibar` pair for `e e`,
+  `mu mu`, `tau tau`, the three neutrino pairs, `pi pi pi0`, `pi0 pi0 pi0`
+  and `g g`, together with partial widths, thresholds and resonances. One
+  hadronic theory, `theory="chpt"`, is implemented; `"rcht"` raises
+  `NotImplementedError`. A total rate or width raises while an open final
+  state has no rate (`v v`, and `eta pi pi` for octet or singlet couplings),
+  rather than returning a zero. Its continuum photon and positron spectra
+  raise `NotImplementedError`. Existing public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

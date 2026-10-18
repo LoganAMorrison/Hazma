@@ -12,9 +12,10 @@ import numpy as np
 # the six consumed `def`s of `_c_vector_mediator_cross_sections.pyx`
 # (Task 5.1) and `scalar_mediator` with the twelve of its scalar twin
 # (Task 5.2). Both submodules grow again in Phase 06. A sixth, `axial`,
-# ports no Cython: it holds the visible-axial-spectra project's axial
-# current kernels, called only by the private wrappers in
-# `hazma/form_factors/axial/`.
+# and a seventh, `axial_vector_mediator`, port no Cython: they hold the
+# visible-axial-spectra project's axial current kernels and mediator
+# rates, called only by the wrappers in `hazma/form_factors/axial/` and
+# `hazma/axial_vector_mediator/`.
 #
 # The live roster is discovered rather than listed — `test/parity/
 # cases.py`'s `rust_core_kernels()` walks the extension — so this comment
