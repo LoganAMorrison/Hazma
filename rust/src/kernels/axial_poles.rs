@@ -127,9 +127,12 @@ impl MesonBlock {
     ///
     /// The cut adds `i γ a aᵀ`, `γ = ρ κ² f²`, to `D = diag(Δ_P)`, so
     /// Sherman–Morrison gives the exact `aᵀ D⁻¹ b = aᵀΔ⁻¹b / (1 + i γ aᵀΔ⁻¹a)`.
-    /// A meson with `a_P = 0` drops out of both sums exactly, even at its own
-    /// zero-width pole; a coupled zero-width pole is singular, with or
-    /// without a cut.
+    /// Both sums are multiplied through by the coupled `Δ*` nearest zero,
+    /// `aᵀ D⁻¹ b = Σ a_P b_P r_P / (Δ* + i γ Σ a_P² r_P)` with
+    /// `r_P = Δ*/Δ_P`, so no bare denominator is ever divided by: an open cut
+    /// keeps a zero-width pole finite. A meson with `a_P = 0` drops out
+    /// exactly, even at its own zero-width pole. Only a singular `D` remains
+    /// singular: a coupled zero-width pole with the cut closed.
     fn coherent_sum(
         &self,
         q: f64,
@@ -140,18 +143,31 @@ impl MesonBlock {
         let s = q * q;
         let a = self.source_traces(couplings);
         let delta = self.denominators(s);
-        let project = |v: &[f64; 3]| -> Complex64 {
-            (0..3)
-                .filter(|&p| a[p] != 0.0)
-                .map(|p| a[p] * v[p] / delta[p])
-                .sum()
+        let coupled = (0..3).filter(|&p| a[p] != 0.0);
+        let Some(nearest) = coupled
+            .clone()
+            .min_by(|&p, &r| delta[p].norm().total_cmp(&delta[r].norm()))
+        else {
+            return Complex64::new(0.0, 0.0);
         };
-        let mut sum = project(b);
+        let pivot = delta[nearest];
+        // r_P = Δ*/Δ_P has |r_P| ≤ 1; an exactly degenerate Δ_P = Δ* is one,
+        // which keeps two coincident zero-width poles from reading 0/0.
+        let ratio = |p: usize| {
+            if delta[p] == pivot {
+                Complex64::new(1.0, 0.0)
+            } else {
+                pivot / delta[p]
+            }
+        };
+        let numerator: Complex64 = coupled.clone().map(|p| a[p] * b[p] * ratio(p)).sum();
+        let mut denominator = pivot;
         if let Some(cut) = cut {
             let gamma = cut.absorptive_weight(s) * (cut.strength * self.decay_constant).powi(2);
-            sum /= Complex64::new(1.0, 0.0) + Complex64::i() * gamma * project(&a);
+            let weight: Complex64 = coupled.map(|p| a[p] * a[p] * ratio(p)).sum();
+            denominator += Complex64::i() * gamma * weight;
         }
-        s * sum
+        s * numerator / denominator
     }
 
     /// Return the meson-pole part `s cᵀ D(s)⁻¹ c` of the longitudinal
@@ -451,6 +467,33 @@ mod tests {
             let expected = 0.5 * mass * mass * a[0] * b[0] / Complex64::new(0.0, mass * width);
             assert!((amplitude - expected).norm() <= 1e-14 * expected.norm());
         }
+    }
+
+    #[test]
+    fn open_cut_keeps_a_stable_pole_finite() {
+        // With no visible width the π⁰ pole's only width is the cut's, so
+        // at q = m_π the aligned amplitude is ½ m² a b/(i m Γ_inv), and with
+        // the cut closed the inverse propagator itself is singular.
+        let aligned = [1e-3, -1e-3, 0.0];
+        let stable = block(MASSES, [0.0; 3]);
+        let a = stable.source_traces(&aligned);
+        let b = stable.photon_traces();
+        let mass = MASSES[0];
+        let open = InvisibleCut {
+            dm_mass: 20.0,
+            strength: 2.0 * 20.0 / 2500.0f64.powi(2),
+        };
+        let width = stable.invisible_widths(&aligned, &open)[0];
+        assert!(width > 0.0);
+        let amplitude = gamma_gamma_amplitude(&stable, mass, &aligned, &NO_TRIANGLES, Some(&open));
+        let expected = 0.5 * mass * mass * a[0] * b[0] / Complex64::new(0.0, mass * width);
+        assert!((amplitude - expected).norm() <= 1e-14 * expected.norm());
+        let closed = InvisibleCut {
+            dm_mass: mass,
+            ..open
+        };
+        let singular = gamma_gamma_amplitude(&stable, mass, &aligned, &NO_TRIANGLES, Some(&closed));
+        assert!(!singular.is_finite());
     }
 
     #[test]

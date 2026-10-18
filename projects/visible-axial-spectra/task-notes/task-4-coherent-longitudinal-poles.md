@@ -84,7 +84,9 @@ insertion is verified independently."
   works in the physical basis. The invisible cut is a rank-one update along
   the source direction `a_P = Tr(G_A lambda_P)`, so Sherman-Morrison gives
   `a^T D^-1 b = a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)` in closed form
-  with no linear solve, and a meson with `a_P = 0` is skipped exactly. The
+  with no linear solve, and a meson with `a_P = 0` is skipped exactly. Both
+  sums are multiplied through by the coupled `Delta` nearest zero, so an
+  open cut keeps a zero-width pole finite and only a singular `D` raises. The
   heavy-fermion triangle `1 - tau arcsin^2` is summed as a series for
   `s/(4 m^2) <= 1/4`, where the subtraction would cancel. The oracle
   inverts the full 4x4 kernel over `(a, pi3, eta8, eta0)` in the generator
@@ -113,7 +115,7 @@ insertion is verified independently."
   `TriangleCouplings` and `MIXING_GUARD`.
 - `test/form_factors/axial/axial_oracle.py`: full-kernel and Dirac-trace
   oracle.
-- `test/form_factors/axial/test_poles.py`: 41 tests.
+- `test/form_factors/axial/test_poles.py`: 48 tests.
 - `projects/visible-axial-spectra/adrs/ADR-0003-proca-embedding-of-longitudinal-meson-poles.md`,
   with a link from `PLAN.md`.
 - `docs/source/form_factors.rst` and `CHANGELOG.md` (Unreleased, Added).
@@ -123,14 +125,14 @@ insertion is verified independently."
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes`: 323 passed (9 new), with clippy `-D warnings`
+  --features test-probes`: 324 passed (10 new), with clippy `-D warnings`
   clean.
-- `.venv/bin/python -m pytest -n 0 -q test/form_factors/axial`: 317 passed.
+- `.venv/bin/python -m pytest -n 0 -q test/form_factors/axial`: 324 passed.
 - With the worktree `.venv/bin` on PATH,
   `scripts/agents/preflight.sh --paths "hazma/form_factors/axial
   test/form_factors/axial"`, with `--md` naming the five touched Markdown
   files, gives `RESULT: PASS` on every row. The pytest row reads
-  `2873 passed, 16 skipped, 20 warnings, 127 subtests passed`, and ruff
+  `2880 passed, 16 skipped, 20 warnings, 127 subtests passed`, and ruff
   reads `0 new, 2 fixed`.
 - Tolerances measured on macOS/arm64:
 
@@ -159,7 +161,7 @@ Findings from a generalist (A) and a numerics (E) reviewer on PR #128.
 |---|---|---|---|
 | E1, A4 | Triangle `1 - tau asin^2` cancels for `s << m^2` (charm 29% off at 1e-4 MeV) | Accepted | Series for `x <= 1/4`; all four fermions pinned to an inline 40-digit mpmath table, since CI's test job does not install the regeneration-only `mpmath` |
 | E3 | 3x3 pivoted solve ill-conditioned when the cut dominates | Accepted | Sherman-Morrison closed form; solve removed |
-| E4, A1 | A decoupled zero-width pole gives `0*inf = NaN` | Accepted | Skipped exactly; a coupled zero-width pole is now singular even with a cut |
+| E4, A1 | A decoupled zero-width pole gives `0*inf = NaN` | Accepted | Skipped exactly |
 | E2 | Per-pole guard can understate the Schur correction up to 3x | Accepted | Documented in `mixing_expansion` and ADR-0003 |
 | E5 | The kept cut is smaller than the dropped Schur term by `Pi_aa/M^2` | Accepted | Documented in `InvisibleCut` and ADR-0003 |
 | E6 | Conditioning figure "~1e6" wrong | Accepted | Recomputed: 1.4e5 at q = 135.0 MeV |
@@ -170,6 +172,20 @@ Findings from a generalist (A) and a numerics (E) reviewer on PR #128.
 
 The heavy-triangle reference test also tightened to rel 1e-10. No existing
 public value moves, so the numerical-impact result stands.
+
+A second generalist review (head `39e2bd42`) found one blocking issue, P2:
+dividing by the bare `Delta_P` before Sherman-Morrison raised at a pole of
+zero visible width even when an open cut makes `D` invertible. For example,
+`pion_width = 0`, source `(1e-3, -1e-3, 0)` and `InvisibleCut(20, 1, 2500)`
+at `q = m_pi` raised. The exact value is `-1.8893751744e10 i`. The fix,
+accepted, multiplies both sums through by the coupled `Delta` nearest zero.
+`test_open_cut_keeps_a_stable_pole_finite` pins all three zero-width poles,
+at two cut strengths, against a physical-basis direct inverse. That inverse
+is good to 6e-16 against 50-digit mpmath, and the kernel to at most 4.9e-14,
+under a 2e-13 tolerance. The generator-basis 4x4 oracle is unusable there,
+with a condition number up to 6e10. A Rust test and an aligned-pion
+closed-form test cover the same limit, and with the cut closed the pole
+still raises.
 
 ## Open Questions
 
@@ -211,10 +227,10 @@ tables below are folded by hand from the commands named in each row.
 
 | Claim location | Command | Actual | Status |
 |---|---|---|---|
-| Verification "317 passed" | `pytest -n 0 -q test/form_factors/axial` | 317 | EDITED |
-| Files Changed "41 tests" | `pytest --collect-only test/form_factors/axial/test_poles.py` | 41 | EDITED |
-| Verification "9 new" Rust tests | `rg -c '#\[test\]' rust/src/kernels/axial_poles.rs` | 9 | EDITED |
-| README "323 Rust tests" | `cargo test` (preflight) | 323 | EDITED |
+| Verification "324 passed" | `pytest -n 0 -q test/form_factors/axial` | 324 | EDITED |
+| Files Changed "48 tests" | `pytest --collect-only test/form_factors/axial/test_poles.py` | 48 | EDITED |
+| Verification "10 new" Rust tests | `rg -c '#\[test\]' rust/src/kernels/axial_poles.rs` | 10 | EDITED |
+| README "324 Rust tests" | `cargo test` (preflight) | 324 | EDITED |
 | lib.rs "six per-domain submodules" | `dir(hazma._core)` modules | six | KEPT |
 
 - **Numerical-impact statement.** No public value changes (verified:

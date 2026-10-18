@@ -332,7 +332,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   zero set. Find every parameter point where the new divisor vanishes —
   thresholds such as `m = 2 m_e` are the usual ones — and evaluate there with
   the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
-  into `NaN` that no tolerance catches (PR #103, #118).
+  into `NaN` that no tolerance catches. A closed form that divides by a bare
+  factor before applying the term that regularizes it has the same zero set
+  (PR #103, #118, #128).
 - [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
   `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
   becomes a finite limit and a finite result. Clip with a comparison that

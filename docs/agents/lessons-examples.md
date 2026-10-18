@@ -1484,6 +1484,18 @@ branch of the underlying kernel that "any" reaches.
   `[nan, nan]`. The repair returns zeros for a mediator with no open decay,
   and `test_v_v_vanishes_for_a_stable_mediator` pins all four spectra.
 
+- PR #128 resummed the invisible cut in `axial_poles.rs` with
+  Sherman-Morrison. The expression was
+  `a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)`, and it divided by each bare
+  pole denominator `Delta_P` before the cut's width could enter. Review set
+  `pion_width = 0` with an open `InvisibleCut(20, 1, 2500)` and evaluated
+  at `q = m_pi`. The dressed matrix was invertible, with exact value
+  `-1.8893751744e10 i`, but the amplitude raised on `inf/inf`. The repair
+  multiplies both sums through by the coupled `Delta` nearest zero, so no
+  bare denominator is divided by.
+  `test_open_cut_keeps_a_stable_pole_finite` pins every zero-width pole
+  against a direct inverse, and the closed-cut case still raises.
+
 ### float-clip-swallows-nan
 
 - PR #105 clipped the charged-pion neutrino boost window at the muon

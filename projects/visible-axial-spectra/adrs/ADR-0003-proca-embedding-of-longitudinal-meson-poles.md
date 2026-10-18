@@ -48,7 +48,10 @@ Task 15's invisible branching ratios read the same residues.
   along the source direction `a_P = Tr(G_A lambda_P)` itself, so
   Sherman-Morrison gives the exact inverse in closed form,
   `a^T D^-1 b = a^T Delta^-1 b/(1 + i gamma a^T Delta^-1 a)`, with no
-  linear solve. A meson with `a_P = 0` drops out exactly.
+  linear solve. Both sums are multiplied through by the coupled `Delta`
+  nearest zero, so an open cut keeps a pole of zero visible width finite,
+  and only a singular `D` raises. A meson with `a_P = 0` drops out
+  exactly.
 - **The invisible cut is inserted once.** Moving the `a`-line pair cut onto
   the mesons gives `y_P = kappa c_P`, `kappa = 2 m_chi g_A^chi/M^2`, and the
   rank-one absorptive matrix `i s beta_chi kappa^2 c c^T/(8 pi)`. Its

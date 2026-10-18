@@ -164,7 +164,8 @@ class AxialMesonPoles:
     ``mixing_angle_deg = -15.4`` degrees, and ``decay_constant = 92.2`` MeV
     for the common octet and singlet ``f``. Zero masses and widths are
     allowed for chiral-limit and residue checks; an exact pole of zero width
-    is then singular and raises.
+    is then singular and raises, unless an open :class:`InvisibleCut` gives
+    it a width.
     """
 
     pion_mass: float = parameters.neutral_pion_mass

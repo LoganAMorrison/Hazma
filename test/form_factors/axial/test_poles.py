@@ -337,6 +337,58 @@ def test_invisible_cut_inserted_once_matches_the_mediator_line_cut() -> None:
     ) == GAMMA_GAMMA.amplitude(39.0, HYPERCHARGE, NO_TRIANGLES)
 
 
+@pytest.mark.parametrize("dm_axial", [1.0, 3e3])
+@pytest.mark.parametrize("pole", range(3))
+def test_open_cut_keeps_a_stable_pole_finite(dm_axial: float, pole: int) -> None:
+    """With no visible width, an open cut alone regularizes each pole.
+
+    The reference inverts the physical-basis matrix
+    ``diag(s - m_P²) + i s Pi_aa c c^T/M⁴`` directly, with Pi_aa from the
+    oracle's Dirac traces. Against 50-digit mpmath that solve is good to
+    6e-16 and the kernel to at most 4.9e-14 (macOS/arm64); 2e-13 allows
+    platform rounding. The generator-basis 4x4 oracle is not used here: with
+    no visible width its condition number reaches 6e10.
+    """
+    stable = AxialFormFactorGammaGamma(
+        poles=AxialMesonPoles(pion_width=0.0, eta_width=0.0, eta_prime_width=0.0)
+    )
+    dm_mass, mediator_mass = 20.0, 2500.0
+    cut = InvisibleCut(dm_mass=dm_mass, dm_axial=dm_axial, mediator_mass=mediator_mass)
+    rotation = oracle.physical_rotation(ANGLE)
+    a = rotation @ oracle.OCTET_SINGLET @ _flavors(HYPERCHARGE)
+    b = rotation @ oracle.photon_traces()
+    q = MASSES[pole]
+    pair = oracle.longitudinal_pair_cut(q, dm_mass, 0.7, dm_axial)
+    gamma = q * q * pair * 92.2**2 / mediator_mass**4
+    inverse_propagator = np.diag(q * q - MASSES**2 + 0j) + 1j * gamma * np.outer(a, a)
+    expected = 0.5 * q * q * a @ np.linalg.solve(inverse_propagator, b + 0j)
+    actual = stable.amplitude(q, HYPERCHARGE, NO_TRIANGLES, invisible=cut)
+    assert abs(actual - expected) <= 2e-13 * abs(expected)
+    # Below the pair threshold the cut is closed and the pole stays singular.
+    closed = InvisibleCut(dm_mass=q, dm_axial=dm_axial, mediator_mass=mediator_mass)
+    with pytest.raises(ValueError, match="zero width"):
+        stable.amplitude(q, HYPERCHARGE, NO_TRIANGLES, invisible=closed)
+
+
+def test_open_cut_on_an_aligned_stable_pion_is_one_breit_wigner() -> None:
+    """G_A = g lambda_pi couples only the pi0: A = (1/2) m² a b/(i m Gamma_inv).
+
+    This is the configuration that once raised although the dressed
+    propagator is invertible; the closed form gives -1.8893751744e10 i.
+    """
+    aligned = _current(1e-3, -1e-3, 0.0)
+    poles = AxialMesonPoles(pion_width=0.0)
+    cut = InvisibleCut(dm_mass=20.0, dm_axial=1.0, mediator_mass=2500.0)
+    width = poles.invisible_widths(aligned, cut)[0]
+    mass = poles.pion_mass
+    amplitude = AxialFormFactorGammaGamma(poles=poles).amplitude(
+        mass, aligned, NO_TRIANGLES, invisible=cut
+    )
+    expected = 0.5 * mass**2 * 2e-3 * 1.0 / (1j * mass * width)
+    assert amplitude == pytest.approx(expected, rel=1e-14)
+    assert amplitude.imag == pytest.approx(-1.8893751744e10, rel=1e-10)
+
+
 def test_invisible_widths_reproduce_the_note_benchmarks() -> None:
     """Gamma(P -> chi chibar) against the note's quoted values (sec:ax-inv).
 
