@@ -43,6 +43,7 @@ hazma/
 ├── scalar_mediator/    # concrete models …
 ├── vector_mediator/
 ├── rh_neutrino/
+├── axial_vector_mediator/
 ├── single_channel.py
 ├── form_factors/       # hadronic form factors
 ├── phase_space/        # RAMBO and friends
@@ -73,7 +74,8 @@ The dependency direction is one-way; do not invert it.
 4. **Theory** (`theory/`) — the abstract model interface, plus the
    gamma-ray-limit, CMB, and constraint mixins.
 5. **Models** (`scalar_mediator/`, `vector_mediator/`, `rh_neutrino/`,
-   `single_channel.py`) — concrete `Theory` implementations.
+   `axial_vector_mediator/`, `single_channel.py`) — concrete `Theory`
+   implementations.
 6. **Analysis** (`limits/`, `relic_density/`, `cmb.py`, `pbh.py`) —
    consumes models.
 

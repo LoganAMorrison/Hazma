@@ -214,6 +214,7 @@ jobs:
               "scalar_mediator",
               "vector_mediator",
               "axial",
+              "axial_vector_mediator",
           }
           found = {
               name

@@ -78,6 +78,10 @@ note. Corrections that move existing published numbers are out of scope
   oracle](adrs/ADR-0002-rust-kernels-and-numpy-oracle.md).
 - [Proca embedding of the longitudinal meson
   poles](adrs/ADR-0003-proca-embedding-of-longitudinal-meson-poles.md).
+- [One hadronic theory per model and declared channel
+  coverage](adrs/ADR-0004-one-hadronic-theory-and-declared-channel-coverage.md).
+- [Rates per pair in sigma
+  v_Moller](adrs/ADR-0005-rates-per-pair-in-sigma-v-moller.md).
 - [LO three-pion derivation](references/lo-three-pion.md).
 - [Scope sources and acceptance references](references/scope-and-acceptance.md):
   benchmark values with their note labels, the channel validity table, and the

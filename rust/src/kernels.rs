@@ -60,8 +60,12 @@
 //! and are named for the kernel modules that project's plan lays out. Their
 //! oracle is the NumPy implementation in
 //! `test/form_factors/axial/axial_oracle.py` rather than the parity corpus.
+//! [`axial_rates`], the same project's mediator rates behind
+//! `hazma/axial_vector_mediator/`, is pinned instead by the explicit-spinor
+//! evaluation in `test/axial_vector_mediator/spinor_oracle.py`.
 
 pub mod axial_poles;
+pub mod axial_rates;
 pub mod axial_tensors;
 pub mod axial_three_pi;
 pub mod mediator_decay_positron;

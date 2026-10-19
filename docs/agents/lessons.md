@@ -375,3 +375,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   ordinary arguments does not see it. Sum the series where it converges
   fast, join the two branches at a pinned point, and pin every branch
   against a high-precision reference across the whole support (PR #128).
+- [property-rule-keyed-on-one-name] A rule that follows from a structural
+  property, such as a channel with no transverse density vanishing without
+  an axial coupling, is keyed on the property, declared once, and applied
+  to every member and every derived output, such as thresholds and the
+  resonances the channel produces. Keyed on the one name that prompted it,
+  it misses the siblings that share the property (PR #129).
