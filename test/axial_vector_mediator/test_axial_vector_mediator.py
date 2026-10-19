@@ -292,12 +292,92 @@ def test_rates_reject_points_past_the_mixing_guard() -> None:
         model.annihilation_sigma_v_funcs()["e e"](parameters.neutral_pion_mass)
 
 
-def test_continuum_spectra_are_not_fabricated() -> None:
+#: Edges that hold every e± of a 500 MeV annihilation: no e± is below its
+#: rest energy, and the hardest, the "e e" line, is at 250 MeV.
+LEPTON_EDGES = np.geomspace(parameters.electron_mass, 400.0, 21)
+
+
+def test_rest_frame_counts_carry_each_charged_lepton() -> None:
+    # One e⁺ per annihilation from the μ⁺ of "mu mu", the π⁺ of "pi pi pi0"
+    # and the "e e" line, and CP gives as many e⁻. The three-pion folds are
+    # integrated to 1e-8, so 1e-7.
     model = _model()
-    with pytest.raises(NotImplementedError, match="photon"):
-        model.spectra(np.array([10.0]), 400.0)
-    with pytest.raises(NotImplementedError, match="positron"):
-        model.positron_spectra(np.array([10.0]), 400.0)
+    positrons = model.rest_frame_counts(LEPTON_EDGES, 500.0, product="positron")
+    both = model.rest_frame_counts(LEPTON_EDGES, 500.0, product="electron_positron")
+    for fs in ("e e", "mu mu", "pi pi pi0"):
+        assert np.sum(positrons[fs]) == pytest.approx(1.0, rel=1e-7)
+        np.testing.assert_allclose(both[fs], 2.0 * positrons[fs], rtol=1e-14)
+    assert np.sum(positrons["pi0 pi0 pi0"]) == 0.0
+
+
+def test_rest_frame_counts_round_trip_by_bin_width() -> None:
+    # A bin of relative width 1e-6 holds the density times its width up to
+    # a second-order error near 1e-12; the muon kernels are good to 1e-10.
+    model = _model()
+    energy, width = 40.0, 40e-6
+    edges = np.array([energy - width / 2.0, energy + width / 2.0])
+    for product in ("positron", "neutrino", "photon"):
+        counts = model.rest_frame_counts(edges, 400.0, product=product)["mu mu"]
+        density = model.rest_frame_yields(energy, 400.0, product=product)["mu mu"]
+        np.testing.assert_allclose(counts[..., 0] / width, density, rtol=1e-8)
+
+
+def test_neutrino_yields_are_per_flavor() -> None:
+    model = _model()
+    scalar = model.rest_frame_yields(10.0, 400.0, product="neutrino")["mu mu"]
+    array = model.rest_frame_yields(np.array([10.0, 20.0]), 400.0, product="neutrino")
+    assert scalar.shape == (3,)
+    assert array["mu mu"].shape == (3, 2)
+    np.testing.assert_array_equal(array["mu mu"][:, 0], scalar)
+    assert scalar[2] == 0.0
+    lines = model.rest_frame_lines(400.0, product="neutrino")
+    np.testing.assert_array_equal(lines["vm vm"]["multiplicity"], [0.0, 2.0, 0.0])
+    assert lines["vm vm"]["energy"] == pytest.approx(400.0 / 2.0, rel=0.0)
+
+
+def test_lines_on_the_last_edge_are_counted() -> None:
+    model = _model()
+    # The two photons of "g g" sit exactly on the last edge, e_cm/2.
+    counts = model.rest_frame_counts(np.array([150.0, 200.0]), 400.0, product="photon")
+    np.testing.assert_array_equal(counts["g g"], [2.0])
+
+
+def test_spectra_weight_the_rest_frame_yields() -> None:
+    model = _model()
+    energies = np.array([10.0, 30.0])
+    bfs = model.annihilation_branching_fractions(400.0)
+    yields = model.rest_frame_yields(energies, 400.0, product="positron")
+    spectra = model.positron_spectra(energies, 400.0)
+    np.testing.assert_allclose(spectra["mu mu"], bfs["mu mu"] * yields["mu mu"])
+    assert np.all(model.spectra(energies, 400.0)["total"] > 0.0)
+
+
+def test_tau_yields_are_refused() -> None:
+    taus_only = LeptonCouplings(
+        gvee=0.0,
+        gaee=0.0,
+        gvmumu=0.0,
+        gamumu=0.0,
+        gvtautau=0.5,
+        gatautau=0.0,
+        gnue=0.0,
+        gnumu=0.0,
+        gnutau=0.0,
+    )
+    # A heavy mediator keeps the unmodeled "v v" closed.
+    model = _model(mv=5000.0, quarks=ZERO, leptons=taus_only)
+    with pytest.raises(ValueError, match="tau decay"):
+        model.rest_frame_yields(10.0, 3600.0, product="positron")
+
+
+def test_rest_frame_inputs_are_validated() -> None:
+    model = _model()
+    with pytest.raises(ValueError, match="product"):
+        model.rest_frame_yields(10.0, 400.0, product="proton")
+    with pytest.raises(ValueError, match="increasing"):
+        model.rest_frame_counts(np.array([2.0, 1.0]), 400.0, product="positron")
+    with pytest.raises(ValueError, match="positive"):
+        model.rest_frame_yields(0.0, 400.0, product="photon")
 
 
 def test_setters_recompute_the_width_or_change_nothing() -> None:

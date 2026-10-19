@@ -13,7 +13,7 @@
 | 3 | Rust port of the Task 1-2 numerics | 1, 2 | Complete | `task-3-rust-port.md` |
 | 4 | Coherent longitudinal poles | 3 | Complete | `task-4-coherent-longitudinal-poles.md` |
 | 5 | Rates and mediator model | 3, 4 | Complete | `task-5-rates-and-mediator-model.md` |
-| 6 | Rest frame yields | 5 | Not started | — |
+| 6 | Rest frame yields | 5 | In Progress | `task-6-rest-frame-yields.md` |
 | 7 | Polarized cascades | 6; 14 for model-generated pair densities | Not started | — |
 | 8 | Resolved photons | 6; 7 for polarized boosts | Not started | — |
 | 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Not started | — |

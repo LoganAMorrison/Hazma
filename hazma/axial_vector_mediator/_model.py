@@ -1,10 +1,9 @@
-"""The axial-vector mediator model and its annihilation rates."""
+"""The axial-vector mediator model, its annihilation rates and its yields."""
 
 from __future__ import annotations
 
 from collections.abc import Callable
 from functools import partial
-from typing import NoReturn
 
 import numpy as np
 
@@ -32,6 +31,23 @@ _THREE_PIONS = ("pi pi pi0", "pi0 pi0 pi0")
 #: through the axial contact: "g g" by Landau-Yang, and the LO three neutral
 #: pions because only the pion pole produces them.
 _LONGITUDINAL_ONLY = ("pi0 pi0 pi0", "g g")
+_PRODUCTS = ("photon", "positron", "electron_positron", "neutrino")
+_NEUTRINO_FLAVORS = {"ve ve": 0, "vm vm": 1, "vt vt": 2}
+
+
+def _line_multiplicity(final_state: str, product: str) -> float | np.ndarray | None:
+    """Return a final state's primary-line multiplicity of ``product``, if any."""
+    if product == "photon" and final_state == "g g":
+        return 2.0
+    if product == "positron" and final_state == "e e":
+        return 1.0
+    if product == "electron_positron" and final_state == "e e":
+        return 2.0
+    if product == "neutrino" and final_state in _NEUTRINO_FLAVORS:
+        multiplicity = np.zeros(3)
+        multiplicity[_NEUTRINO_FLAVORS[final_state]] = 2.0
+        return multiplicity
+    return None
 
 
 def _scalar_or_array(value: np.ndarray) -> float | np.ndarray:
@@ -121,6 +137,11 @@ class AxialVectorMediator(TheoryAnn):
     of zero width. Totals raise while a final state this model does not
     compute is open: the mediator pair ``"v v"`` and, for a source with
     octet or singlet directions, ``eta pi0 pi0`` and ``eta pi pi``.
+
+    `rest_frame_yields`, `rest_frame_counts` and `rest_frame_lines` give the
+    photon, e⁺, e± and neutrino yields of each final state in the
+    centre-of-mass frame, and `spectra` and `positron_spectra` weight their
+    photon and e⁺ continua by the branching fractions.
     """
 
     def __init__(  # noqa: PLR0913 - the model's parameters
@@ -552,15 +573,289 @@ class AxialVectorMediator(TheoryAnn):
         widths["total"] = sum(widths.values())
         return widths
 
-    def _spectrum_funcs(self) -> NoReturn:
-        raise NotImplementedError(
-            "AxialVectorMediator does not compute continuum photon spectra."
+    def _rate_parts(self, final_state: str, e_cm: float) -> tuple[float, float]:
+        r"""Return the transverse and longitudinal rates of an open final state.
+
+        Both are :math:`\sigma v` in MeV⁻² at ``e_cm`` in MeV, and sum to its rate.
+        """
+        q = np.array([e_cm])
+        if self._gaxx != 0.0:
+            self._check_mixing(q)
+        transverse, longitudinal = self._densities(final_state, q)
+        dark = (self._mx, self._gvxx, self._gaxx, self._mv, self._width_v)
+        zero = np.zeros_like(q)
+        return (
+            float(_rates.sigma_v(q, transverse, zero, dark)[0]),
+            float(_rates.sigma_v(q, zero, longitudinal, dark)[0]),
         )
 
-    def _positron_spectrum_funcs(self) -> NoReturn:
-        raise NotImplementedError(
-            "AxialVectorMediator does not compute continuum positron spectra."
+    def _muon_polarization(self, e_cm: float) -> float:
+        """Return the effective polarization of each muon of ``"mu mu"``.
+
+        It is the μ⁻ helicity, the helicity-weighted rate over the rate,
+        and equals minus the μ⁺ helicity (see `rest_frame_yields`).
+        """
+        q = np.array([e_cm])
+        mass, vector, axial = self._fermion_pair("mu mu")
+        helicity = _rates.fermion_pair_helicity_density(q, mass, vector, axial, 1.0)
+        dark = (self._mx, self._gvxx, self._gaxx, self._mv, self._width_v)
+        weighted = float(_rates.sigma_v(q, helicity, np.zeros_like(q), dark)[0])
+        return weighted / sum(self._rate_parts("mu mu", e_cm))
+
+    def _open_final_states(self, e_cm: float) -> list[str]:
+        """Return the final states with a nonzero rate at ``e_cm`` in MeV."""
+        return [
+            fs
+            for fs in self.list_annihilation_final_states()
+            if self._sigma_v(fs, e_cm) > 0.0
+        ]
+
+    def _continuum(
+        self,
+        final_state: str,
+        product: str,
+        points: np.ndarray,
+        e_cm: float,
+        *,
+        binned: bool,
+    ) -> np.ndarray:
+        """Return one open final state's continuum yields as rows.
+
+        The rows are ``[e⁺, e⁻]`` for ``"charged_lepton"``, the flavors for
+        ``"neutrino"`` and one row for ``"photon"``, with a column per
+        energy in ``points``, or per bin between its edges when ``binned``.
+        """
+        rows = {"photon": 1, "charged_lepton": 2, "neutrino": 3}[product]
+        columns = points.size - 1 if binned else points.size
+        if final_state == "tau tau":
+            raise ValueError(
+                "The tau tau yields are undefined: this model has no tau decay "
+                "kernels."
+            )
+        if final_state == "mu mu":
+            polarization = self._muon_polarization(e_cm)
+            return _rates.muon_pair_yields(
+                product, points, binned, e_cm / 2.0, polarization
+            )
+        if final_state in _THREE_PIONS:
+            transverse, longitudinal = self._rate_parts(final_state, e_cm)
+            parents = (
+                final_state == "pi0 pi0 pi0",
+                e_cm,
+                parameters.neutral_pion_mass,
+                transverse / (transverse + longitudinal),
+            )
+            return _rates.three_pion_yields(product, points, binned, parents)
+        # Lepton and neutrino pairs and "g g" are primary lines alone.
+        return np.zeros((rows, columns))
+
+    @staticmethod
+    def _product_rows(product: str, rows: np.ndarray) -> np.ndarray:
+        """Select ``product``'s yield from a final state's continuum rows."""
+        if product == "positron":
+            return rows[0]
+        if product == "electron_positron":
+            return rows[0] + rows[1]
+        if product == "photon":
+            return rows[0]
+        return rows
+
+    @staticmethod
+    def _kernel_product(product: str) -> str:
+        if product not in _PRODUCTS:
+            raise ValueError(f"product must be one of {', '.join(_PRODUCTS)}.")
+        if product in ("positron", "electron_positron"):
+            return "charged_lepton"
+        return product
+
+    @staticmethod
+    def _check_energies(points: np.ndarray, product: str, name: str) -> None:
+        if product == "photon" and np.any(points <= 0.0):
+            raise ValueError(f"Photon {name} must be positive.")
+        if np.any(points < 0.0):
+            raise ValueError(f"{name} must be nonnegative.")
+
+    def rest_frame_yields(
+        self, energies: RealOrRealArray, e_cm: float, *, product: str
+    ) -> dict[str, float | np.ndarray]:
+        r"""Return each open final state's continuum yield :math:`dN/dE`.
+
+        The yield is per annihilation into that final state, in the
+        :math:`\chi\bar\chi` centre-of-mass frame, with every particle of
+        the state and of its decays counted and no branching fraction
+        applied; `annihilation_branching_fractions` weights the states.
+        Primary lines are excluded and given by `rest_frame_lines`;
+        `rest_frame_counts` bins both.
+
+        Parameters
+        ----------
+        energies : float or array_like
+            Particle energies in MeV: total energies for e±, positive for
+            photons and nonnegative otherwise.
+        e_cm : float
+            Center-of-mass energy in MeV.
+        product : {"photon", "positron", "electron_positron", "neutrino"}
+            ``"positron"`` counts e⁺ only, and ``"electron_positron"`` is the
+            charge-summed e⁺ + e⁻ injection. ``"neutrino"`` is
+            :math:`\nu + \bar\nu` per flavor (e, μ, τ).
+
+        Returns
+        -------
+        dict of str to float or numpy.ndarray
+            :math:`dN/dE` in MeV⁻¹ for each final state with a nonzero rate
+            at ``e_cm``, shaped like ``energies``, with a leading flavor axis
+            of length 3 for neutrinos.
+
+        Raises
+        ------
+        ValueError
+            If ``"tau tau"`` is open, since this model has no tau decay
+            kernels, or if a rate raises at ``e_cm``.
+
+        Notes
+        -----
+        Muons and charged pions decay through the Born V-A muon decay with
+        a finite electron mass and the muon spin: fully polarized from
+        :math:`\pi\to\mu\nu`, and in a ``"mu mu"`` pair with the μ⁻
+        helicity of the chiral couplings, which CP gives the μ⁺ as minus
+        its helicity, so the pair's e⁺ and e⁻ yields agree. The three
+        pions of the LO currents share one mass,
+        :data:`hazma.parameters.neutral_pion_mass`, and each decays at its
+        production Lorentz factor with its physical mass. Their energy
+        spectra mix the transverse and longitudinal Dalitz weights in
+        proportion to each one's :math:`\sigma v`. Photons are
+        :math:`\pi^0\to\gamma\gamma` and Hazma's unpolarized radiative
+        muon and charged-pion decays; the :math:`\pi^0` Dalitz decay and
+        primary radiation are not included.
+        """
+        kernel_product = self._kernel_product(product)
+        values = _real_array(energies, "energies")
+        self._check_energies(values, product, "energies")
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        points = np.ascontiguousarray(values.reshape(-1))
+        yields = {}
+        for fs in self._open_final_states(e_cm):
+            rows = self._continuum(fs, kernel_product, points, e_cm, binned=False)
+            selected = self._product_rows(product, rows)
+            shape = (*selected.shape[:-1], *values.shape)
+            yields[fs] = _scalar_or_array(selected.reshape(shape))
+        return yields
+
+    def rest_frame_lines(
+        self, e_cm: float, *, product: str
+    ) -> dict[str, dict[str, float | np.ndarray]]:
+        """Return each open final state's primary lines.
+
+        Parameters
+        ----------
+        e_cm : float
+            Center-of-mass energy in MeV.
+        product : {"photon", "positron", "electron_positron", "neutrino"}
+            As in `rest_frame_yields`.
+
+        Returns
+        -------
+        dict of str to dict
+            For each final state with a line and a nonzero rate,
+            ``"energy"`` in MeV and ``"multiplicity"``, the particles per
+            annihilation into that state, an array over the flavors
+            (e, μ, τ) for neutrinos.
+        """
+        self._kernel_product(product)
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        lines = {}
+        for fs in self._open_final_states(e_cm):
+            multiplicity = _line_multiplicity(fs, product)
+            if multiplicity is not None:
+                lines[fs] = {"energy": e_cm / 2.0, "multiplicity": multiplicity}
+        return lines
+
+    def rest_frame_counts(
+        self, edges: np.ndarray, e_cm: float, *, product: str
+    ) -> dict[str, np.ndarray]:
+        """Return each open final state's yield in energy bins, lines included.
+
+        Bin ``i`` is ``[edges[i], edges[i + 1])``, and a line exactly at the
+        last edge belongs to the last bin. The continuum of a bin of width
+        ``ΔE`` tends to ``rest_frame_yields(E) ΔE`` as it shrinks.
+
+        Parameters
+        ----------
+        edges : array_like
+            Strictly increasing bin edges in MeV, at least two: total
+            energies for e±, positive for photons and nonnegative otherwise.
+        e_cm : float
+            Center-of-mass energy in MeV.
+        product : {"photon", "positron", "electron_positron", "neutrino"}
+            As in `rest_frame_yields`.
+
+        Returns
+        -------
+        dict of str to numpy.ndarray
+            Particles per annihilation into each final state with a nonzero
+            rate, one per bin, with a leading flavor axis of length 3 for
+            neutrinos.
+
+        Raises
+        ------
+        ValueError
+            As `rest_frame_yields` does.
+        """
+        kernel_product = self._kernel_product(product)
+        points = _real_array(edges, "edges")
+        if (
+            points.ndim != 1
+            or points.size < 2  # noqa: PLR2004 - a bin needs two edges
+            or np.any(np.diff(points) <= 0.0)
+        ):
+            raise ValueError(
+                "edges must be a strictly increasing 1-D array of two or more."
+            )
+        self._check_energies(points, product, "edges")
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        points = np.ascontiguousarray(points)
+        counts = {}
+        for fs in self._open_final_states(e_cm):
+            rows = self._continuum(fs, kernel_product, points, e_cm, binned=True)
+            selected = np.array(self._product_rows(product, rows))
+            multiplicity = _line_multiplicity(fs, product)
+            if multiplicity is not None:
+                index = np.searchsorted(points, e_cm / 2.0, side="right") - 1
+                if e_cm / 2.0 == points[-1]:
+                    index = points.size - 2
+                if 0 <= index < points.size - 1:
+                    selected[..., index] += multiplicity
+            counts[fs] = selected
+        return counts
+
+    def _spectrum_funcs(
+        self,
+    ) -> dict[str, Callable[[RealOrRealArray, float], float | np.ndarray]]:
+        return {
+            fs: partial(self._final_state_yield, fs, "photon")
+            for fs in self.list_annihilation_final_states()
+        }
+
+    def _positron_spectrum_funcs(
+        self,
+    ) -> dict[str, Callable[[RealOrRealArray, float], float | np.ndarray]]:
+        return {
+            fs: partial(self._final_state_yield, fs, "positron")
+            for fs in self.list_annihilation_final_states()
+        }
+
+    def _final_state_yield(
+        self, final_state: str, product: str, energies: RealOrRealArray, e_cm: float
+    ) -> float | np.ndarray:
+        """Return one final state's continuum yield, as `rest_frame_yields`."""
+        values = _real_array(energies, "energies")
+        self._check_energies(values, product, "energies")
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        points = np.ascontiguousarray(values.reshape(-1))
+        rows = self._continuum(
+            final_state, self._kernel_product(product), points, e_cm, binned=False
         )
+        return _scalar_or_array(self._product_rows(product, rows).reshape(values.shape))
 
     def _gamma_ray_line_energies(self, e_cm: float) -> dict[str, float]:
         """Return the photon energy in MeV of each line final state."""
