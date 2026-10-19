@@ -59,9 +59,9 @@ projects/visible-axial-spectra/references/check_public_impact.py`.
 
 ## Verification
 
-After Task 5 the model suite `test/axial_vector_mediator` passed 38 tests
+After Task 5 the model suite `test/axial_vector_mediator` passed 40 tests
 and the `axial_rates` Rust unit tests passed 9. Path-scoped preflight passed
-with 2,918 tests, 16 skips and 127 subtests. Exact commands and literal
+with 2,920 tests, 16 skips and 127 subtests. Exact commands and literal
 summaries are in the completed task notes. The literal gate output for Tasks
 1-2 is `projects/visible-axial-spectra/task-notes/preflight.txt`, for Task 4
 it is `projects/visible-axial-spectra/task-notes/preflight-task-4.txt`, and

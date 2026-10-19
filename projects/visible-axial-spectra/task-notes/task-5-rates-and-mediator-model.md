@@ -73,7 +73,9 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
   width raise while `v v` or `eta pi pi` is open; the mixing guard
   binds the axial dark-matter coupling only; a channel with identically
   zero couplings is an exact zero that is neither range-checked nor listed
-  in `annihilation_thresholds`; a rate at an exact pole of zero width
+  in `annihilation_thresholds`, and the longitudinal-only `g g` and
+  `pi0 pi0 pi0` vanish with `gaxx = 0`, taking the meson poles out of
+  `annihilation_resonances`; a rate at an exact pole of zero width
   raises; branching fractions come from `sigma v`.
 - **Parameters:** `mx`, `mv`, `gvxx`, `gaxx` positional; `quarks`
   (`AxialCurrent`), `leptons` (new `LeptonCouplings`, nine required
@@ -85,8 +87,9 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
   LO action uses one common pion mass (ADR-0001); the class docstring and
   the Sphinx page say so, and Task 11's physical-mass work owns the fix.
 - **Partial widths:** fermion pairs, three pions and `"x x"`; `"g g"` is
-  absent (Landau-Yang). Resonances are the mediator plus each meson pole
-  with a nonzero source coupling, where `"g g"` peaks at `e_cm = m_P`.
+  absent (Landau-Yang). Resonances are the mediator plus, unless `"g g"`
+  vanishes, each meson pole with a nonzero source coupling, where `"g g"`
+  peaks at `e_cm = m_P`.
 
 ## Files Changed
 
@@ -102,7 +105,7 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
   branching fractions.
 - `test/axial_vector_mediator/spinor_oracle.py`,
   `test/axial_vector_mediator/test_axial_vector_mediator.py` — explicit-spinor
-  oracle (its flux comment corrected) and 38 tests.
+  oracle (its flux comment corrected) and 40 tests.
 - `test/parity/cases.py`, `test/parity/README.md` — the new submodule joins
   `_CORE_NEW_PHYSICS_MODULES`.
 - `../adrs/ADR-0004-one-hadronic-theory-and-declared-channel-coverage.md`,
@@ -141,12 +144,12 @@ From `../PLAN.md` Task 5, "Deliverable / gate":
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
   --features test-probes axial_rates`: 9 passed.
 - `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator`:
-  `38 passed in 0.95s`.
+  `40 passed in 1.19s`.
 - `scripts/agents/preflight.sh --paths "hazma/axial_vector_mediator
   test/axial_vector_mediator test/parity/cases.py" --md "<the five touched
   Markdown files>"`: black, isort, ruff (0 new), cargo fmt, clippy and test,
-  pytest (`2918 passed, 16 skipped, 20 warnings, 127 subtests passed in
-  51.82s`), import and forbidden tokens PASS; markdownlint over the five
+  pytest (`2920 passed, 16 skipped, 20 warnings, 127 subtests passed in
+  53.52s`), import and forbidden tokens PASS; markdownlint over the five
   touched Markdown files PASS. Output: `preflight-task-5.txt`.
 - Performance on 10^4 points, including the mixing guard: `mu mu`
   0.016 us, `pi pi pi0` 0.29 us and `g g` 0.081 us per point, against
@@ -199,6 +202,12 @@ and ADR-0001 to ADR-0005 true of the shipped code.
 - N5 (accepted, fixed): the oracle comment stated the wrong flux.
 - G4/N4 (rejected for this PR): per-call overhead costs time only, with no
   correctness effect; recorded under Open Questions.
+- Codex C1 (accepted, fixed): meson poles stayed in
+  `annihilation_resonances` with `gaxx = 0`, where `g g` vanishes, and
+  pushed the thermal window to the eta' pole past the three-pion range.
+- Codex C2 (accepted, fixed): the LO `pi0 pi0 pi0` density is purely
+  longitudinal (`A_T` measured 0.0 on 410-600 MeV), so it joins `g g` in
+  `_LONGITUDINAL_ONLY` and vanishes, unchecked, with `gaxx = 0`.
 
 ## Stale-state sweep
 
@@ -238,7 +247,7 @@ added by `git add -N`.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 38 model tests | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator` | `38 passed in 0.95s` | KEPT |
+| Verification, 40 model tests | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator` | `40 passed in 1.19s` | KEPT |
 | Verification, 9 kernel tests | `grep -c '#\[test\]' rust/src/kernels/axial_rates.rs` | 9 | KEPT |
 | `lib.rs` "seven per-domain submodules" | `dir(hazma._core)` | seven | KEPT |
 | `AGENTS.md` six probe submodules | `AGENTS.md:118` vs `environment.md:71` | six probes | KEPT |

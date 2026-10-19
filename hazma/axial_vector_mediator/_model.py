@@ -28,6 +28,10 @@ from ._couplings import LeptonCouplings
 
 _FERMION_PAIRS = ("e e", "mu mu", "tau tau", "ve ve", "vm vm", "vt vt")
 _THREE_PIONS = ("pi pi pi0", "pi0 pi0 pi0")
+#: Final states with no transverse density, which reach the dark matter only
+#: through the axial contact: "g g" by Landau-Yang, and the LO three neutral
+#: pions because only the pion pole produces them.
+_LONGITUDINAL_ONLY = ("pi0 pi0 pi0", "g g")
 
 
 def _scalar_or_array(value: np.ndarray) -> float | np.ndarray:
@@ -299,9 +303,7 @@ class AxialVectorMediator(TheoryAnn):
 
     def _rate_vanishes(self, final_state: str) -> bool:
         """Whether a final state's annihilation rate is identically zero."""
-        # Landau-Yang leaves "g g" no transverse density, so it reaches the
-        # dark matter only through the axial contact.
-        needs_axial = final_state == "g g"
+        needs_axial = final_state in _LONGITUDINAL_ONLY
         decoupled = self._gaxx == 0.0 and (needs_axial or self._gvxx == 0.0)
         return decoupled or self._densities_vanish(final_state)
 
@@ -499,8 +501,10 @@ class AxialVectorMediator(TheoryAnn):
 
         The mediator, and each of the pi0, eta and eta' poles that the
         ``"g g"`` rate passes through at ``e_cm`` equal to its mass, if the
-        quark source couples to it.
+        quark source couples to it and that rate does not vanish.
         """
+        if self._rate_vanishes("g g"):
+            return [(self._mv, self._width_v)]
         poles = self._gamma_gamma.poles
         couplings = poles.source_couplings(self._quarks)
         mesons = [

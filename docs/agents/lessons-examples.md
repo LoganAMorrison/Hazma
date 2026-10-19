@@ -1656,3 +1656,18 @@ branch of the underlying kernel that "any" reaches.
   `tau arcsin² - 1 = Σ 2^{2n} x^{n-1}/(2 n² C(2n, n))` for `x ≤ 1/4`, and
   `test_triangle_keeps_its_relative_precision_across_the_support` pins all
   four fermions from `1e-6` to `1600` MeV at a worst error of 3.2e-15.
+
+### property-rule-keyed-on-one-name
+
+- PR #129 made `AxialVectorMediator` treat `"g g"` as an exact zero when
+  `gaxx = 0`, because Landau-Yang leaves it only the axial contact, and
+  wrote the test as `final_state == "g g"`. A later review found two
+  siblings left out. The LO `pi0 pi0 pi0` density is also purely
+  longitudinal (`A_T` is exactly 0.0 on 410-600 MeV), so it still opened
+  as a threshold and raised past 600 MeV. The `pi0`, `eta` and `eta'` poles
+  of the vanished `"g g"` rate stayed in `annihilation_resonances` and
+  carried the thermal window to 959 MeV, past the three-pion range. The fix
+  declares `_LONGITUDINAL_ONLY` once and lists the poles only when `"g g"`
+  does not vanish. `thermal_cross_section(1e4, model)` for `mx = 150`,
+  `mv = 500`, hypercharge quarks and electrons only went from raising to
+  4.476589112591885e-12 MeV⁻².

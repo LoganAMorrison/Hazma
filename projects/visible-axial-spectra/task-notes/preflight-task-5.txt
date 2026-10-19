@@ -1,15 +1,15 @@
 
 preflight — /Users/logan.morrison/dev/Hazma/.claude/worktrees/visible-axial-spectra/task-5-rates-and-mediator-model (base origin/master)
 -------------------------------------------------------------------
-PASS   black --check           hazma/axial_vector_mediator hazma/_core.pyi test/axial_vector_mediator test/parity/cases.py
+PASS   black --check           hazma/axial_vector_mediator test/axial_vector_mediator
 PASS   isort --check-only      0 new (0 pre-existing at e6bf13ba1474)
 PASS   ruff check              0 new (0 pre-existing at e6bf13ba1474)
 PASS   cargo fmt --check       rust/
 PASS   cargo clippy            rust/
 PASS   cargo test              rust/
-PASS   pytest                  2918 passed, 16 skipped, 20 warnings, 127 subtests passed in 51.82s
+PASS   pytest                  2920 passed, 16 skipped, 20 warnings, 127 subtests passed in 53.52s
 PASS   import hazma            version 2.3.0
-PASS   markdownlint            docs/source/axial_vector_mediator.rst projects/visible-axial-spectra/adrs/ADR-0004-one-hadronic-theory-and-declared-channel-coverage.md projects/visible-axial-spectra/adrs/ADR-0005-rates-per-pair-in-sigma-v-moller.md projects/visible-axial-spectra/task-notes/task-5-rates-and-mediator-model.md projects/visible-axial-spectra/task-notes/README.md
+PASS   markdownlint            projects/visible-axial-spectra/adrs/ADR-0004-one-hadronic-theory-and-declared-channel-coverage.md projects/visible-axial-spectra/task-notes/task-5-rates-and-mediator-model.md projects/visible-axial-spectra/task-notes/README.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 -------------------------------------------------------------------

@@ -380,3 +380,26 @@ def test_branching_fractions_are_finite_at_threshold() -> None:
     fractions = model.annihilation_branching_fractions(400.0)
     for fs, fraction in fractions.items():
         assert fraction == pytest.approx(sigmas[fs] / sigmas["total"], rel=1e-14)
+
+
+def test_longitudinal_channels_vanish_without_axial_dark_matter() -> None:
+    # "g g" (Landau-Yang) and the LO "pi0 pi0 pi0" (pion pole only) have no
+    # transverse density, so with gaxx = 0 they are exact zeros that neither
+    # open nor range-check, while "pi pi pi0" keeps its transverse rate.
+    model = _model(mx=320.0, mv=5000.0, gaxx=0.0, width=1.0)
+    assert {"g g", "pi0 pi0 pi0"}.isdisjoint(model.annihilation_thresholds())
+    assert model.annihilation_sigma_v_funcs()["pi0 pi0 pi0"](700.0) == 0.0
+    assert "pi pi pi0" in model.annihilation_thresholds()
+    with pytest.raises(ValueError, match="declared only up to 600"):
+        model.annihilation_sigma_v_funcs()["pi pi pi0"](700.0)
+
+
+def test_meson_poles_leave_the_resonances_with_the_gamma_gamma_rate() -> None:
+    # With gaxx = 0 the "g g" rate vanishes, so its pi0, eta and eta' poles
+    # are not resonances and cannot carry the thermal window to the eta'
+    # pole, past the three-pion range. The average then departs from the
+    # e e s-wave value by O(1/x): 1.2e-4 measured at x = 1e4, hence 5e-4.
+    model = _model(gaxx=0.0, quarks=HYPERCHARGE, leptons=ELECTRONS_ONLY)
+    assert model.annihilation_resonances() == [(500.0, model.width_v)]
+    threshold = model.annihilation_sigma_v_funcs()["e e"](300.0)
+    assert thermal_cross_section(1e4, model) == pytest.approx(threshold, rel=5e-4)

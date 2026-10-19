@@ -33,9 +33,11 @@ while the hypercharge-aligned benchmark has both.
   not range-checked.
 - **A channel with no density is an exact zero.** A final state whose
   couplings make its rate identically zero, such as a lepton with zero
-  couplings or `g g` with `gaxx = 0` and no axial Standard Model coupling,
-  returns zero without a range check and is omitted from
+  couplings, returns zero without a range check and is omitted from
   `annihilation_thresholds`, so it cannot close the generic thermal window.
+  `g g` (Landau-Yang) and the LO `pi0 pi0 pi0` (pion pole only) have no
+  transverse density, so they vanish whenever `gaxx = 0`, and the meson
+  poles are then not listed among `annihilation_resonances` either.
 - **A rate past its provider's range raises.** Each channel rate raises
   where its provider has no declared support, and so does a width that
   needs one; the `width` override then supplies the total. A rate at an
