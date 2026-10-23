@@ -374,7 +374,10 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   `1 - f(x)` loses its relative precision wherever `f → 1`, and a test on
   ordinary arguments does not see it. Sum the series where it converges
   fast, join the two branches at a pinned point, and pin every branch
-  against a high-precision reference across the whole support (PR #128).
+  against a high-precision reference across the whole support. A difference
+  of primitives `F(b) − F(a)` over a range that shrinks at a threshold
+  cancels the same way: factor out `b − a` and write the variables relative
+  to the threshold (PR #128, PR #130).
 - [property-rule-keyed-on-one-name] A rule that follows from a structural
   property, such as a channel with no transverse density vanishing without
   an axial coupling, is keyed on the property, declared once, and applied

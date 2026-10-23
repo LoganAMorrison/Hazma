@@ -1656,6 +1656,17 @@ branch of the underlying kernel that "any" reaches.
   `tau arcsin² - 1 = Σ 2^{2n} x^{n-1}/(2 n² C(2n, n))` for `x ≤ 1/4`, and
   `test_triangle_keeps_its_relative_precision_across_the_support` pins all
   four fermions from `1e-6` to `1600` MeV at a worst error of 3.2e-15.
+- PR #130 gave each charged pion of the LO `π⁺π⁻π⁰` state the density
+  `∫M dE₀` as differences of cubic primitives in total energy, in
+  `rust/src/kernels/axial_yields.rs`. Its tests used `q` of 450 to 600 MeV.
+  Review evaluated `rest_frame_counts([0, 400], q, product="positron")` just
+  above `q = 3m_π⁰`. It gave 1.0126 e⁺ per annihilation at `1e-6` MeV
+  above threshold and 2.3e5 at `1e-9` MeV, because the Dalitz plot shrinks
+  to a point there and every total energy is `m` plus a sliver.
+  `ThreePionParents` now works in kinetic energy `u = E − m` and
+  `q − 3m`, and factors each primitive through the partner range's length.
+  `parent_densities_are_normalized_at_threshold` and
+  `test_three_pion_counts_stay_normalized_at_threshold` pin one e⁺ to 4e-11.
 
 ### property-rule-keyed-on-one-name
 

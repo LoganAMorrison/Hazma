@@ -112,6 +112,13 @@ chiral `μ⁺μ⁻` chains.
   e⁺ bins from `m_e` lost 1e-7 of a muon's e⁺.
   `bins_starting_below_the_boosted_rest_energy_tile_the_spectrum` fails at
   1.04e-7 with the old rule restored.
+- **Threshold stability (PR #130 review).** `ThreePionParents` works in
+  kinetic energy `u = E − m` and the excess `q − 3m`. It factors the
+  charged pions' cubic primitives through the partner-range length `L`.
+  The total-energy form cancelled near `3m`, giving 1.0126 e⁺ per
+  annihilation at `1e-6` MeV above threshold and 2.3e5 at `1e-9` MeV. Now
+  the deviation from one is −3.9e-11 at `1e-9` MeV, −1.6e-13 at `1e-6` MeV
+  and −2.0e-14 at 95 MeV.
 
 ## Files Changed
 
@@ -136,7 +143,7 @@ Done so far:
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
   --features test-probes -- polarized_muon axial_yields axial_rates`:
-  29 passed. These tests cover the note's 36.94069288635647 MeV (1e-11) and
+  30 passed. These tests cover the note's 36.94069288635647 MeV (1e-11) and
   38.430221 MeV (1e-8), the neutrino rest means, the Michel normalization,
   bin round-trips, the unpolarized limit against `positron_pion` (2e-4), the
   parent weights against `ThreePion::spectral_functions` (1e-10), and the
@@ -147,7 +154,7 @@ Done so far:
   `pi pi pi0`; ν `[2, 2, 0]` for `mu mu` and `[2, 4 BR(μν), 0]` for
   `pi pi pi0`; π⁰ photons `6 BR(γγ)` for `3π⁰`.
 
-- `pytest -n 0 -q test/axial_vector_mediator`: 46 passed.
+- `pytest -n 0 -q test/axial_vector_mediator`: 49 passed.
 - `scripts/agents/preflight.sh --paths "hazma/axial_vector_mediator
   test/axial_vector_mediator" --md "<task-6 note, task-notes README>"`:
   `RESULT: PASS`, pytest `2926 passed, 16 skipped, 20 warnings, 127 subtests

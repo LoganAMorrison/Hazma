@@ -310,6 +310,17 @@ def test_rest_frame_counts_carry_each_charged_lepton() -> None:
     assert np.sum(positrons["pi0 pi0 pi0"]) == 0.0
 
 
+@pytest.mark.parametrize("excess", [1e-9, 1e-6, 1e-3])
+def test_three_pion_counts_stay_normalized_at_threshold(excess: float) -> None:
+    # Just above 3m the Dalitz plot shrinks to a point, where total-energy
+    # primitives cancelled and gave 1.0126 e⁺ at 1e-6 MeV and 2.3e5 at
+    # 1e-9 MeV. The kinetic-energy form keeps one e⁺ to about 4e-11.
+    model = _model(gaxx=0.0)
+    q = 3.0 * parameters.neutral_pion_mass + excess
+    counts = model.rest_frame_counts(np.array([0.0, 400.0]), q, product="positron")
+    assert counts["pi pi pi0"][0] == pytest.approx(1.0, rel=1e-9)
+
+
 def test_rest_frame_counts_round_trip_by_bin_width() -> None:
     # A bin of relative width 1e-6 holds the density times its width up to
     # a second-order error near 1e-12; the muon kernels are good to 1e-10.

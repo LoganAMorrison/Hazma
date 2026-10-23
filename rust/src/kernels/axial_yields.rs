@@ -50,7 +50,7 @@ use super::axial_three_pi::Channel as PionChannel;
 use super::photon_muon::{dnde_photon_muon, photon_endpoint};
 use super::photon_pion::{charged_pion_photon_endpoint, dnde_photon_charged_pion};
 use super::polarized_muon::{
-    Daughter, MuonDecay, PionDecay, box_density, box_fraction, integrate, momentum, threshold_gamma,
+    Daughter, MuonDecay, PionDecay, box_density, box_fraction, integrate, threshold_gamma,
 };
 
 /// Relative tolerance of every integral over a parent's energy and of a
@@ -136,6 +136,11 @@ fn neutral_pion_photons(probe: Probe, gamma: f64, gamma_beta: f64) -> f64 {
 }
 
 /// The energy densities of the three pions of one LO final state.
+///
+/// Every quantity is written in a pion's kinetic energy `u = E − m` and
+/// the excess `q − 3m` over threshold, never as a difference of total
+/// energies near `m`, so the densities stay normalized arbitrarily close to
+/// threshold, where the whole Dalitz plot shrinks to a point.
 #[derive(Clone, Copy, Debug)]
 pub struct ThreePionParents {
     channel: PionChannel,
@@ -143,6 +148,8 @@ pub struct ThreePionParents {
     energy: f64,
     /// Common production pion mass `m` in MeV, positive.
     pion_mass: f64,
+    /// `q − 3m` in MeV.
+    excess: f64,
     /// Fraction of the channel's `σv` from its transverse density, in
     /// `[0, 1]`; zero for the neutral channel.
     transverse_fraction: f64,
@@ -163,13 +170,14 @@ impl ThreePionParents {
             channel,
             energy,
             pion_mass,
+            excess: energy - 3.0 * pion_mass,
             transverse_fraction,
             transverse_norm: 1.0,
             longitudinal_norm: 1.0,
         };
         let norm = |weight: fn(&Self, f64) -> f64| {
-            let mut integrand = |e: f64| weight(&parents, e) * parents.partner_length(e);
-            integrate(&mut integrand, pion_mass, parents.max_energy(), &[], 1e-12)
+            let mut integrand = |u: f64| weight(&parents, u) * parents.partner_length(u);
+            integrate(&mut integrand, 0.0, parents.max_kinetic(), &[], 1e-12)
         };
         let (transverse_norm, longitudinal_norm) = (
             norm(Self::transverse_weight),
@@ -180,65 +188,69 @@ impl ThreePionParents {
         parents
     }
 
-    /// Return the largest energy of any one pion in MeV, `(q² − 3m²)/(2q)`.
-    pub fn max_energy(&self) -> f64 {
+    /// Return the largest kinetic energy of any one pion in MeV,
+    /// `(q − 3m)(q + m)/(2q)`.
+    pub fn max_kinetic(&self) -> f64 {
         let (q, m) = (self.energy, self.pion_mass);
-        (q * q - 3.0 * m * m) / (2.0 * q)
+        self.excess * (q + m) / (2.0 * q)
     }
 
-    /// Return `s − m² = q² − 2qE` in MeV² for a pion of `energy`, with `s`
-    /// the invariant mass squared of its two partners.
-    fn pair_excess(&self, energy: f64) -> f64 {
-        self.energy * (self.energy - 2.0 * energy)
+    /// Return the length `L(u)` in MeV of a partner's energy range,
+    /// `p √(1 − 4m²/s)` with `p² = u(2m + u)` and
+    /// `s − 4m² = 2q(u_max − u)`.
+    fn partner_length(&self, kinetic: f64) -> f64 {
+        let (q, m) = (self.energy, self.pion_mass);
+        let pair_mass2 = (q - m).powi(2) - 2.0 * q * kinetic;
+        let gap = (2.0 * q * (self.max_kinetic() - kinetic) / pair_mass2).max(0.0);
+        (kinetic * (2.0 * m + kinetic)).max(0.0).sqrt() * gap.sqrt()
     }
 
-    /// Return the length `L(E)` in MeV of a partner's energy range.
-    fn partner_length(&self, energy: f64) -> f64 {
-        let m2 = self.pion_mass * self.pion_mass;
-        let s = self.pair_excess(energy) + m2;
-        momentum(energy, self.pion_mass) * (1.0 - 4.0 * m2 / s).max(0.0).sqrt()
+    /// Return `s − m² = q(q − 2m − 2u)` in MeV², with `s` the invariant mass
+    /// squared of the two partners of a pion of kinetic energy `u`.
+    fn pair_excess(&self, kinetic: f64) -> f64 {
+        let (q, m) = (self.energy, self.pion_mass);
+        q * (q - 2.0 * m - 2.0 * kinetic)
     }
 
-    /// Return the partner energy range `(q − E)/2 ∓ L(E)/2` in MeV.
-    fn partner_range(&self, energy: f64) -> (f64, f64) {
-        let (center, half) = (
-            (self.energy - energy) / 2.0,
-            self.partner_length(energy) / 2.0,
-        );
-        (center - half, center + half)
-    }
-
-    /// Return the unnormalized transverse weight at π⁰ `energy`: `|p₀|²`
-    /// for the charged channel, and zero for the neutral one.
-    fn transverse_weight(&self, energy: f64) -> f64 {
+    /// Return the unnormalized transverse weight at π⁰ kinetic energy `u`:
+    /// `|p₀|² = u(2m + u)` for the charged channel, and zero for the
+    /// neutral one.
+    fn transverse_weight(&self, kinetic: f64) -> f64 {
         match self.channel {
-            PionChannel::Charged => (energy - self.pion_mass) * (energy + self.pion_mass),
+            PionChannel::Charged => kinetic * (2.0 * self.pion_mass + kinetic),
             PionChannel::Neutral => 0.0,
         }
     }
 
-    /// Return the unnormalized longitudinal weight at π⁰ `energy`:
-    /// `(s − m²)²` for the charged channel and one for the neutral one.
-    fn longitudinal_weight(&self, energy: f64) -> f64 {
+    /// Return the unnormalized longitudinal weight at π⁰ kinetic energy
+    /// `u`: `(s − m²)²` for the charged channel and one for the neutral one.
+    fn longitudinal_weight(&self, kinetic: f64) -> f64 {
         match self.channel {
-            PionChannel::Charged => self.pair_excess(energy).powi(2),
+            PionChannel::Charged => self.pair_excess(kinetic).powi(2),
             PionChannel::Neutral => 1.0,
         }
     }
 
-    /// Return `∫ M dE₀` over `[low, high]`, by the primitives
-    /// `E³/3 − m²E` of `|p₀|²` and `−(q² − 2qE)³/(6q)` of `(s − m²)²`.
-    fn weight_integral(&self, low: f64, high: f64) -> f64 {
-        let m2 = self.pion_mass * self.pion_mass;
-        let transverse = |e: f64| e * (e * e / 3.0 - m2);
-        let longitudinal = |e: f64| match self.channel {
-            PionChannel::Charged => -self.pair_excess(e).powi(3) / (6.0 * self.energy),
-            PionChannel::Neutral => e,
+    /// Return `∫ M dE₀` over the π⁰ kinetic energies compatible with a
+    /// charged pion of kinetic energy `u`, `u_a, u_b = (q − 3m − u ∓ L)/2`.
+    ///
+    /// The cubic primitives are factored through `u_b − u_a = L`:
+    /// `∫|p₀|² = L[m(u_a + u_b) + (u_a² + u_a u_b + u_b²)/3]` and, with
+    /// `A = s − m²` linear in `u`, `∫A² = L(A_a² + A_a A_b + A_b²)/3`.
+    fn weight_integral(&self, kinetic: f64) -> f64 {
+        let length = self.partner_length(kinetic);
+        let sum = self.excess - kinetic;
+        let (low, high) = ((sum - length) / 2.0, (sum + length) / 2.0);
+        let transverse =
+            length * (self.pion_mass * sum + (low * low + low * high + high * high) / 3.0);
+        let longitudinal = match self.channel {
+            PionChannel::Charged => {
+                let (a, b) = (self.pair_excess(low), self.pair_excess(high));
+                length * (a * a + a * b + b * b) / 3.0
+            }
+            PionChannel::Neutral => length,
         };
-        self.mix(
-            transverse(high) - transverse(low),
-            longitudinal(high) - longitudinal(low),
-        )
+        self.mix(transverse, longitudinal)
     }
 
     /// Combine unnormalized transverse and longitudinal pieces in the
@@ -255,27 +267,26 @@ impl ThreePionParents {
         total
     }
 
-    /// Return the normalized energy density in MeV⁻¹ of the π⁰ of the
-    /// charged channel, or of each π⁰ of the neutral one.
-    pub fn spectator_density(&self, energy: f64) -> f64 {
+    /// Return the normalized density in MeV⁻¹ over kinetic energy of the π⁰
+    /// of the charged channel, or of each π⁰ of the neutral one.
+    pub fn spectator_density(&self, kinetic: f64) -> f64 {
         let weight = self.mix(
-            self.transverse_weight(energy),
-            self.longitudinal_weight(energy),
+            self.transverse_weight(kinetic),
+            self.longitudinal_weight(kinetic),
         );
-        weight * self.partner_length(energy)
+        weight * self.partner_length(kinetic)
     }
 
-    /// Return the normalized energy density in MeV⁻¹ of each charged pion
-    /// of the charged channel.
-    pub fn charged_density(&self, energy: f64) -> f64 {
-        let (low, high) = self.partner_range(energy);
-        self.weight_integral(low, high)
+    /// Return the normalized density in MeV⁻¹ over kinetic energy of each
+    /// charged pion of the charged channel.
+    pub fn charged_density(&self, kinetic: f64) -> f64 {
+        self.weight_integral(kinetic)
     }
 
-    /// Integrate `density` times `response` over a pion's energy, with
-    /// the parent energies at which `response` breaks for `probe`. Each
-    /// feature is a decay daughter's `(energy, mass)` in its parent's rest
-    /// frame, whose boost crosses a probe edge at one Lorentz factor.
+    /// Integrate `density` times `response` over a pion's kinetic energy,
+    /// with the kinetic energies at which `response` breaks for `probe`.
+    /// Each feature is a decay daughter's `(energy, mass)` in its parent's
+    /// rest frame, whose boost crosses a probe edge at one Lorentz factor.
     fn fold(
         &self,
         density: impl Fn(&Self, f64) -> f64,
@@ -287,33 +298,34 @@ impl ThreePionParents {
         for edge in probe.edges() {
             if edge > 0.0 {
                 for &(energy, mass) in features {
-                    points.push(self.pion_mass * threshold_gamma(edge, energy, mass));
+                    let gamma = threshold_gamma(edge, energy, mass);
+                    points.push(self.pion_mass * (gamma - 1.0));
                 }
             }
         }
-        let mut integrand = |energy: f64| density(self, energy) * response(energy);
+        let mut integrand = |kinetic: f64| density(self, kinetic) * response(kinetic);
         integrate(
             &mut integrand,
-            self.pion_mass,
-            self.max_energy(),
+            0.0,
+            self.max_kinetic(),
             &points,
             FOLD_EPSREL,
         )
     }
 
     /// Return the physical-mass energy in MeV at which a charged pion
-    /// produced with `energy` decays, at the same Lorentz factor.
-    fn charged_decay_energy(&self, energy: f64) -> f64 {
-        energy * (MASS_PI / self.pion_mass)
+    /// produced with `kinetic` energy decays, at the same Lorentz factor.
+    fn charged_decay_energy(&self, kinetic: f64) -> f64 {
+        (self.pion_mass + kinetic) * (MASS_PI / self.pion_mass)
     }
 
     /// Return the π⁰ photon yield at `probe`, every π⁰ of the state
     /// counted.
     fn neutral_pion_photons(&self, probe: Probe) -> f64 {
-        let response = |energy: f64| {
-            let gamma = energy / self.pion_mass;
-            let gamma_beta = momentum(energy, self.pion_mass) / self.pion_mass;
-            neutral_pion_photons(probe, gamma, gamma_beta)
+        let m = self.pion_mass;
+        let response = |kinetic: f64| {
+            let gamma_beta = (kinetic * (2.0 * m + kinetic)).sqrt() / m;
+            neutral_pion_photons(probe, 1.0 + kinetic / m, gamma_beta)
         };
         let multiplicity = match self.channel {
             PionChannel::Charged => 1.0,
@@ -329,14 +341,14 @@ impl ThreePionParents {
         let mass = decay.muon.daughter_mass(daughter);
         let features = decay.rest_features(daughter).map(|energy| (energy, mass));
         let response =
-            |energy: f64| pion_response(daughter, probe, self.charged_decay_energy(energy));
+            |kinetic: f64| pion_response(daughter, probe, self.charged_decay_energy(kinetic));
         self.fold(Self::charged_density, response, probe, &features)
     }
 
     /// Return the radiative photon yield of one charged pion at `probe`.
     fn charged_pion_photons(&self, probe: Probe) -> f64 {
-        let response = |energy: f64| {
-            let decay_energy = self.charged_decay_energy(energy);
+        let response = |kinetic: f64| {
+            let decay_energy = self.charged_decay_energy(kinetic);
             photon_response(
                 probe,
                 |photon| dnde_photon_charged_pion(photon, decay_energy),
@@ -485,6 +497,17 @@ mod tests {
         );
     }
 
+    /// Assert that every parent density of `parents` integrates to one.
+    fn assert_normalized(parents: &ThreePionParents, rtol: f64) {
+        let top = parents.max_kinetic();
+        let mut spectator = |u: f64| parents.spectator_density(u);
+        assert_close(integrate(&mut spectator, 0.0, top, &[], 1e-12), 1.0, rtol);
+        if parents.channel == PionChannel::Charged {
+            let mut each = |u: f64| parents.charged_density(u);
+            assert_close(integrate(&mut each, 0.0, top, &[], 1e-12), 1.0, rtol);
+        }
+    }
+
     /// Every parent density is normalized, and the charged pions'
     /// marginal integrates to one through its closed-form primitives.
     #[test]
@@ -495,27 +518,40 @@ mod tests {
             charged(600.0, 1.0),
             ThreePionParents::new(PionChannel::Neutral, 500.0, MASS_PI0, 0.0),
         ] {
-            let (low, high) = (parents.pion_mass, parents.max_energy());
-            let mut spectator = |e: f64| parents.spectator_density(e);
-            assert_close(integrate(&mut spectator, low, high, &[], 1e-12), 1.0, 1e-11);
-            if parents.channel == PionChannel::Charged {
-                let mut each = |e: f64| parents.charged_density(e);
-                assert_close(integrate(&mut each, low, high, &[], 1e-12), 1.0, 1e-11);
+            assert_normalized(&parents, 1e-11);
+        }
+    }
+
+    /// The densities stay normalized as the Dalitz plot shrinks to a
+    /// point. Written in total energies, the charged pions' cubic
+    /// primitives cancelled catastrophically here and gave 1.0126 e⁺ per
+    /// annihilation at `1e-6` MeV above threshold and 2.3e5 at `1e-9` MeV.
+    #[test]
+    fn parent_densities_are_normalized_at_threshold() {
+        for excess in [1e-9, 1e-6, 1e-3] {
+            let q = 3.0 * MASS_PI0 + excess;
+            for fraction in [0.0, 0.5, 1.0] {
+                assert_normalized(&charged(q, fraction), 1e-10);
+                let pions = Channel::ThreePion(charged(q, fraction));
+                let [positrons, _] = pions.charged_leptons(Probe::Bin(0.0, 1e4));
+                assert_close(positrons, 1.0, 1e-9);
             }
+            let neutral = ThreePionParents::new(PionChannel::Neutral, q, MASS_PI0, 0.0);
+            assert_normalized(&neutral, 1e-10);
         }
     }
 
     /// The three pions share the invariant energy on average:
-    /// `⟨E₀⟩ + 2⟨E±⟩ = q`.
+    /// `⟨u₀⟩ + 2⟨u±⟩ + 3m = q`.
     #[test]
     fn parent_energies_sum_to_the_invariant_energy() {
         let parents = charged(530.0, 0.6);
-        let (low, high) = (parents.pion_mass, parents.max_energy());
-        let mut spectator = |e: f64| e * parents.spectator_density(e);
-        let mut each = |e: f64| e * parents.charged_density(e);
-        let total = integrate(&mut spectator, low, high, &[], 1e-12)
-            + 2.0 * integrate(&mut each, low, high, &[], 1e-12);
-        assert_close(total, 530.0, 1e-11);
+        let top = parents.max_kinetic();
+        let mut spectator = |u: f64| u * parents.spectator_density(u);
+        let mut each = |u: f64| u * parents.charged_density(u);
+        let kinetic = integrate(&mut spectator, 0.0, top, &[], 1e-12)
+            + 2.0 * integrate(&mut each, 0.0, top, &[], 1e-12);
+        assert_close(kinetic + 3.0 * MASS_PI0, 530.0, 1e-12);
     }
 
     /// A μ⁺μ⁻ pair carries two of each lepton flavor's neutrinos, one e⁺
