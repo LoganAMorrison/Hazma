@@ -119,6 +119,24 @@ impl FermionPair {
         let longitudinal = self.colors * (self.axial * m).powi(2) * beta / PI;
         (transverse, longitudinal)
     }
+
+    /// Return the transverse density weighted by the fermion's helicity,
+    /// `N β² s g_V g_A/(3π)` in MeV², at invariant mass `q`.
+    ///
+    /// The opposite-helicity amplitudes are `g_V ± β g_A`, with the upper
+    /// sign for a right-handed fermion, and the equal-helicity ones carry
+    /// no net helicity, so over [`Self::densities`]' `A_T` this is the
+    /// fermion's mean helicity. The antifermion's is its negative. The
+    /// source-longitudinal pair is a pseudoscalar of equal helicities and
+    /// adds nothing. It vanishes at and below threshold.
+    pub fn helicity_density(&self, q: f64) -> f64 {
+        let m = self.mass;
+        if q <= 2.0 * m {
+            return 0.0;
+        }
+        let beta_squared = (q - 2.0 * m) * (q + 2.0 * m) / (q * q);
+        self.colors * beta_squared * q * q * self.vector * self.axial / (3.0 * PI)
+    }
 }
 
 #[cfg(test)]
@@ -171,6 +189,22 @@ mod tests {
         let fermion = pair(MUON, 1.0, 1.0);
         assert_eq!(fermion.densities(2.0 * MUON), (0.0, 0.0));
         assert_eq!(fermion.densities(MUON), (0.0, 0.0));
+        assert_eq!(fermion.helicity_density(2.0 * MUON), 0.0);
+    }
+
+    /// Massless, the mean helicity is `(g_R² − g_L²)/(g_R² + g_L²)` with
+    /// `g_R, g_L = g_V ± g_A`, and the neutrino's `g_A = −g_V` is purely
+    /// left-handed. Roundoff only.
+    #[test]
+    fn massless_helicity_is_the_chiral_asymmetry() {
+        let (gv, ga) = (0.3, -0.7);
+        let fermion = pair(0.0, gv, ga);
+        let (right, left) = ((gv + ga).powi(2), (gv - ga).powi(2));
+        let helicity = fermion.helicity_density(500.0) / fermion.densities(500.0).0;
+        assert_close(helicity, (right - left) / (right + left), 1e-14);
+        let neutrino = pair(0.0, 0.25, -0.25);
+        let helicity = neutrino.helicity_density(500.0) / neutrino.densities(500.0).0;
+        assert_close(helicity, -1.0, 1e-14);
     }
 
     fn sector(width: f64) -> DarkSector {
