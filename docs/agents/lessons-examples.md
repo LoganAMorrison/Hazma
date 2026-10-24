@@ -1667,6 +1667,20 @@ branch of the underlying kernel that "any" reaches.
   `q − 3m`, and factors each primitive through the partner range's length.
   `parent_densities_are_normalized_at_threshold` and
   `test_three_pion_counts_stay_normalized_at_threshold` pin one e⁺ to 4e-11.
+- PR #131 integrated the muon-decay neutrino densities as closed-form
+  Laurent polynomials in `rust/src/kernels/polarized_muon.rs`, factoring each
+  power difference through the interval length, but `power_integral` formed
+  that length as `t_to − t_from` from `1 − x` values near 1. Review compared
+  `MuonDecay::counts` with the quadrature and a 40-digit `mpmath` integral
+  for bins of relative width 1e-6: the worst relative error was 5.6e-3 at
+  `γβ = 1e-3`, 88 at `1e-5` and 5.3e5 at `1e-7` with negative counts,
+  because the absolute rounding error of the edges was amplified by pole
+  coefficients of order `1/β²`. `power_integral` now takes the length
+  `x_to − x_from` from the caller. Over eight energies from 5e-3 to 140 MeV
+  the worst error is then 7e-11, 6e-8 and 9e-5 (it was 1.7e-2, 9 and 3e5
+  over the same grid before). `neutrino_closed_forms_hold_for_a_slow_muon`
+  (with a 5e-3 MeV bin) and a pinned `mpmath` bin in
+  `neutrino_bins_match_a_high_precision_reference` fail with the old length.
 
 ### property-rule-keyed-on-one-name
 

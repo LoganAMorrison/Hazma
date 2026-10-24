@@ -338,7 +338,7 @@ def test_pion_rest_mean_positron_energy_carries_the_muon_spin() -> None:
     width = 0.2
     # The first edge lies between `m_e - 1.5 width` and `m_e - 0.5 width`,
     # below every e⁺ and above zero.
-    n_low = int(np.floor((line - m_e) / width)) + 1
+    n_low = int(np.floor((line - m_e) / width)) + 2
     n_high = int(np.ceil(1.0 / width)) + 1
     edges = line + (np.arange(-n_low, n_high + 1) + 0.5) * width
     counts = model.rest_frame_counts(edges, e_cm, product="positron")["pi pi pi0"]

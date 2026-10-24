@@ -82,11 +82,43 @@ chiral `μ⁺μ⁻` chains.
   cancelling to 1e-4. Expanding the polynomial part about each
   subinterval's midpoint keeps every coefficient of the order of the
   values it describes. The closed forms then agree with a 40-digit
-  `mpmath` integration of the same densities to 1e-10 or better in seven
+  `mpmath` integration of the same densities to 1e-10 or better in eight
   pinned cases, and for a bin of relative width 1e-3 from a muon at
   2000 MeV they are the accurate side: 3e-11 against the quadrature's
   4e-10, since the quadrature forms each edge's `cos θ` before
   differencing them.
+- **Pole interval length (PR #131 review, closed).** `Laurent::integral`
+  passed `1 − x_to` and `1 − x_from` to `power_integral`, which formed the
+  interval length as their difference. That length carries the absolute
+  rounding error of two numbers near 1 instead of one relative to the
+  window, and after `add_pole_times_power` the pole coefficients are of
+  order `r²Δα² ~ r²/β²`, which amplifies it. Against `counts_quadrature`,
+  for bins of relative width 1e-6, the reviewer measured a worst relative
+  error of 5.6e-3 at `γβ = 1e-3`, 88 at `1e-5` and 5.3e5 at `1e-7`, with
+  negative counts, and a `dnde` error of 1.5e-4 at `1e-7`; a 40-digit
+  `mpmath` integral agreed with the quadrature (ν_μ, `γβ = 1e-3`,
+  P = 1, bin [5.505365311236440e-3, 5.510873430607361e-3] MeV: `mpmath`
+  6.798856735042118e-15, the old closed form 6.7987380054813551e-15, a
+  relative error of 1.7e-5). `power_integral` now takes the length
+  `x_to − x_from` from its caller, which is exact for the polynomial part
+  (`u_to − u_from`) and for the poles (`q_to − q_from`), and uses the
+  `1 − x` values only for the ratio in `ln_1p` and for the products. Over
+  eight energies from 5e-3 to 140 MeV, both neutrinos and
+  P ∈ {−1, 0.4, 1}, the worst counts error against `counts_quadrature` for
+  bins of relative width 1e-6 went from 1.7e-2, 9.0 and 3.1e5 to 6.6e-11,
+  5.6e-8 and 9.2e-5 at `γβ = 1e-3`, `1e-5` and `1e-7` (none of the 48
+  counts per `γβ` is negative now, where 0, 3 and 6 were), and the worst
+  `dnde` error at `γβ = 1e-7` from 5.0e-6 to 1.7e-9. At rest, ν_e counts
+  on [E, 2E] agree with the quadrature to 1.4e-10, 5.9e-13 and 7.5e-15 for
+  E = 1e-6, 1e-5 and 1e-4 MeV, where they were off by 2.6e-3, 2.5e-6 and
+  2.0e-9 (the
+  generalist's absolute floor near 1e-25 from the same cause). With the
+  fix, the remaining error scales as `1/(βw)` for a bin of relative width
+  `w`: at `γβ = 1e-7` it is 9.2e-5, 8.9e-7 and 1.2e-8 for widths 1e-6, 1e-4
+  and 1e-2. The 5e-3 MeV energy is now in
+  `assert_closed_forms_match_quadrature`, and a pinned `mpmath` bin
+  covers it; with the old length they fail at 4.5e-8 (the slow-muon
+  comparison, against a 1e-9 tolerance) and 1.7e-5 (the pin, against 1e-10).
 - **Bin sums at threshold.** `rest_frame_counts` for `pi pi pi0` at
   `3m_π⁰ + 1e-6` MeV sums to one e⁺ within 1e-12 over 353 bins of 0.2 MeV
   but to `1 − 5.4e-8` over 704 bins of 0.1 MeV. The loss is a few times
@@ -151,10 +183,18 @@ chiral `μ⁺μ⁻` chains.
   stay as the tests' oracle. The form is the private `Laurent` type: poles
   `q⁻³` to `q⁻¹` integrated in `q`, and a cubic in `u = x − x₀` integrated
   about the interval's midpoint, with each power difference factored
-  through the interval length. `CosineEdge` holds a bin edge's
-  `cos θ = α + β'/x`, clamped or free per subinterval. Both forms inherit
-  the relative precision `β` of the window edges, so neither is more
-  accurate than that for a muon nearly at rest; the module docs say so.
+  through the interval length `x_to − x_from`, which `Laurent::integral`
+  forms once from the `x` edges and passes to `power_integral`.
+  `CosineEdge` holds a bin edge's `cos θ = α + β'/x`, clamped or free per
+  subinterval. Both forms know a window's edges only to the machine epsilon
+  `ε` of the lab energies, so a bin of relative width `w` from a muon of
+  speed `β` carries an error of at most about `ε/(βw)`; the module docs give
+  the measured 7e-11, 6e-8 and 9e-5 at `γβ = 1e-3`, `1e-5` and `1e-7` for
+  `w = 1e-6`. `MuonDecay::electron_mass` is zero or at least about 1e-5 MeV:
+  below that, `r` is comparable to the machine epsilon, `x(max_energy)`
+  rounds to 1, and the closed forms return infinity or NaN. Only
+  `MuonDecay::PDG` is constructed outside the tests, so the contract is a
+  field doc and not a check.
 - **Python pins.** The Hazma-mass mean e⁺ energy per π⁺ at rest,
   36.94069258356754 MeV, is pinned in Rust at 1e-11
   (`pion_rest_mean_positron_energy_with_hazma_masses`) and through the
@@ -190,20 +230,27 @@ The second PR:
   `Neutrino`, the closed-form `dnde_neutrino` and `counts_neutrino`, the
   module's "Closed forms for the neutrinos" section, and five tests: the
   oracle comparison from rest to `γ ≈ 19`, the slow-muon comparison, the
-  massless-electron limit, the seven `mpmath` reference pins and the
-  Hazma-mass pion mean.
+  massless-electron limit, the eight `mpmath` reference pins and the
+  Hazma-mass pion mean. The review fix passes the interval length into
+  `power_integral`, adds 5e-3 MeV to the energies
+  `assert_closed_forms_match_quadrature` checks, adds the eighth pin and
+  documents the `electron_mass` contract.
 - `rust/src/kernels.rs`: the module-doc paragraph for `polarized_muon`
   and `axial_yields`.
 - `test/axial_vector_mediator/spinor_oracle.py`: `fermion_polarization`
   and the helicity spinors behind it.
 - `test/axial_vector_mediator/test_axial_vector_mediator.py`: the pion
-  mean pin and the polarization oracle test.
+  mean pin, whose first edge a review moved a full bin below `m_e`, and the
+  polarization oracle test.
 - `CHANGELOG.md`: the yields entry under `Added`, replacing the sentence
   that said the spectra raise.
 - `docs/source/axial_vector_mediator.rst`: a "Yields" section.
 - `docs/followups/todo/axial-mediator-pi0-dalitz-positrons.md` and
   `axial-mediator-polarized-radiative-muon-photons.md` (new), with their
-  rows in `docs/followups/README.md`.
+  rows in `docs/followups/README.md`. The first now gives the `pi pi pi0`
+  Dalitz addition as 0.0117 e⁺ per annihilation, about 1.2%.
+- `docs/agents/lessons.md` and `docs/agents/lessons-examples.md`: PR #131
+  joins the `closed-form-cancels-where-a-series-converges` class.
 - This note and `projects/visible-axial-spectra/task-notes/README.md`.
 
 ## Verification
@@ -251,6 +298,33 @@ The second PR:
   `scripts/agents/check_doc_citations.py` over the six touched documents:
   `out-of-range or ambiguous: NONE`.
 
+The review fixes (PR #131):
+
+- `cargo test --manifest-path rust/Cargo.toml --no-default-features
+  --features test-probes -- polarized_muon axial_yields`: 25 passed, the
+  same count as before, because the new `mpmath` pin is a row of an
+  existing test and the 5e-3 MeV energy an element of an existing loop.
+  With `power_integral` forming its own length again,
+  `neutrino_bins_match_a_high_precision_reference` fails at a relative
+  error of 1.7e-5 and `neutrino_closed_forms_hold_for_a_slow_muon` at
+  4.5e-8. `cargo clippy --all-features --all-targets -- -D warnings` and
+  `cargo fmt --check` are clean.
+- `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator`: `52
+  passed in 4.56s`, after the pion-mean test's first edge moved a full bin
+  below `m_e` and the rebuild with `uv pip install --python .venv/bin/python
+  -e . --config-setting build-args="--features test-probes"`.
+- `.venv/bin/python projects/visible-axial-spectra/references/check_public_impact.py`
+  after the rebuild: `"maximum_absolute_difference": 0.0`. The 500 MeV
+  neutrino comparison (`/tmp/hazma-task6-timing.py after3`, against the
+  quadrature build) gives maximum relative differences of 8.2e-15 for
+  yields and 7.7e-14 for counts.
+- `scripts/agents/preflight.sh --paths "hazma/axial_vector_mediator
+  test/axial_vector_mediator" --md "<CHANGELOG, the two lessons files, the
+  Dalitz follow-up, this note>"` on the final tree with `.venv/bin` first
+  on `PATH`: `RESULT: PASS` with pytest `2932 passed, 16 skipped, 20
+  warnings, 127 subtests passed`, the same count as before the fixes
+  because no test function was added.
+
 ## Open Questions
 
 - The two deferred physics items are follow-ups, not open questions of this
@@ -266,9 +340,11 @@ The second PR:
   contract depends on it, and Task 7's cascades should check their bin
   sums at threshold before trusting fine grids.
 - Both the closed form and the quadrature know a boost window's edges only
-  to the relative precision `β`, so a muon nearly at rest (a `mu mu` pair
-  within a few parts in 1e6 of threshold) gets correspondingly fewer
-  digits; the module docs record this and no caller needs more.
+  to the machine epsilon of the lab energies, so a narrow bin from a muon
+  nearly at rest (a `mu mu` pair within a few parts in 1e6 of threshold)
+  gets correspondingly fewer digits: about `ε/(βw)` for a bin of relative
+  width `w`, 9e-5 at `γβ = 1e-7` and `w = 1e-6`. The module docs record
+  this and no caller needs more.
 
 ## Plan Impact
 
@@ -334,15 +410,27 @@ follow-ups were added with `git add -N`, and after the last prose edit.
   which serve only e± and neutrinos, where the photons go through
   `Channel::photons` and `ThreePionParents::charged_pion_photons`
   (EDITED).
+- **Review-fix sweep (PR #131).** `rg -n --hidden 'relative precision|
+  neither is more accurate|the accurate side|few-percent|nearly at rest'`
+  over the project, `docs/source/`, `docs/followups/`, the model package,
+  the model tests, the two kernels, `rust/src/kernels.rs` and the
+  CHANGELOG found the precision claim in the module docs (EDITED), the
+  Dalitz follow-up's "few-percent" (EDITED), the test comment on the
+  accurate side (EDITED to the 0.5 MeV case), the Open Questions bullet
+  (EDITED) and one record of an earlier follow-up
+  (`docs/followups/done/vector-mediator-gev-vv-positron-and-neutrino-are-zero.md`,
+  KEPT). Two further hits are the Findings bullet that says the closed
+  forms are the accurate side for a 1e-3 bin at 2000 MeV (KEPT, a measured
+  record) and this sweep.
 - **Count sweep.**
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 25 Rust tests (19 + 6) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_muon axial_yields` | `running 25 tests`, `25 passed` | KEPT |
+| Verification, 25 Rust tests (19 + 6) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_muon axial_yields` | `running 25 tests`, `25 passed` (rerun after the pole-length fix) | KEPT |
 | Same, 19 in `polarized_muon` and 6 in `axial_yields` | `grep -c '#\[test\]' rust/src/kernels/polarized_muon.rs rust/src/kernels/axial_yields.rs` | 19 and 6 | KEPT |
 | Files Changed, "five tests" added | `git show origin/master:rust/src/kernels/polarized_muon.rs \| grep -c '#\[test\]'` | 14 on master, 19 now | EDITED from six |
-| Files Changed, "seven" reference pins | the `Daughter::` rows of `neutrino_bins_match_a_high_precision_reference` | 7 | KEPT |
-| Verification, 52 model tests | `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator` | `52 passed in 4.45s` (the note says 6 s) | KEPT |
+| Files Changed, "eight" reference pins | the `Daughter::` rows of `neutrino_bins_match_a_high_precision_reference` | 8 | EDITED from seven |
+| Verification, 52 model tests | `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator` | `52 passed in 4.56s` (rerun after the review fixes; the note says 6 s for the earlier run) | KEPT |
 | PR #130, 49 model tests | master's 49 plus two new test functions, one with two widths | 49 + 1 + 2 = 52 | KEPT |
 | Verification, 2932 passed | `scripts/agents/preflight.sh` on the final tree (recorded above) | `2932 passed, 16 skipped, 20 warnings, 127 subtests passed` | KEPT |
 | Findings, neutrino speedup 11x and 10x | 2.36 s / 0.22 s and 24.6 s / 2.5 s | 10.7 and 9.8 | KEPT |
@@ -354,9 +442,14 @@ follow-ups were added with `git add -N`, and after the last prose edit.
   `hazma.__file__` and `hazma._core.__file__` inside this worktree, reports
   `"maximum_absolute_difference": 0.0` and "unchanged on the recorded
   grid", 164 values). The new neutrino yields of `AxialVectorMediator`
-  agree with the previous quadrature build to 8e-15 relative on densities
-  and 8e-14 on counts over 40 energies and 300 bins at `e_cm = 500` MeV.
-  The yields are new public output, not a change to an existing one.
+  agree with the previous quadrature build to 8.2e-15 relative on
+  densities and 7.7e-14 on counts over 40 energies and 300 bins at
+  `e_cm = 500` MeV, measured again after the pole-length fix
+  (`/tmp/hazma-task6-timing.py after3`; it moved the counts by 4e-16 from
+  the build before it). The fix moves the closed forms of the unreleased
+  neutrino kernel for slow muons and low-energy bins toward the quadrature
+  by up to the amounts in Findings, and moves no existing public value. The
+  yields are new public output, not a change to an existing one.
 - **Exit Criteria to test mapping.**
 
 | Exit criterion | Satisfied by |

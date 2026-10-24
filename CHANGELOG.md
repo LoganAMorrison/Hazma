@@ -52,8 +52,7 @@ user-facing change even when no signature did.
   densities in MeV⁻¹, as counts per bin, and as lines; `spectra()` and
   `positron_spectra()` are built from them. Muons from `mu mu` decay with
   the effective polarization set by the chiral couplings, and the muon of
-  `π → μν` fully polarized, through a new Rust kernel whose neutrino
-  integrals are closed forms; the mean e⁺ energy per π⁺ at rest is
+  `π → μν` decays fully polarized; the mean e⁺ energy per π⁺ at rest is
   36.94069 MeV with the spin against 38.43022 MeV without it. The π⁰
   Dalitz e± and the polarization of the radiative-muon photons are not
   included (`docs/followups/todo/axial-mediator-pi0-dalitz-positrons.md`

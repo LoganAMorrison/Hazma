@@ -55,9 +55,12 @@
 //! closed form for the neutrinos and keep the adaptive quadrature for the
 //! massive charged lepton, whose `√(x² − 4r)` has no such form. The
 //! quadrature stays available to the tests as the closed form's oracle.
-//! Both forms resolve the lab-energy differences that set a window's
-//! edges to the relative precision of `β`, so neither is more accurate
-//! than that for a muon nearly at rest.
+//! Both forms know a window's edges only to the machine epsilon `ε` of the
+//! lab energies, so a bin of relative width `w` from a muon of speed `β`
+//! carries a relative error of at most about `ε/(βw)`. For `w = 10⁻⁶` the
+//! closed forms and the quadrature differ by 7e-11 at `γβ = 10⁻³`, 6e-8
+//! at `10⁻⁵` and 9e-5 at `10⁻⁷`, and a muon at rest agrees to 1.4e-10 on
+//! the bin from 10⁻⁶ MeV to 2·10⁻⁶ MeV.
 //!
 //! Lines are kept apart from the continuum. A prompt line of a pion in
 //! flight is a flat box; at rest it is a delta function, which only
@@ -316,12 +319,17 @@ impl Laurent {
     /// never forms `0 · ∞`.
     fn integral(&self, x_from: f64, x_to: f64) -> f64 {
         let (u_from, u_to) = (x_from - self.center, x_to - self.center);
+        // The length is formed once from the `x` edges, which carry the
+        // caller's precision; differencing `u` or `q` values near 1 would
+        // add an absolute error of the order of the machine epsilon that
+        // the poles, whose coefficients grow as `1/β²`, amplify.
+        let length = x_to - x_from;
         let polynomial: f64 = self
             .polynomial
             .iter()
             .enumerate()
             .filter(|(_, coefficient)| **coefficient != 0.0)
-            .map(|(k, coefficient)| coefficient * power_integral(k as i32, u_from, u_to))
+            .map(|(k, coefficient)| coefficient * power_integral(k as i32, u_from, u_to, length))
             .sum();
         // `dx = −dq` turns the range `[x_from, x_to]` into `[q(x_to), q(x_from)]`.
         let poles: f64 = self
@@ -330,7 +338,7 @@ impl Laurent {
             .enumerate()
             .filter(|(_, coefficient)| **coefficient != 0.0)
             .map(|(index, coefficient)| {
-                coefficient * power_integral(index as i32 - 3, 1.0 - x_to, 1.0 - x_from)
+                coefficient * power_integral(index as i32 - 3, 1.0 - x_to, 1.0 - x_from, length)
             })
             .sum();
         polynomial + poles
@@ -340,15 +348,14 @@ impl Laurent {
 /// Return `∫ tⁿ dt` from `t_from` to `t_to`, both positive when `n` is
 /// negative.
 ///
-/// The difference of the two antiderivatives is factored through
-/// `t_to − t_from`, so a narrow window loses no more precision than its
-/// edges carry; the edges themselves are differences of nearly equal
-/// lab and boosted energies, so the whole stays at the relative
-/// precision of `β`.
-fn power_integral(power: i32, t_from: f64, t_to: f64) -> f64 {
-    let difference = t_to - t_from;
+/// The caller supplies `length = t_to − t_from`, because two edges near 1
+/// carry an absolute rounding error, and a length recomputed from them
+/// would carry it too. The difference of the two antiderivatives is
+/// factored through `length`, so a narrow window loses no more precision
+/// than that length does.
+fn power_integral(power: i32, t_from: f64, t_to: f64, length: f64) -> f64 {
     if power == -1 {
-        return (difference / t_from).ln_1p();
+        return (length / t_from).ln_1p();
     }
     // `∫ qⁿ = q^m / m` with `m = n + 1`, and
     // `t_to^m − t_from^m = (t_to − t_from) Σⱼ t_toʲ t_from^(m−1−j)` for
@@ -359,9 +366,9 @@ fn power_integral(power: i32, t_from: f64, t_to: f64) -> f64 {
         .map(|j| t_to.powi(j) * t_from.powi(degree - 1 - j))
         .sum();
     let power_difference = if m > 0 {
-        difference * sum
+        length * sum
     } else {
-        -difference * sum / (t_to * t_from).powi(degree)
+        -length * sum / (t_to * t_from).powi(degree)
     };
     power_difference / f64::from(m)
 }
@@ -458,7 +465,11 @@ impl Neutrino {
 pub struct MuonDecay {
     /// Muon mass in MeV, positive.
     pub muon_mass: f64,
-    /// Electron mass in MeV, nonnegative and below half the muon mass.
+    /// Electron mass in MeV: zero, or at least about 1e-5, and below half
+    /// the muon mass. A smaller nonzero mass makes `r = (m_e/m_μ)²`
+    /// comparable to the machine epsilon, so the neutrino closed forms
+    /// reach `q = 0` with nonzero pole coefficients and return infinity or
+    /// NaN.
     pub electron_mass: f64,
 }
 
@@ -1189,7 +1200,7 @@ mod tests {
                         "{daughter:?} from a muon of {muon_energy} MeV, P = {polarization}, {what}"
                     )
                 };
-                for energy in [0.5, 5.0, 31.0, 52.0, 77.0, 140.0, 900.0] {
+                for energy in [5e-3, 0.5, 5.0, 31.0, 52.0, 77.0, 140.0, 900.0] {
                     check(
                         label(format!("dnde at {energy} MeV")),
                         decay.dnde(daughter, energy, muon_energy, polarization),
@@ -1199,8 +1210,9 @@ mod tests {
                     // A bin of relative width 1e-3 costs the quadrature three
                     // digits, since it forms each edge's `cos θ` before
                     // differencing them, where the closed form differences
-                    // the lab energies; the pinned references below show the
-                    // closed form is the accurate side there.
+                    // the lab energies; the pinned 0.5 MeV reference below
+                    // shows the closed form is the accurate side in that
+                    // case.
                     for (width, rtol) in [(0.3 * energy, rtol), (1e-3 * energy, rtol.max(1e-9))] {
                         let (low, high) = (energy - width / 2.0, energy + width / 2.0);
                         check(
@@ -1224,8 +1236,11 @@ mod tests {
 
     /// Bins pinned against a 40-digit `mpmath` integration of the same
     /// densities with the same clamped `cos θ` windows: the slow muon's
-    /// endpoint bin and wide bin, a fast muon's narrow bin and a moderate
-    /// case. The reference's kinks sit at crossings it knows only to
+    /// endpoint bin and wide bin, a fast muon's narrow bin, a moderate case
+    /// and a bin of relative width 1e-3 near 5.5e-3 MeV from the slow muon,
+    /// whose pole integrals are the most sensitive to their interval's
+    /// length. The
+    /// reference's kinks sit at crossings it knows only to
     /// double precision, so 1e-10 covers both sides.
     #[test]
     fn neutrino_bins_match_a_high_precision_reference() {
@@ -1287,6 +1302,14 @@ mod tests {
                 250.0,
                 -0.6,
                 0.006297247697720865,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                5.505_365_311_236_44e-3,
+                5.510_873_430_607_361e-3,
+                slow,
+                1.0,
+                6.798856735042118e-15,
             ),
         ];
         for (daughter, low, high, muon_energy, polarization, expected) in cases {

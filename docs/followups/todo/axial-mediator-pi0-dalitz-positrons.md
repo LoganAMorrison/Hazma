@@ -18,7 +18,9 @@ e⁺ and e± yields of the three-pion final states from the charged pions'
 `π⁰ → γ e⁺ e⁻`, with branching fraction 1.17%, is left out. For
 `pi0 pi0 pi0` that is the whole e± yield, so the model reports an exact
 zero where the physical yield is about 0.035 e⁺ per annihilation. For
-`pi pi pi0` it is a few-percent addition concentrated at low energies.
+`pi pi pi0` it adds 0.0117 e⁺ per annihilation to a yield of about one,
+1.2%, concentrated at low energies, where it may be a larger share of the
+continuum.
 
 Hazma has no π⁰ Dalitz e± kernel to reuse: `hazma.spectra._positron`
 has no neutral-pion function.

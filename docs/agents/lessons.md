@@ -377,7 +377,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   against a high-precision reference across the whole support. A difference
   of primitives `F(b) − F(a)` over a range that shrinks at a threshold
   cancels the same way: factor out `b − a` and write the variables relative
-  to the threshold (PR #128, PR #130).
+  to the threshold, and form `b − a` from the quantities that carry the
+  precision rather than from the rounded `F` arguments (PR #128, PR #130,
+  PR #131).
 - [property-rule-keyed-on-one-name] A rule that follows from a structural
   property, such as a channel with no transverse density vanishing without
   an axial coupling, is keyed on the property, declared once, and applied
