@@ -84,6 +84,31 @@ muon and pion kernels and from the :math:`\pi^0 \to \gamma\gamma` box. The
 yield, and ``"tau tau"`` yields raise ``ValueError`` while that state is
 open.
 
+Polarized cascades
+------------------
+
+``mediator_decay_yields`` and ``mediator_decay_counts`` return the same
+products in the lab for one mediator of lab energy ``mediator_energy``,
+above its mass, per decay into each open final state. The mediator's spin
+state is a 3×3 helicity ``density`` in the basis (+1, 0, −1) along its
+flight direction, Hermitian, positive semidefinite and of unit trace;
+``numpy.eye(3) / 3`` is unpolarized, and a pair produced at threshold is
+transverse, ``numpy.diag([0.5, 0.0, 0.5])``. Only the diagonal, the helicity
+fractions :math:`F_\lambda`, reaches these yields, and each daughter's
+angular density about the flight direction is
+:math:`[1 + g(F_+ - F_-)P_1 + h(3F_0 - 1)P_2]/2` with the analyzing powers
+of its decay.
+
+The fermion pairs take their analyzing powers and spins from the tree-level
+helicity amplitudes, and each muon decays with its lab helicity, which the
+boost mixes with its spin in the decay plane. ``pi pi pi0`` comes from the
+transverse leading-order current alone, which aligns the :math:`\pi^0` with
+the mediator's polarization and the charged pions through their angle to
+it. ``mediator_pair_yields`` and ``mediator_pair_counts`` give the inclusive
+yield :math:`2\sum_f B_f K_f` of a mediator pair sharing one density, with
+the branching fractions of ``partial_widths``; the probability that both
+mediators decay into :math:`f` is :math:`B_f^2`, which is not that yield.
+
 Classes
 -------
 
