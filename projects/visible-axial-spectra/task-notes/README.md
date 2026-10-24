@@ -50,7 +50,8 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
   did not name. It folds the three-pion parents and the muon-pair and
   three-pion decays into yields, while `polarized_muon` was the named module.
   The neutrino paths of `polarized_muon` are closed forms, and the adaptive
-  quadrature stays as the test oracle.
+  quadrature stays as the test oracle and integrates the endpoint layer,
+  where the closed forms' terms cancel.
 
 ## Numerical impact so far
 

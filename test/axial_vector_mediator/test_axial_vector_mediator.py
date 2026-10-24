@@ -375,6 +375,29 @@ def test_muon_polarization_matches_helicity_spinors(width: float) -> None:
     )
 
 
+def test_muon_neutrino_counts_stay_positive_at_the_endpoint() -> None:
+    # The last 5.3e-10 MeV below the lab endpoint of a muon pair 5e-13
+    # above its threshold, where the neutrino densities vanish as the
+    # square of the distance to the endpoint. The Laurent terms of the
+    # closed forms cancel there, and once gave -9.99e-26 muon neutrinos
+    # in this bin;
+    # the kernel integrates the endpoint layer by quadrature. The
+    # references are a 60-digit mpmath integral of the same densities,
+    # doubled for the pair. The bin is 1e-11 of its energy wide, so its
+    # edges are known to ε/w ≈ 2e-5 of it.
+    muon_energy = 105.65837450005283
+    edges = np.array([52.82800440010534, 52.828004400633624])
+    counts = core.muon_pair_yields("neutrino", edges, True, muon_energy, 0.0)
+    assert counts[0, 0] == pytest.approx(2.0 * 3.20664703596685e-33, rel=2e-5)
+    assert counts[1, 0] == pytest.approx(2.0 * 6.854862983906438e-29, rel=2e-5)
+    # The same bin through the public counts, at an e_cm that puts the
+    # muons there.
+    model = _model(mx=100.0)
+    public = model.rest_frame_counts(edges, 2.0 * muon_energy, product="neutrino")
+    assert (public["mu mu"] >= 0.0).all()
+    assert public["mu mu"][1, 0] > 0.0
+
+
 def test_rest_frame_counts_round_trip_by_bin_width() -> None:
     # A bin of relative width 1e-6 holds the density times its width up to
     # a second-order error near 1e-12; the muon kernels are good to 1e-10.

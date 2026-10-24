@@ -119,6 +119,37 @@ chiral `μ⁺μ⁻` chains.
   `assert_closed_forms_match_quadrature`, and a pinned `mpmath` bin
   covers it; with the old length they fail at 4.5e-8 (the slow-muon
   comparison, against a 1e-9 tolerance) and 1.7e-5 (the pin, against 1e-10).
+- **Endpoint layer (PR #131 review, second round, closed).** The neutrino
+  densities vanish at their endpoint as `(q − r)²` (ν̄_e, and the `KA` of
+  ν_μ) or `(q − r)³` (`KB`), but their Laurent forms write them as terms
+  of order `r` that cancel, and each term knows `q = 1 − x` only to the
+  machine epsilon of `x`. A window ending at the endpoint a distance `s`
+  from it in `x` therefore carries an absolute error of about `ε s`
+  against a value of about `s³/r`, a relative error `ε r/s²` that passes
+  one near `s = 1e-10`. The reviewer's case is the last 5.3e-10 MeV of the
+  lab spectrum from a muon of 105.65837450005283 MeV (`γβ = 1e-6`) with
+  `P = 0`: `muon_pair_yields` gave −9.99e-26 ν_μ for the pair where a
+  60-digit `mpmath` integral of the same densities gives 1.37097e-28
+  (6.854862983906438e-29 per muon), and 1.27e-29 ν_e against 6.41e-33. The
+  same cancellation made the at-rest ν_e count of the last 1e-11 of the
+  spectrum 50 times too large. `MuonDecay::dnde` and `counts` now take the
+  quadrature whenever the window starts inside the layer `q < 2r`
+  (`MuonDecay::endpoint_layer`, the innermost of `endpoint_points`), where
+  the pointwise density forms `q − r` directly and is good to `ε/s`;
+  outside the layer `s ≥ r`, and the closed forms lose at most `ε/r`. The
+  quadrature's angular integral had a sibling cancellation:
+  `a Δcos θ + P b Δ(cos² θ)/2` drops the `(1 − cos θ)²` of a density that
+  vanishes at an edge, and gave the ν̄_e count with `P = −1` in the last
+  1e-8 of the spectrum at 250 MeV 16% low; it is now `Δcos θ` times the
+  density at the midpoint. Against the `mpmath` oracle, the last bin of
+  relative width `w` and the density at its lower edge now agree to 7.5e-6
+  or better for `w = 1e-11`, where the bin's own edges are known to
+  `ε/w ≈ 2e-5`, and to 3e-8 for `w = 1e-8`, from rest to 250 MeV; 672
+  endpoint bins and densities over six muon energies, seven widths and four
+  polarizations are all nonnegative. The 500 MeV grid of 40 densities and
+  300 bins is bit-identical for every final state between the builds before
+  and after the fix, and the neutrino timings are unchanged at 0.21 s and
+  2.49 s.
 - **Bin sums at threshold.** `rest_frame_counts` for `pi pi pi0` at
   `3m_π⁰ + 1e-6` MeV sums to one e⁺ within 1e-12 over 353 bins of 0.2 MeV
   but to `1 − 5.4e-8` over 704 bins of 0.1 MeV. The loss is a few times
@@ -186,7 +217,10 @@ chiral `μ⁺μ⁻` chains.
   through the interval length `x_to − x_from`, which `Laurent::integral`
   forms once from the `x` edges and passes to `power_integral`.
   `CosineEdge` holds a bin edge's `cos θ = α + β'/x`, clamped or free per
-  subinterval. Both forms know a window's edges only to the machine epsilon
+  subinterval. A window that starts inside the endpoint layer `q < 2r`
+  (`MuonDecay::endpoint_layer`) is integrated by the quadrature instead,
+  since there the Laurent terms cancel below the precision of `q`
+  (Findings). Both forms know a window's edges only to the machine epsilon
   `ε` of the lab energies, so a bin of relative width `w` from a muon of
   speed `β` carries an error of at most about `ε/(βw)`; the module docs give
   the measured 7e-11, 6e-8 and 9e-5 at `γβ = 1e-3`, `1e-5` and `1e-7` for
@@ -234,14 +268,22 @@ The second PR:
   Hazma-mass pion mean. The review fix passes the interval length into
   `power_integral`, adds 5e-3 MeV to the energies
   `assert_closed_forms_match_quadrature` checks, adds the eighth pin and
-  documents the `electron_mass` contract.
+  documents the `electron_mass` contract. The second review round adds
+  `MuonDecay::endpoint_layer`, the quadrature fallback in `dnde_neutrino`
+  and `counts_neutrino`, the midpoint form of `counts_quadrature`'s angular
+  integral, and two more tests:
+  `neutrino_endpoint_layer_matches_a_high_precision_reference` (eleven
+  60-digit `mpmath` pins) and `neutrino_endpoint_bins_are_nonnegative`.
 - `rust/src/kernels.rs`: the module-doc paragraph for `polarized_muon`
   and `axial_yields`.
 - `test/axial_vector_mediator/spinor_oracle.py`: `fermion_polarization`
   and the helicity spinors behind it.
 - `test/axial_vector_mediator/test_axial_vector_mediator.py`: the pion
-  mean pin, whose first edge a review moved a full bin below `m_e`, and the
-  polarization oracle test.
+  mean pin, whose first edge a review moved a full bin below `m_e`, the
+  polarization oracle test and, from the second review round,
+  `test_muon_neutrino_counts_stay_positive_at_the_endpoint`, which pins the
+  reviewer's bin through `muon_pair_yields` and checks it through the
+  public `rest_frame_counts`.
 - `CHANGELOG.md`: the yields entry under `Added`, replacing the sentence
   that said the spectra raise.
 - `docs/source/axial_vector_mediator.rst`: a "Yields" section.
@@ -325,6 +367,29 @@ The review fixes (PR #131):
   warnings, 127 subtests passed`, the same count as before the fixes
   because no test function was added.
 
+The second review round (PR #131):
+
+- `cargo test --manifest-path rust/Cargo.toml --no-default-features
+  --features test-probes -- polarized_muon axial_yields`: 27 passed (21 in
+  `polarized_muon`, 6 in `axial_yields`). With `endpoint_layer` returning
+  infinity, so that the closed forms run in the layer, the new pin fails at
+  a relative error of 2.0e3 on the reviewer's ν_e bin and the sweep finds
+  −4.7e-30 ν_e in the last 1e-12 of the spectrum at `γβ = 1e-6`, `P = 0.4`.
+  `cargo clippy --all-features --all-targets -- -D warnings` and `cargo fmt
+  --check` are clean.
+- `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator`:
+  `53 passed in 4.49s` after the rebuild.
+- The 60-digit `mpmath` oracle (a scratch script, not committed) evaluates
+  `a + b cos θ` with the clamped windows and break points at the crossings
+  and the layer; the kernel's eleven pinned cases agree with it as recorded
+  in Findings. The 500 MeV neutrino grid is bit-identical between the
+  builds before and after the fix (0 of 8160 entries changed).
+- `scripts/agents/preflight.sh --paths "hazma/axial_vector_mediator
+  test/axial_vector_mediator" --md "<the two lessons files, the task-notes
+  README, this note>"` on the final tree with `.venv/bin` first on `PATH`:
+  `RESULT: PASS`, pytest `2933 passed, 16 skipped, 20 warnings, 127 subtests
+  passed`, one more than before for the new model test.
+
 ## Open Questions
 
 - The two deferred physics items are follow-ups, not open questions of this
@@ -383,6 +448,9 @@ follow-ups were added with `git add -N`, and after the last prose edit.
   - `dnde_quadrature|counts_quadrature` appear only in `polarized_muon.rs`
     and this note once a `rg` over the generic `dnde_neutrino` is excluded,
     since that name is the public Hazma kernel family (KEPT).
+  - `endpoint_layer` (second review round) hits `polarized_muon.rs` (7),
+    `docs/agents/lessons-examples.md` (2) and this note (8, this row
+    included), all KEPT.
 - **Line-number citation sweep.** `rg -n
   'polarized_muon\.rs:[0-9]+|axial_yields\.rs:[0-9]+|_model\.py:[0-9]+|spinor_oracle\.py:[0-9]+|test_axial_vector_mediator\.py:[0-9]+|kernels\.rs:[0-9]+'
   projects/visible-axial-spectra/ docs/` returned no hits.
@@ -426,13 +494,13 @@ follow-ups were added with `git add -N`, and after the last prose edit.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 25 Rust tests (19 + 6) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_muon axial_yields` | `running 25 tests`, `25 passed` (rerun after the pole-length fix) | KEPT |
-| Same, 19 in `polarized_muon` and 6 in `axial_yields` | `grep -c '#\[test\]' rust/src/kernels/polarized_muon.rs rust/src/kernels/axial_yields.rs` | 19 and 6 | KEPT |
-| Files Changed, "five tests" added | `git show origin/master:rust/src/kernels/polarized_muon.rs \| grep -c '#\[test\]'` | 14 on master, 19 now | EDITED from six |
+| Verification, 27 Rust tests (21 + 6) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_muon axial_yields` | `running 27 tests`, `27 passed` (rerun after the endpoint-layer fix; 25 before it) | EDITED |
+| Same, 21 in `polarized_muon` and 6 in `axial_yields` | `grep -c '#\[test\]' rust/src/kernels/polarized_muon.rs rust/src/kernels/axial_yields.rs` | 21 and 6 | EDITED |
+| Files Changed, "five tests" plus "two more tests" | `git show origin/master:rust/src/kernels/polarized_muon.rs \| grep -c '#\[test\]'` | 14 on master, 21 now | EDITED |
 | Files Changed, "eight" reference pins | the `Daughter::` rows of `neutrino_bins_match_a_high_precision_reference` | 8 | EDITED from seven |
-| Verification, 52 model tests | `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator` | `52 passed in 4.56s` (rerun after the review fixes; the note says 6 s for the earlier run) | KEPT |
-| PR #130, 49 model tests | master's 49 plus two new test functions, one with two widths | 49 + 1 + 2 = 52 | KEPT |
-| Verification, 2932 passed | `scripts/agents/preflight.sh` on the final tree (recorded above) | `2932 passed, 16 skipped, 20 warnings, 127 subtests passed` | KEPT |
+| Verification, 52 then 53 model tests | `.venv/bin/python -m pytest -q -n 0 test/axial_vector_mediator` | `53 passed in 4.49s` after the second round's test (52 before it) | EDITED |
+| PR #130, 49 model tests | master's 49 plus three new test functions, one with two widths | 49 + 1 + 2 + 1 = 53 | EDITED |
+| Verification, 2933 passed | `scripts/agents/preflight.sh` on the final tree (recorded above) | `2933 passed, 16 skipped, 20 warnings, 127 subtests passed` | EDITED from 2932 |
 | Findings, neutrino speedup 11x and 10x | 2.36 s / 0.22 s and 24.6 s / 2.5 s | 10.7 and 9.8 | KEPT |
 | Exit criterion, 36.94069288635647 MeV | `pion_rest_mean_positron_energy_is_the_note_value` | passes at 1e-11 | KEPT |
 
@@ -449,7 +517,11 @@ follow-ups were added with `git add -N`, and after the last prose edit.
   the build before it). The fix moves the closed forms of the unreleased
   neutrino kernel for slow muons and low-energy bins toward the quadrature
   by up to the amounts in Findings, and moves no existing public value. The
-  yields are new public output, not a change to an existing one.
+  second round's endpoint-layer fix moves only neutrino windows that start
+  inside `q < 2r`: the same 500 MeV grid is bit-identical for every final
+  state between the builds before and after it (`/tmp/pr131/timing.py`,
+  0 of 8160 entries changed), and the public-impact script still reports
+  0.0. The yields are new public output, not a change to an existing one.
 - **Exit Criteria to test mapping.**
 
 | Exit criterion | Satisfied by |
@@ -460,7 +532,7 @@ follow-ups were added with `git add -N`, and after the last prose edit.
 | Mean e⁺ energy per π⁺ at rest, 36.94069288635647 MeV with spin and 38.430221 MeV without | `pion_rest_mean_positron_energy_is_the_note_value`, `pion_rest_mean_positron_energy_without_spin`, `pion_rest_mean_positron_energy_with_hazma_masses`, `test_pion_rest_mean_positron_energy_carries_the_muon_spin` |
 | Count bins and differential spectra round-trip by bin width | Rust `muon_counts_round_trip_by_bin_width`, `pion_counts_are_normalized_and_round_trip`, `counts_round_trip_by_bin_width`; Python `test_rest_frame_counts_round_trip_by_bin_width` |
 | Polarization convention pinned | `test_muon_polarization_matches_helicity_spinors` against `spinor_oracle.fermion_polarization` |
-| Closed-form neutrinos agree with their oracle | `neutrino_closed_forms_match_the_quadrature`, `neutrino_closed_forms_hold_for_a_slow_muon`, `neutrino_closed_forms_survive_the_massless_limit`, `neutrino_bins_match_a_high_precision_reference` |
+| Closed-form neutrinos agree with their oracle | `neutrino_closed_forms_match_the_quadrature`, `neutrino_closed_forms_hold_for_a_slow_muon`, `neutrino_closed_forms_survive_the_massless_limit`, `neutrino_bins_match_a_high_precision_reference`, `neutrino_endpoint_layer_matches_a_high_precision_reference`, `neutrino_endpoint_bins_are_nonnegative`; Python `test_muon_neutrino_counts_stay_positive_at_the_endpoint` |
 | Existing public outputs bit-identical | `references/check_public_impact.py`, difference 0.0 |
 
 - **Task-note self-consistency.** `**Status:** Complete` agrees with the
@@ -471,7 +543,8 @@ follow-ups were added with `git add -N`, and after the last prose edit.
   this note and the README. Every function and type cited in Decisions
   and Findings (`Laurent`, `CosineEdge`, `dnde_neutrino`,
   `counts_neutrino`, `dnde_quadrature`, `counts_quadrature`,
-  `fermion_polarization`) exists in the tree. The follow-up files exist
+  `endpoint_layer`, `endpoint_points`, `fermion_polarization`) exists in
+  the tree. The follow-up files exist
   under `docs/followups/todo/` with rows in `docs/followups/README.md`.
 
 ## Handoff to Next Task

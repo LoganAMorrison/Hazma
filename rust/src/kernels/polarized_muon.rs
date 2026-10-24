@@ -54,13 +54,19 @@
 //! plus `ln q`. [`MuonDecay::dnde`] and [`MuonDecay::counts`] take that
 //! closed form for the neutrinos and keep the adaptive quadrature for the
 //! massive charged lepton, whose `√(x² − 4r)` has no such form. The
-//! quadrature stays available to the tests as the closed form's oracle.
-//! Both forms know a window's edges only to the machine epsilon `ε` of the
-//! lab energies, so a bin of relative width `w` from a muon of speed `β`
-//! carries a relative error of at most about `ε/(βw)`. For `w = 10⁻⁶` the
-//! closed forms and the quadrature differ by 7e-11 at `γβ = 10⁻³`, 6e-8
-//! at `10⁻⁵` and 9e-5 at `10⁻⁷`, and a muon at rest agrees to 1.4e-10 on
-//! the bin from 10⁻⁶ MeV to 2·10⁻⁶ MeV.
+//! quadrature stays available to the tests as the closed form's oracle,
+//! and takes over inside the endpoint layer `q < 2r`: there a density
+//! vanishes as `(q − r)²` or faster while its Laurent terms are each of
+//! order `r`, and since `q = 1 − x` is known only to the machine epsilon
+//! of `x`, a window lying in the layer would come out with the sign of
+//! the rounding rather than of the density (see
+//! [`MuonDecay::endpoint_layer`]). Both forms know a window's edges only
+//! to the machine epsilon `ε` of the lab energies, so a bin of relative
+//! width `w` from a muon of speed `β` carries a relative error of at most
+//! about `ε/(βw)`. For `w = 10⁻⁶` the closed forms and the quadrature
+//! differ by 7e-11 at `γβ = 10⁻³`, 6e-8 at `10⁻⁵` and 9e-5 at `10⁻⁷`, and
+//! a muon at rest agrees to 1.4e-10 on the bin from 10⁻⁶ MeV to
+//! 2·10⁻⁶ MeV.
 //!
 //! Lines are kept apart from the continuum. A prompt line of a pion in
 //! flight is a flat box; at rest it is a delta function, which only
@@ -511,8 +517,9 @@ impl MuonDecay {
     /// Return break points, as rest-frame momenta in MeV, that resolve the
     /// neutrino densities' layer of width `r` at their endpoint
     /// `q = 1 − x → r`, where factors such as `(q − r)/q` vary on the
-    /// scale `r` rather than one. They sit at `q = 2r, 10r, 100r, 1000r`;
-    /// the charged lepton has no such layer.
+    /// scale `r` rather than one. They sit at `q = 2r, 10r, 100r, 1000r`,
+    /// the first being [`Self::endpoint_layer`]; the charged lepton has no
+    /// such layer.
     fn endpoint_points(&self, daughter: Daughter) -> Vec<f64> {
         if daughter == Daughter::ChargedLepton {
             return Vec::new();
@@ -522,6 +529,23 @@ impl MuonDecay {
             .iter()
             .map(|multiple| self.muon_mass * (1.0 - multiple * r) / 2.0)
             .collect()
+    }
+
+    /// Return the rest-frame energy in MeV, `q = 2r`, above which a
+    /// neutrino window is integrated by quadrature rather than in closed
+    /// form.
+    ///
+    /// In the layer the densities vanish as `(q − r)²` (ν̄_e, and the
+    /// `KA` of ν_μ) or `(q − r)³` (`KB`), but their Laurent terms are each
+    /// of order `r` and cancel, and they carry `q = 1 − x` only to the
+    /// machine epsilon `ε` of `x`. A window ending at the endpoint a
+    /// distance `s` from it in `x` therefore comes out with an absolute
+    /// error of about `ε s` against a value of about `s³/r`, a relative
+    /// error `ε r/s²` that passes one at `s ≈ 10⁻¹⁰`, where the pointwise
+    /// density, which forms `q − r` directly, is still good to `ε/s`.
+    /// Outside the layer `s ≥ r` and the loss is at most `ε/r`.
+    fn endpoint_layer(&self) -> f64 {
+        self.muon_mass * (1.0 - 2.0 * self.mass_ratio()) / 2.0
     }
 
     /// Return the dimensionless `(a, b)` of `d²N/(dx dcos θ) = a + b cos θ`
@@ -645,6 +669,9 @@ impl MuonDecay {
         if low >= high {
             return 0.0;
         }
+        if low >= self.endpoint_layer() {
+            return self.dnde_quadrature(daughter, energy, muon_energy, polarization);
+        }
         let (x_low, x_high) = (self.x(low), self.x(high));
         let center = (x_low + x_high) / 2.0;
         let (a, b) = self.neutrino_coefficients(neutrino, center);
@@ -731,12 +758,16 @@ impl MuonDecay {
         muon_energy: f64,
         polarization: f64,
     ) -> f64 {
-        let max_energy = self.max_energy(neutrino.daughter());
+        let daughter = neutrino.daughter();
+        let max_energy = self.max_energy(daughter);
         let gamma_beta = momentum(muon_energy, self.muon_mass) / self.muon_mass;
         if gamma_beta == 0.0 {
             let (low, high) = (low.max(0.0), high.min(max_energy));
             if low >= high {
                 return 0.0;
+            }
+            if low >= self.endpoint_layer() {
+                return self.counts_quadrature(daughter, low, high, muon_energy, polarization);
             }
             let (x_low, x_high) = (self.x(low), self.x(high));
             let center = (x_low + x_high) / 2.0;
@@ -751,6 +782,9 @@ impl MuonDecay {
         let stop = stop.min(max_energy);
         if start >= stop {
             return 0.0;
+        }
+        if start >= self.endpoint_layer() {
+            return self.counts_quadrature(daughter, low, high, muon_energy, polarization);
         }
         // The window starts at the lower crossing of `low`; the other two
         // crossings fall in either order.
@@ -843,8 +877,13 @@ impl MuonDecay {
             let (a, b) = self.rest_coefficients(daughter, scale * e);
             let edge = |lab: f64| ((lab - gamma * e) / (gamma_beta * k)).clamp(-1.0, 1.0);
             let (cos_low, cos_high) = (edge(low), edge(high));
-            let angular = a * (cos_high - cos_low)
-                + polarization * b * (cos_high * cos_high - cos_low * cos_low) / 2.0;
+            // `∫ (a + P b cos θ) dcos θ` is the width times the density at
+            // the midpoint. Written as `a Δcos θ + P b Δ(cos² θ)/2` it
+            // would lose the density where it vanishes at an edge, such as
+            // `a(1 − cos θ)` for ν̄_e with `P = −1` near the forward edge,
+            // since `1 − cos² θ` drops the `(1 − cos θ)²` term at ε.
+            let middle = (cos_high + cos_low) / 2.0;
+            let angular = (cos_high - cos_low) * polarization.mul_add(b * middle, a);
             angular * scale * k / e
         };
         let mut points = self.endpoint_points(daughter);
@@ -1369,6 +1408,173 @@ mod tests {
             );
         }
         assert_closed_forms_match_quadrature(&decay, 250.0, 1e-10);
+    }
+
+    /// Windows inside the endpoint layer `q < 2r`, pinned against a
+    /// 60-digit `mpmath` integration of the same densities: the last bin
+    /// below the lab endpoint, of relative width `w`, and the density at
+    /// its lower edge, from muons at rest, at `γβ = 1e-6` with `P = 0`
+    /// (where the closed forms gave −9.99e-26 ν_μ for the pair), at
+    /// `γβ = 1e-3` and at 250 MeV. The bin's edges are known to about
+    /// `ε/w` of it, the slow muon's to a few times that, so 3e-5 for
+    /// `w = 1e-11` and 1e-7 for `w = 1e-8`.
+    #[test]
+    fn neutrino_endpoint_layer_matches_a_high_precision_reference() {
+        let decay = MuonDecay::PDG;
+        let slow = decay.muon_mass / (1.0_f64 - 1e-6).sqrt();
+        let barely = 105.65837450005283;
+        let bins = [
+            (
+                Daughter::ElectronNeutrino,
+                52.82800440010534,
+                52.828004400633624,
+                barely,
+                0.0,
+                3.20664703596685e-33,
+                3e-5,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                52.82800440010534,
+                52.828004400633624,
+                barely,
+                0.0,
+                6.854862983906438e-29,
+                3e-5,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                52.82795156927054,
+                52.82795156979882,
+                decay.muon_mass,
+                1.0,
+                1.710308380462997e-28,
+                3e-5,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                52.8279510415193,
+                52.82795156979882,
+                decay.muon_mass,
+                1.0,
+                1.7096967087118605e-19,
+                1e-7,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                52.88080543297118,
+                52.880805961779245,
+                slow,
+                1.0,
+                2.230738852651635e-25,
+                1e-7,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                238.2820093077433,
+                238.28201169056342,
+                250.0,
+                -1.0,
+                1.8912270695346885e-36,
+                1e-7,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                238.2820093077433,
+                238.28201169056342,
+                250.0,
+                -1.0,
+                1.9211365104940507e-23,
+                1e-7,
+            ),
+        ];
+        for (daughter, low, high, muon_energy, polarization, expected, rtol) in bins {
+            assert_close(
+                decay.counts(daughter, low, high, muon_energy, polarization),
+                expected,
+                rtol,
+            );
+        }
+        let densities = [
+            (
+                Daughter::MuonNeutrino,
+                52.82795156927054,
+                decay.muon_mass,
+                1.0,
+                2.0762236258583085e-14,
+                3e-5,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                52.8279510415193,
+                decay.muon_mass,
+                1.0,
+                2.07380911749556e-08,
+                1e-7,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                52.88080543297118,
+                slow,
+                1.0,
+                3.2363430744876206e-18,
+                1e-7,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                238.2820116881806,
+                250.0,
+                -1.0,
+                3.2271909232101085e-26,
+                3e-5,
+            ),
+        ];
+        for (daughter, energy, muon_energy, polarization, expected, rtol) in densities {
+            assert_close(
+                decay.dnde(daughter, energy, muon_energy, polarization),
+                expected,
+                rtol,
+            );
+        }
+    }
+
+    /// The last bin below the lab endpoint, of relative width from 1e-12
+    /// to 1e-2, and the density at its lower edge are never negative, from
+    /// rest to `γ ≈ 19` and for every polarization: the densities are
+    /// nonnegative, and the quadrature keeps them so where the closed
+    /// forms' cancelling terms do not.
+    #[test]
+    fn neutrino_endpoint_bins_are_nonnegative() {
+        let decay = MuonDecay::PDG;
+        let endpoint = decay.max_energy(Daughter::ElectronNeutrino);
+        let slow = decay.muon_mass / (1.0_f64 - 1e-6).sqrt();
+        for muon_energy in [
+            decay.muon_mass,
+            105.65837450005283,
+            slow,
+            110.0,
+            250.0,
+            2000.0,
+        ] {
+            let gamma = muon_energy / decay.muon_mass;
+            let gamma_beta = momentum(muon_energy, decay.muon_mass) / decay.muon_mass;
+            let top = endpoint * (gamma + gamma_beta);
+            for width in [1e-12, 1e-11, 1e-9, 1e-8, 1e-6, 1e-4, 1e-2] {
+                let low = top * (1.0 - width);
+                for daughter in NEUTRINOS {
+                    for polarization in [-1.0, 0.0, 0.4, 1.0] {
+                        let label = format!(
+                            "{daughter:?} from a muon of {muon_energy} MeV, P = {polarization}, \
+                             the last {width:e} of the spectrum"
+                        );
+                        let counts = decay.counts(daughter, low, top, muon_energy, polarization);
+                        assert!(counts >= 0.0, "{label}: counts {counts:e}");
+                        let density = decay.dnde(daughter, low, muon_energy, polarization);
+                        assert!(density >= 0.0, "{label}: density {density:e}");
+                    }
+                }
+            }
+        }
     }
 
     /// A muon at the next representable energy above rest decays like one
