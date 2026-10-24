@@ -1,8 +1,9 @@
-//! `hazma._core.axial_vector_mediator` — rates and rest-frame yields of
-//! the axial-vector mediator model.
+//! `hazma._core.axial_vector_mediator` — rates, rest-frame yields and
+//! polarized decay cascades of the axial-vector mediator model.
 //!
-//! Registration only: the math is in [`crate::kernels::axial_rates`] and
-//! [`crate::kernels::axial_yields`]. The caller is
+//! Registration only: the math is in [`crate::kernels::axial_rates`],
+//! [`crate::kernels::axial_yields`] and
+//! [`crate::kernels::polarized_cascade`]. The caller is
 //! `hazma/axial_vector_mediator/_model.py`, which validates every argument
 //! and flattens it, so each entry point takes flat batches of equal length
 //! and returns one value per sample, or per bin between consecutive edges.
@@ -14,7 +15,8 @@ use pyo3::prelude::*;
 use crate::dispatch::component_major;
 use crate::kernels::axial_rates::{self, DarkSector, FermionPair};
 use crate::kernels::axial_three_pi::Channel as PionChannel;
-use crate::kernels::axial_yields::{Channel, Probe, ThreePionParents};
+use crate::kernels::axial_yields::{Channel, Probe, ThreePionParents, Yields};
+use crate::kernels::polarized_cascade::{Boost, Cascade, Decay, Helicities, PairDecay};
 
 /// `(m, g_V^χ, g_A^χ, M, Γ)`, masses and width in MeV.
 type Dark = (f64, f64, f64, f64, f64);
@@ -140,7 +142,7 @@ fn fermion_pair_helicity_density<'py>(
 /// `[e, μ, τ]` for `"neutrino"`.
 fn channel_yields<'py>(
     py: Python<'py>,
-    channel: &Channel,
+    channel: &impl Yields,
     product: &str,
     points: &PyReadonlyArray1<'py, f64>,
     binned: bool,
@@ -229,11 +231,97 @@ fn three_pion_yields<'py>(
     channel_yields(py, &channel, product, &points, binned)
 }
 
+/// Return a mediator's boost from `(mass, lab energy)` in MeV and its
+/// helicity fractions from `(F₊, F₀, F₋)`.
+fn mediator_state(mediator: (f64, f64), helicities: (f64, f64, f64)) -> (Boost, Helicities) {
+    let (plus, zero, minus) = helicities;
+    (
+        Boost::new(mediator.0, mediator.1),
+        Helicities { plus, zero, minus },
+    )
+}
+
+/// Return the `product` yields of a moving mediator's decay into the
+/// fermion pair of `lepton` (`"e"`, `"mu"`, `"ve"`, `"vm"` or `"vt"`),
+/// with `fermion` its `(mass in MeV, g_V, g_A)`, `mediator` the mediator's
+/// `(mass, lab energy)` in MeV and `helicities` its `(F₊, F₀, F₋)`.
+///
+/// # Errors
+///
+/// `ValueError` for an unknown `lepton` or `product`.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn pair_cascade_yields<'py>(
+    py: Python<'py>,
+    product: &str,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    lepton: &str,
+    fermion: (f64, f64, f64),
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
+    let (mass, vector, axial) = fermion;
+    let pair = PairDecay {
+        mediator_mass: mediator.0,
+        mass,
+        vector,
+        axial,
+    };
+    let decay = match lepton {
+        "e" => Decay::ElectronPair(pair),
+        "mu" => Decay::MuonPair(pair),
+        "ve" => Decay::NeutrinoPair(pair, 0),
+        "vm" => Decay::NeutrinoPair(pair, 1),
+        "vt" => Decay::NeutrinoPair(pair, 2),
+        _ => {
+            return Err(PyValueError::new_err(format!("unknown lepton {lepton:?}.")));
+        }
+    };
+    let (boost, helicities) = mediator_state(mediator, helicities);
+    let cascade = Cascade {
+        decay,
+        boost,
+        helicities,
+    };
+    channel_yields(py, &cascade, product, &points, binned)
+}
+
+/// Return the `product` yields of a moving mediator's decay into
+/// `π⁺π⁻π⁰` through the LO transverse current, with every pion produced at
+/// `pion_mass` in MeV, and `mediator` and `helicities` as in
+/// `pair_cascade_yields`.
+///
+/// # Errors
+///
+/// `ValueError` for an unknown `product`.
+#[pyfunction]
+fn three_pion_cascade_yields<'py>(
+    py: Python<'py>,
+    product: &str,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    pion_mass: f64,
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> PyResult<Bound<'py, PyArray2<f64>>> {
+    let parents = ThreePionParents::new(PionChannel::Charged, mediator.0, pion_mass, 1.0);
+    let (boost, helicities) = mediator_state(mediator, helicities);
+    let cascade = Cascade {
+        decay: Decay::ThreePion(parents),
+        boost,
+        helicities,
+    };
+    channel_yields(py, &cascade, product, &points, binned)
+}
+
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(fermion_pair_densities, module)?)?;
     module.add_function(wrap_pyfunction!(fermion_pair_helicity_density, module)?)?;
     module.add_function(wrap_pyfunction!(muon_pair_yields, module)?)?;
     module.add_function(wrap_pyfunction!(three_pion_yields, module)?)?;
+    module.add_function(wrap_pyfunction!(pair_cascade_yields, module)?)?;
+    module.add_function(wrap_pyfunction!(three_pion_cascade_yields, module)?)?;
     module.add_function(wrap_pyfunction!(sigma_v, module)?)?;
     module.add_function(wrap_pyfunction!(cross_section, module)?)?;
     Ok(())

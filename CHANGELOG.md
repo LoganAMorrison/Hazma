@@ -59,6 +59,19 @@ user-facing change even when no signature did.
   and `axial-mediator-polarized-radiative-muon-photons.md`). `"tau tau"`
   yields raise while that state is open. Existing public values are
   unchanged.
+- **Polarized cascades of `AxialVectorMediator`.**
+  `mediator_decay_yields` and `mediator_decay_counts` return the lab photon,
+  e⁺-only, charge-summed e± and per-flavor neutrino yields of one moving
+  mediator's decay into each open visible state (`e e`, `mu mu`, the three
+  neutrino pairs and `pi pi pi0`), from a declared 3×3 helicity density.
+  `mediator_pair_yields` and `mediator_pair_counts` give the inclusive yield
+  `2 Σ_f B_f K_f` of a mediator pair, with `B_f` from `partial_widths`.
+  Muons decay with their lab helicity, and `pi pi pi0` comes from the
+  transverse LO current. The radiative photons of muons and charged pions
+  stay unpolarized
+  (`docs/followups/todo/axial-mediator-polarized-radiative-muon-photons.md`),
+  and a model-generated density waits for the mediator-pair channel. Existing
+  public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

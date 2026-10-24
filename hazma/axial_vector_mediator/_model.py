@@ -33,6 +33,16 @@ _THREE_PIONS = ("pi pi pi0", "pi0 pi0 pi0")
 _LONGITUDINAL_ONLY = ("pi0 pi0 pi0", "g g")
 _PRODUCTS = ("photon", "positron", "electron_positron", "neutrino")
 _NEUTRINO_FLAVORS = {"ve ve": 0, "vm vm": 1, "vt vt": 2}
+#: The fermion-pair decays with a cascade kernel, by the kernel's lepton name.
+_CASCADE_LEPTONS = {
+    "e e": "e",
+    "mu mu": "mu",
+    "ve ve": "ve",
+    "vm vm": "vm",
+    "vt vt": "vt",
+}
+#: Absolute tolerance of a helicity density's Hermiticity, trace and spectrum.
+_DENSITY_ATOL = 1e-12
 
 
 def _line_multiplicity(final_state: str, product: str) -> float | np.ndarray | None:
@@ -52,6 +62,28 @@ def _line_multiplicity(final_state: str, product: str) -> float | np.ndarray | N
 
 def _scalar_or_array(value: np.ndarray) -> float | np.ndarray:
     return value.item() if value.ndim == 0 else value
+
+
+def _helicity_fractions(density: np.ndarray) -> tuple[float, float, float]:
+    """Validate a mediator's helicity density and return its diagonal.
+
+    The density is a 3x3 matrix in the helicity basis (+1, 0, -1) along the
+    mediator's flight direction; the diagonal is ``(F₊, F₀, F₋)``.
+    """
+    rho = np.asarray(density)
+    if rho.shape != (3, 3) or not np.issubdtype(rho.dtype, np.number):
+        raise ValueError("density must be a 3x3 numeric matrix.")
+    rho = rho.astype(complex)
+    if not np.all(np.isfinite(rho)):
+        raise ValueError("density must be finite.")
+    if np.max(np.abs(rho - rho.conj().T)) > _DENSITY_ATOL:
+        raise ValueError("density must be Hermitian.")
+    if abs(np.trace(rho) - 1.0) > _DENSITY_ATOL:
+        raise ValueError("density must have unit trace.")
+    if np.linalg.eigvalsh(rho).min() < -_DENSITY_ATOL:
+        raise ValueError("density must be positive semidefinite.")
+    plus, zero, minus = np.clip(np.diag(rho).real, 0.0, 1.0)
+    return float(plus), float(zero), float(minus)
 
 
 def _parameter(name: str, doc: str, *, positive: bool = False) -> property:
@@ -142,6 +174,10 @@ class AxialVectorMediator(TheoryAnn):
     photon, e⁺, e± and neutrino yields of each final state in the
     centre-of-mass frame, and `spectra` and `positron_spectra` weight their
     photon and e⁺ continua by the branching fractions.
+    `mediator_decay_yields` and `mediator_decay_counts` give the same
+    products of a moving mediator's decays from its helicity density, and
+    `mediator_pair_yields` and `mediator_pair_counts` the inclusive yield of
+    a mediator pair.
     """
 
     def __init__(  # noqa: PLR0913 - the model's parameters
@@ -550,28 +586,32 @@ class AxialVectorMediator(TheoryAnn):
             mass is past a channel's declared range. A model in that case
             needs the ``width`` argument.
         """
-        mv = self._mv
         unmodeled = [
             fs
             for fs, threshold in self._unmodeled_thresholds().items()
-            if fs != "v v" and mv > threshold
+            if fs != "v v" and self._mv > threshold
         ]
         if unmodeled:
             raise ValueError(
                 f"The total width is undefined: {', '.join(unmodeled)} is open "
                 "and this model has no rate for it; pass width."
             )
+        widths = self._visible_widths()
+        dm_pair, _ = _rates.fermion_pair_densities(
+            np.array([self._mv]), self._mx, self._gvxx, self._gaxx, 1.0
+        )
+        widths["x x"] = float(dm_pair[0]) / (2.0 * self._mv)
+        widths["total"] = sum(widths.values())
+        return widths
+
+    def _visible_widths(self) -> dict[str, float]:
+        """Return the partial widths in MeV of the decays into Standard Model states."""
+        mv = self._mv
         q = np.array([mv])
-        widths = {
+        return {
             fs: float(self._densities(fs, q)[0][0]) / (2.0 * mv)
             for fs in (*_FERMION_PAIRS, *_THREE_PIONS)
         }
-        dm_pair, _ = _rates.fermion_pair_densities(
-            q, self._mx, self._gvxx, self._gaxx, 1.0
-        )
-        widths["x x"] = float(dm_pair[0]) / (2.0 * mv)
-        widths["total"] = sum(widths.values())
-        return widths
 
     def _rate_parts(self, final_state: str, e_cm: float) -> tuple[float, float]:
         r"""Return the transverse and longitudinal rates of an open final state.
@@ -674,6 +714,21 @@ class AxialVectorMediator(TheoryAnn):
             raise ValueError(f"Photon {name} must be positive.")
         if np.any(points < 0.0):
             raise ValueError(f"{name} must be nonnegative.")
+
+    @classmethod
+    def _checked_edges(cls, edges: np.ndarray, product: str) -> np.ndarray:
+        """Validate bin edges for ``product`` and return them contiguous."""
+        points = _real_array(edges, "edges")
+        if (
+            points.ndim != 1
+            or points.size < 2  # noqa: PLR2004 - a bin needs two edges
+            or np.any(np.diff(points) <= 0.0)
+        ):
+            raise ValueError(
+                "edges must be a strictly increasing 1-D array of two or more."
+            )
+        cls._check_energies(points, product, "edges")
+        return np.ascontiguousarray(points)
 
     def rest_frame_yields(
         self, energies: RealOrRealArray, e_cm: float, *, product: str
@@ -802,18 +857,8 @@ class AxialVectorMediator(TheoryAnn):
             As `rest_frame_yields` does.
         """
         kernel_product = self._kernel_product(product)
-        points = _real_array(edges, "edges")
-        if (
-            points.ndim != 1
-            or points.size < 2  # noqa: PLR2004 - a bin needs two edges
-            or np.any(np.diff(points) <= 0.0)
-        ):
-            raise ValueError(
-                "edges must be a strictly increasing 1-D array of two or more."
-            )
-        self._check_energies(points, product, "edges")
+        points = self._checked_edges(edges, product)
         e_cm = _finite_real(e_cm, "e_cm", positive=True)
-        points = np.ascontiguousarray(points)
         counts = {}
         for fs in self._open_final_states(e_cm):
             rows = self._continuum(fs, kernel_product, points, e_cm, binned=True)
@@ -827,6 +872,277 @@ class AxialVectorMediator(TheoryAnn):
                     selected[..., index] += multiplicity
             counts[fs] = selected
         return counts
+
+    def _mediator_decays(
+        self, mediator_energy: float, density: np.ndarray
+    ) -> tuple[tuple[float, float], tuple[float, float, float], list[str]]:
+        """Return ``(mass, energy)``, the helicity fractions and the open decays.
+
+        The open decays are those into Standard Model states with a positive
+        partial width; the dark-matter pair leaves nothing visible.
+        """
+        energy = _finite_real(mediator_energy, "mediator_energy", positive=True)
+        if energy <= self._mv:
+            raise ValueError(
+                "mediator_energy must exceed the mediator mass: a mediator at rest "
+                "decays into lines."
+            )
+        helicities = _helicity_fractions(density)
+        decays = [fs for fs, width in self._visible_widths().items() if width > 0.0]
+        if "tau tau" in decays:
+            raise ValueError(
+                "The tau tau cascade is undefined: this model has no tau decay "
+                "kernels."
+            )
+        return (self._mv, energy), helicities, decays
+
+    def _cascade(
+        self,
+        final_state: str,
+        product: str,
+        points: np.ndarray,
+        state: tuple[tuple[float, float], tuple[float, float, float]],
+        *,
+        binned: bool,
+    ) -> np.ndarray:
+        """Return one decay's yields of ``product`` as rows, as `_continuum` does."""
+        mediator, helicities = state
+        if final_state == "pi pi pi0":
+            return _rates.three_pion_cascade_yields(
+                product,
+                points,
+                binned,
+                parameters.neutral_pion_mass,
+                mediator,
+                helicities,
+            )
+        return _rates.pair_cascade_yields(
+            product,
+            points,
+            binned,
+            _CASCADE_LEPTONS[final_state],
+            self._fermion_pair(final_state),
+            mediator,
+            helicities,
+        )
+
+    def mediator_decay_yields(
+        self,
+        energies: RealOrRealArray,
+        mediator_energy: float,
+        *,
+        product: str,
+        density: np.ndarray,
+    ) -> dict[str, float | np.ndarray]:
+        r"""Return the lab yield :math:`dN/dE` of each open mediator decay.
+
+        The yield is per decay of one mediator of lab energy
+        ``mediator_energy`` into that final state, with every particle of
+        the state and of its decays counted and no branching fraction
+        applied; `mediator_pair_yields` gives the inclusive yield of a
+        pair. Each decay is boosted from the mediator's rest frame with the
+        angular distribution its helicity density gives each daughter.
+
+        Parameters
+        ----------
+        energies : float or array_like
+            Lab particle energies in MeV: total energies for e±, positive for
+            photons and nonnegative otherwise.
+        mediator_energy : float
+            The mediator's lab energy in MeV, above its mass.
+        product : {"photon", "positron", "electron_positron", "neutrino"}
+            As in `rest_frame_yields`.
+        density : array_like
+            The mediator's 3x3 helicity density in the basis (+1, 0, -1)
+            along its flight direction: Hermitian, positive semidefinite and
+            of unit trace. ``numpy.eye(3) / 3`` is the unpolarized mediator.
+
+        Returns
+        -------
+        dict of str to float or numpy.ndarray
+            :math:`dN/dE` in MeV⁻¹ for each decay with a positive partial
+            width, shaped like ``energies``, with a leading flavor axis of
+            length 3 for neutrinos.
+
+        Raises
+        ------
+        ValueError
+            If ``density`` is not a helicity density, ``mediator_energy`` is
+            not above the mass, ``"tau tau"`` is open, or a partial width
+            raises.
+
+        Notes
+        -----
+        The yields depend on the density only through its diagonal, the
+        helicity fractions :math:`F_\lambda`, because the off-diagonal
+        elements carry the daughters' azimuth about the flight direction.
+        A daughter's angular density about that direction is
+        :math:`[1 + g(F_+ - F_-)P_1 + h(3F_0 - 1)P_2]/2`, so
+        :math:`F_0 = 1/3` with :math:`F_+ = F_-` boosts an isotropic decay;
+        pair production at threshold is transverse, :math:`F_0 = 0`. The
+        fermion pairs take their analyzing powers and each fermion's spin
+        from the tree-level helicity amplitudes, and a muon decays with its
+        lab helicity, which the boost mixes with its spin in the decay
+        plane. ``"pi pi pi0"`` comes from the transverse LO current alone,
+        with every pion at :data:`hazma.parameters.neutral_pion_mass` as in
+        `rest_frame_yields`. Radiative muon and charged-pion photons stay
+        unpolarized, and the :math:`\pi^0` Dalitz decay and primary
+        radiation are not included.
+        """
+        kernel_product = self._kernel_product(product)
+        values = _real_array(energies, "energies")
+        self._check_energies(values, product, "energies")
+        mediator, helicities, decays = self._mediator_decays(mediator_energy, density)
+        points = np.ascontiguousarray(values.reshape(-1))
+        yields = {}
+        for fs in decays:
+            rows = self._cascade(
+                fs, kernel_product, points, (mediator, helicities), binned=False
+            )
+            selected = self._product_rows(product, rows)
+            shape = (*selected.shape[:-1], *values.shape)
+            yields[fs] = _scalar_or_array(selected.reshape(shape))
+        return yields
+
+    def mediator_decay_counts(
+        self,
+        edges: np.ndarray,
+        mediator_energy: float,
+        *,
+        product: str,
+        density: np.ndarray,
+    ) -> dict[str, np.ndarray]:
+        """Return each open mediator decay's lab yield in energy bins.
+
+        Bin ``i`` is ``[edges[i], edges[i + 1])``. A moving mediator has no
+        lines, and a bin of width ``ΔE`` tends to
+        ``mediator_decay_yields(E) ΔE`` as it shrinks.
+
+        Parameters
+        ----------
+        edges : array_like
+            Strictly increasing lab bin edges in MeV, at least two: total
+            energies for e±, positive for photons and nonnegative otherwise.
+        mediator_energy : float
+            The mediator's lab energy in MeV, above its mass.
+        product : {"photon", "positron", "electron_positron", "neutrino"}
+            As in `rest_frame_yields`.
+        density : array_like
+            The mediator's helicity density, as in `mediator_decay_yields`.
+
+        Returns
+        -------
+        dict of str to numpy.ndarray
+            Particles per decay into each decay with a positive partial
+            width, one per bin, with a leading flavor axis of length 3 for
+            neutrinos.
+
+        Raises
+        ------
+        ValueError
+            As `mediator_decay_yields` does.
+        """
+        kernel_product = self._kernel_product(product)
+        points = self._checked_edges(edges, product)
+        mediator, helicities, decays = self._mediator_decays(mediator_energy, density)
+        return {
+            fs: self._product_rows(
+                product,
+                self._cascade(
+                    fs, kernel_product, points, (mediator, helicities), binned=True
+                ),
+            )
+            for fs in decays
+        }
+
+    def _inclusive_pair(
+        self, per_decay: dict[str, float | np.ndarray], shape: tuple[int, ...]
+    ) -> np.ndarray:
+        """Return ``2 Σ_f B_f K_f`` over the per-decay yields ``K_f``."""
+        widths = self.partial_widths()
+        total = np.zeros(shape)
+        for fs, value in per_decay.items():
+            total += 2.0 * widths[fs] / widths["total"] * np.asarray(value)
+        return total
+
+    def mediator_pair_yields(
+        self,
+        energies: RealOrRealArray,
+        mediator_energy: float,
+        *,
+        product: str,
+        density: np.ndarray,
+    ) -> float | np.ndarray:
+        r"""Return the inclusive lab yield :math:`dN/dE` of a mediator pair.
+
+        It is :math:`2\sum_f B_f K_f`, with :math:`K_f` the
+        `mediator_decay_yields` of decay :math:`f` and :math:`B_f` its
+        branching fraction from `partial_widths`, for two mediators of lab
+        energy ``mediator_energy`` sharing one helicity density, such as the
+        pair of :math:`\chi\bar\chi \to Z'Z'` at threshold. It counts the
+        pairs in which only one mediator decays into :math:`f`; the
+        probability that both do is :math:`B_f^2`, which is not this yield.
+
+        Parameters
+        ----------
+        energies, mediator_energy, product, density
+            As in `mediator_decay_yields`.
+
+        Returns
+        -------
+        float or numpy.ndarray
+            :math:`dN/dE` in MeV⁻¹ per pair, shaped like ``energies``, with a
+            leading flavor axis of length 3 for neutrinos.
+
+        Raises
+        ------
+        ValueError
+            As `mediator_decay_yields` does, and when `partial_widths`
+            raises because a decay this model does not compute is open.
+        """
+        per_decay = self.mediator_decay_yields(
+            energies, mediator_energy, product=product, density=density
+        )
+        shape = np.shape(energies)
+        if product == "neutrino":
+            shape = (3, *shape)
+        return _scalar_or_array(self._inclusive_pair(per_decay, shape))
+
+    def mediator_pair_counts(
+        self,
+        edges: np.ndarray,
+        mediator_energy: float,
+        *,
+        product: str,
+        density: np.ndarray,
+    ) -> np.ndarray:
+        """Return the inclusive lab yield of a mediator pair in energy bins.
+
+        It weights `mediator_decay_counts` as `mediator_pair_yields` weights
+        `mediator_decay_yields`.
+
+        Parameters
+        ----------
+        edges, mediator_energy, product, density
+            As in `mediator_decay_counts`.
+
+        Returns
+        -------
+        numpy.ndarray
+            Particles per pair, one per bin, with a leading flavor axis of
+            length 3 for neutrinos.
+
+        Raises
+        ------
+        ValueError
+            As `mediator_pair_yields` does.
+        """
+        per_decay = self.mediator_decay_counts(
+            edges, mediator_energy, product=product, density=density
+        )
+        bins = np.size(edges) - 1
+        shape = (3, bins) if product == "neutrino" else (bins,)
+        return self._inclusive_pair(per_decay, shape)
 
     def _spectrum_funcs(
         self,

@@ -70,6 +70,10 @@
 //! three-pion parent densities. They are pinned by the mediator note's
 //! closed-form moments, by Hazma's unpolarized kernels at zero
 //! polarization, and by high-precision integrations of their own densities.
+//! [`polarized_cascade`] boosts the decays of a mediator with a declared
+//! helicity density into the lab through the same decay kernels; it is
+//! pinned by its decay matrix, by the isotropic boost, and by the mediator
+//! note's three-pion cascade spectra.
 
 pub mod axial_poles;
 pub mod axial_rates;
@@ -85,6 +89,7 @@ pub mod photon_muon;
 pub mod photon_pion;
 pub mod photon_rho;
 pub mod photon_tables;
+pub mod polarized_cascade;
 pub mod polarized_muon;
 pub mod positron_muon;
 pub mod positron_pion;
