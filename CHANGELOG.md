@@ -44,8 +44,21 @@ user-facing change even when no signature did.
   hadronic theory, `theory="chpt"`, is implemented; `"rcht"` raises
   `NotImplementedError`. A total rate or width raises while an open final
   state has no rate (`v v`, and `eta pi pi` for octet or singlet couplings),
-  rather than returning a zero. Its continuum photon and positron spectra
-  raise `NotImplementedError`. Existing public values are unchanged.
+  rather than returning a zero. Existing public values are unchanged.
+- **Rest-frame stable-particle yields of `AxialVectorMediator`.**
+  `rest_frame_yields`, `rest_frame_counts` and `rest_frame_lines` return,
+  per annihilation into each open final state in the center-of-mass frame,
+  the photon, e⁺-only, charge-summed e± and per-flavor neutrino yields as
+  densities in MeV⁻¹, as counts per bin, and as lines; `spectra()` and
+  `positron_spectra()` are built from them. Muons from `mu mu` decay with
+  the effective polarization set by the chiral couplings, and the muon of
+  `π → μν` decays fully polarized; the mean e⁺ energy per π⁺ at rest is
+  36.94069 MeV with the spin against 38.43022 MeV without it. The π⁰
+  Dalitz e± and the polarization of the radiative-muon photons are not
+  included (`docs/followups/todo/axial-mediator-pi0-dalitz-positrons.md`
+  and `axial-mediator-polarized-radiative-muon-photons.md`). `"tau tau"`
+  yields raise while that state is open. Existing public values are
+  unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

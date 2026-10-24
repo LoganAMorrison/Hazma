@@ -63,6 +63,13 @@
 //! [`axial_rates`], the same project's mediator rates behind
 //! `hazma/axial_vector_mediator/`, is pinned instead by the explicit-spinor
 //! evaluation in `test/axial_vector_mediator/spinor_oracle.py`.
+//! [`polarized_muon`] and [`axial_yields`] are the same model's rest-frame
+//! stable-particle yields: the first decays a muon with its spin and the
+//! charged pion that feeds it, which no existing `.pyx` did, and the second
+//! folds those decays and the photon kernels above with the model's
+//! three-pion parent densities. They are pinned by the mediator note's
+//! closed-form moments, by Hazma's unpolarized kernels at zero
+//! polarization, and by high-precision integrations of their own densities.
 
 pub mod axial_poles;
 pub mod axial_rates;
