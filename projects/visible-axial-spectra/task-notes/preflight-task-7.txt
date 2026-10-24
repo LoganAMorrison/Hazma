@@ -7,9 +7,9 @@ PASS   ruff check              0 new, 1 fixed (0 pre-existing at d109b65b73db)
 PASS   cargo fmt --check       rust/
 PASS   cargo clippy            rust/
 PASS   cargo test              rust/
-PASS   pytest                  2955 passed, 16 skipped, 20 warnings, 127 subtests passed in 51.24s
+PASS   pytest                  2956 passed, 16 skipped, 20 warnings, 127 subtests passed in 49.29s
 PASS   import hazma            version 2.3.0
-PASS   markdownlint            docs/source/axial_vector_mediator.rst projects/visible-axial-spectra/task-notes/task-7-polarized-cascades.md
+PASS   markdownlint            projects/visible-axial-spectra/task-notes/task-7-polarized-cascades.md projects/visible-axial-spectra/task-notes/README.md
 SKIP   version bump            not a closing PR (pass --closing)
 PASS   forbidden tokens        none added
 -------------------------------------------------------------------

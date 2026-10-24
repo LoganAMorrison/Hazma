@@ -793,6 +793,12 @@ mod tests {
         analyzers
     }
 
+    /// The angular average of the decay matrix is the identity for any
+    /// analyzing powers, since `∫n̂ dΩ = ∫(3P_n − 1) dΩ = 0`, so this pins
+    /// the matrix's structure and not `g` or `h`; those are pinned by
+    /// `pair_spin_sums_match_the_helicity_amplitudes`,
+    /// `pair_endpoints_at_rest_and_ultra_relativistic`, and the Python
+    /// `test_muon_cascades_match_explicit_spinors`.
     #[test]
     fn decay_matrix_integrates_to_the_identity() {
         for analyzer in physical_analyzers() {
@@ -999,6 +1005,8 @@ mod tests {
                 Decay::ElectronPair(pair)
             };
             let [positron, electron] = cascade(decay, 700.0, TRANSVERSE).charged_leptons(bin);
+            // The two charges share each quadrature's integrand, so they
+            // agree to the fold tolerance (1e-8) with margin.
             assert_close(positron, electron, 1e-9);
             let [positron, electron] = cascade(decay, 700.0, ORIENTED).charged_leptons(bin);
             assert!((positron - electron).abs() > 1e-3 * electron);
@@ -1031,7 +1039,8 @@ mod tests {
         let [positron, electron] = slow.charged_leptons(Probe::Bin(energy - 1e-3, energy + 1e-3));
         assert_close(positron, 1.0, 1e-14);
         assert_close(electron, 1.0, 1e-14);
-        // At γ = 10⁴, dN/dx with x = E/E_A tends to 2W(2x − 1).
+        // At γ = 10⁴, dN/dx with x = E/E_A tends to 2W(2x − 1); the
+        // corrections are O(1/γ²) and O(m_e²/M²) ≈ 5e-6, hence 1e-5.
         let analyzer = pair.analyzer();
         let lab = 1e4 * MEDIATOR;
         let fast = cascade(Decay::ElectronPair(pair), lab, ORIENTED);
@@ -1079,6 +1088,102 @@ mod tests {
         }
     }
 
+    /// The lab second moment `⟨E²⟩` of each pion matches Dalitz-plot
+    /// moments integrated by brute force from momentum conservation, which
+    /// pins the charged pions' alignment wiring (`CHARGED`) at the lab
+    /// level. A pion with the mediator-frame angular density
+    /// `[f + (3F₀ − 1) h P₂(c)]/2` has no `P₁` term, so
+    /// `⟨E²⟩ = γ² ∫e² f du + (γβ)² ∫k² (f/3 + 2κh/15) du` with `κ = 3F₀ − 1`.
+    #[test]
+    fn pion_lab_second_moments_match_dalitz_moments() {
+        let parents = three_pions(MEDIATOR);
+        let (mass, top) = (MASS_PI0, parents.max_kinetic());
+        let excess = MEDIATOR - 3.0 * mass;
+        let momentum2 = |kinetic: f64| kinetic * (2.0 * mass + kinetic);
+        // The cosine of the angle between pions with kinetic energies `a`
+        // and `b`, from the third pion's momentum.
+        let cosine = |a: f64, b: f64| {
+            let third = excess - a - b;
+            (momentum2(third) - momentum2(a) - momentum2(b))
+                / (2.0 * (momentum2(a) * momentum2(b)).sqrt())
+        };
+        let feasible = |a: f64, b: f64| (-1.0..=1.0).contains(&cosine(a, b));
+        // The partner's physical kinetic energies at a fixed pion's: the
+        // symmetric point (equal partner energies) is always physical, so
+        // each edge is bisected outward from it.
+        let span = |fixed: f64| {
+            let edge = |outer: f64| {
+                if feasible(fixed, outer) {
+                    return outer;
+                }
+                let (mut inside, mut outside) = ((excess - fixed) / 2.0, outer);
+                for _ in 0..100 {
+                    let middle = 0.5 * (inside + outside);
+                    if feasible(fixed, middle) {
+                        inside = middle;
+                    } else {
+                        outside = middle;
+                    }
+                }
+                inside
+            };
+            (edge(0.0), edge(excess - fixed))
+        };
+        let dalitz_integral = |fixed: f64, weight: &dyn Fn(f64) -> f64| {
+            let (low, high) = span(fixed);
+            integrate(&mut |partner: f64| weight(partner), low, high, &[], 1e-12)
+        };
+        let mut area = |neutral: f64| momentum2(neutral) * dalitz_integral(neutral, &|_| 1.0);
+        let norm = integrate(&mut area, 0.0, top, &[], 1e-12);
+        // The energy density `f` and alignment density `h` of the π⁰ and of
+        // each charged pion, in MeV⁻¹.
+        let spectator = |neutral: f64| {
+            let density = momentum2(neutral) * dalitz_integral(neutral, &|_| 1.0) / norm;
+            (density, density)
+        };
+        let charged = |charged: f64| {
+            let density = dalitz_integral(charged, &momentum2) / norm;
+            let alignment = dalitz_integral(charged, &|neutral| {
+                let c = cosine(charged, neutral);
+                momentum2(neutral) * legendre2(c)
+            }) / norm;
+            (density, alignment)
+        };
+        let brute = |pions: &Cascade, densities: &dyn Fn(f64) -> (f64, f64)| {
+            let kappa = pions.helicities.alignment();
+            let (gamma, gamma_beta) = (pions.boost.gamma, pions.boost.gamma_beta);
+            let mut integrand = |kinetic: f64| {
+                let (density, alignment) = densities(kinetic);
+                let energy = mass + kinetic;
+                let along = density / 3.0 + 2.0 * kappa * alignment / 15.0;
+                gamma * gamma * energy * energy * density
+                    + gamma_beta * gamma_beta * momentum2(kinetic) * along
+            };
+            integrate(&mut integrand, 0.0, top, &[], 1e-10)
+        };
+        let fold = |pions: &Cascade, densities: PionDensities| {
+            pions.pion_fold(&parents, densities, |e| e * e, Probe::Density(0.0), &[])
+        };
+        // The two sides agree to about 5e-12; the allowance covers the
+        // fold's 1e-8 request and the brute-force nested quadratures
+        // converging well inside theirs, while the alignment moves the
+        // moment by about 2e-2.
+        let rtol = 1e-10;
+        for lab in [900.0, 3000.0] {
+            let mut charged_moments = Vec::new();
+            for fractions in [TRANSVERSE, LONGITUDINAL] {
+                let pions = cascade(Decay::ThreePion(parents), lab, fractions);
+                assert_close(fold(&pions, SPECTATOR), brute(&pions, &spectator), rtol);
+                assert_close(fold(&pions, CHARGED), brute(&pions, &charged), rtol);
+                charged_moments.push(fold(&pions, CHARGED));
+            }
+            // The alignment moves the moment far beyond the tolerance.
+            assert!(
+                (charged_moments[1] - charged_moments[0]).abs() > 1e6 * rtol * charged_moments[0]
+            );
+        }
+    }
+
     #[test]
     fn three_pion_counts_round_trip_by_bin_width() {
         let pions = cascade(Decay::ThreePion(three_pions(MEDIATOR)), 600.0, TRANSVERSE);
@@ -1086,6 +1191,8 @@ mod tests {
             let width = 1e-4;
             let bin = Probe::Bin(energy - width / 2.0, energy + width / 2.0);
             let density = Probe::Density(energy);
+            // A 1e-4 MeV bin averages the density to 1e-5: the density's
+            // curvature over the bin and the fold tolerance set the margin.
             assert_close(pions.photons(bin) / width, pions.photons(density), 1e-5);
             assert_close(
                 pions.charged_leptons(bin)[0] / width,
@@ -1109,6 +1216,8 @@ mod tests {
             MEDIATOR * (1.0 + 1e-10),
             LONGITUDINAL,
         );
+        // The physical change is O(β²) ≈ 1e-10, so the compounding fold
+        // tolerances of the two sides set the 1e-6.
         for low in [20.0, 100.0] {
             let bin = Probe::Bin(low, low + 5.0);
             assert_close(slow.photons(bin), rest.photons(bin), 1e-6);

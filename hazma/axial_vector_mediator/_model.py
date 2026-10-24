@@ -1062,7 +1062,7 @@ class AxialVectorMediator(TheoryAnn):
         widths = self.partial_widths()
         total = np.zeros(shape)
         for fs, value in per_decay.items():
-            total += 2.0 * widths[fs] / widths["total"] * np.asarray(value)
+            total += 2.0 * widths[fs] / self.width_v * np.asarray(value)
         return total
 
     def mediator_pair_yields(
@@ -1077,7 +1077,8 @@ class AxialVectorMediator(TheoryAnn):
 
         It is :math:`2\sum_f B_f K_f`, with :math:`K_f` the
         `mediator_decay_yields` of decay :math:`f` and :math:`B_f` its
-        branching fraction from `partial_widths`, for two mediators of lab
+        branching fraction :math:`\Gamma_f` from `partial_widths` over the
+        total width `width_v`, for two mediators of lab
         energy ``mediator_energy`` sharing one helicity density, such as the
         pair of :math:`\chi\bar\chi \to Z'Z'` at threshold. It counts the
         pairs in which only one mediator decays into :math:`f`; the
@@ -1098,7 +1099,8 @@ class AxialVectorMediator(TheoryAnn):
         ------
         ValueError
             As `mediator_decay_yields` does, and when `partial_widths`
-            raises because a decay this model does not compute is open.
+            raises because a decay this model does not compute is open, even
+            when a ``width`` override supplies the total.
         """
         per_decay = self.mediator_decay_yields(
             energies, mediator_energy, product=product, density=density

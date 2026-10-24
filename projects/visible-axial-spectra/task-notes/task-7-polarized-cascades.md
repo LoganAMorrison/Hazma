@@ -67,6 +67,12 @@ photon, positron and neutrino yields of each decay channel.
   on all 2000 bins. The TV between the F₀ = 0 and F₀ = 1/3 spectra is
   0.0538 for 600/450 MeV and 0.0585 for 900/500 MeV at these masses,
   against the note's 0.050 and 0.057 at the physical charged-pion mass.
+- **Lab second moments.** `pion_lab_second_moments_match_dalitz_moments`
+  compares ⟨E²⟩ of the π⁰ and of each charged pion at E_A = 900 and
+  3000 MeV, for F₀ = 0 and 1, against moments integrated by brute force
+  over the Dalitz plot from momentum conservation. They agree to 5.5e-12
+  at worst, while the alignment moves the charged moment by 1.8e-2 to
+  2.3e-2 and wiring `CHARGED` to `spectator_alignment` fails at 1.8e-2.
 - **Performance.** A μ⁺μ⁻ e± density takes 84 µs per energy, against 0.16 s
   for the Python spinor oracle. For 500 three-pion bins, e± take 0.6 s,
   neutrinos 1.2 s and photons 10.9 s. The radiative charged-pion photons
@@ -94,6 +100,11 @@ photon, positron and neutrino yields of each decay channel.
   Hermiticity, the trace and positivity at 1e-12 and passes the diagonal on.
 - **Mediator at rest.** `mediator_energy ≤ M` raises, because a mediator at
   rest decays into lines that a density cannot hold.
+- **Review fixes.** The pair yield divides by `width_v`, so a `width`
+  override rescales every branching fraction; `partial_widths` still
+  raises while an unmodeled decay is open. The lab second-moment test pins
+  the charged pions' alignment wiring, and the tolerances of the cascade
+  tests state their reasons.
 - **Unchanged physics.** Radiative muon and charged-pion photons stay
   unpolarized, as in Task 6 (see
   `docs/followups/todo/axial-mediator-polarized-radiative-muon-photons.md`).
@@ -102,7 +113,7 @@ photon, positron and neutrino yields of each decay channel.
 ## Files Changed
 
 - `rust/src/kernels/polarized_cascade.rs` (new): the cascade kernel and its
-  14 tests.
+  15 tests.
 - `rust/src/kernels/testdata/three_pion_cascade.csv` (new): the reference
   spectra, with their provenance in the header.
 - `rust/src/kernels/axial_yields.rs`: adds the `Yields` trait, the
@@ -117,17 +128,24 @@ photon, positron and neutrino yields of each decay channel.
   `test/axial_vector_mediator/spinor_oracle.py`: `polarized_vector_decay`.
 - `docs/source/axial_vector_mediator.rst`: the "Polarized cascades"
   section.
+- `CHANGELOG.md`: the `Unreleased` entry for the four public methods.
+- `docs/followups/todo/axial-mediator-polarized-radiative-muon-photons.md`:
+  names the cascade's photon arms.
+- `projects/visible-axial-spectra/task-notes/README.md`: the Tasks row and
+  the handoff.
+- `projects/visible-axial-spectra/task-notes/preflight-task-7.txt` (new):
+  the gate log.
 
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes -- polarized_cascade axial_yields`: 21 passed
-  (14 + 7). `cargo clippy … -D warnings` and `cargo fmt --check` are clean.
-- `pytest -n 0 test/axial_vector_mediator/test_cascades.py`: 22 passed.
+  --features test-probes -- polarized_cascade axial_yields`: 22 passed
+  (15 + 7). `cargo clippy … -D warnings` and `cargo fmt --check` are clean.
+- `pytest -n 0 test/axial_vector_mediator/test_cascades.py`: 23 passed.
 - `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths
   "hazma/axial_vector_mediator test/axial_vector_mediator" --md "…"`:
-  RESULT: PASS on every row; pytest `2955 passed, 16 skipped, 127 subtests
-  passed in 51.24s` (`preflight-task-7.txt`).
+  RESULT: PASS on every row; pytest `2956 passed, 16 skipped, 127 subtests
+  passed in 49.29s` (`preflight-task-7.txt`).
 
 ## Numerical impact
 
@@ -217,10 +235,10 @@ for this note include this block.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 21 Rust tests (14 + 7) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_cascade axial_yields` | `running 21 tests`, `21 passed` | KEPT |
-| Files Changed, 14 tests in `polarized_cascade.rs`; `axial_yields.rs` gains one | `grep -c '#\[test\]' rust/src/kernels/polarized_cascade.rs rust/src/kernels/axial_yields.rs`; `git show origin/master:rust/src/kernels/axial_yields.rs \| grep -c '#\[test\]'` | 14 and 7; 6 on master | KEPT |
-| Verification, 22 cascade tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_cascades.py` | `22 tests collected` | KEPT |
-| Verification, 2955 passed | `preflight-task-7.txt` | `2955 passed, 16 skipped, 20 warnings, 127 subtests passed` | KEPT |
+| Verification, 22 Rust tests (15 + 7) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_cascade axial_yields` | `running 22 tests`, `22 passed` | KEPT |
+| Files Changed, 15 tests in `polarized_cascade.rs`; `axial_yields.rs` gains one | `grep -c '#\[test\]' rust/src/kernels/polarized_cascade.rs rust/src/kernels/axial_yields.rs`; `git show origin/master:rust/src/kernels/axial_yields.rs \| grep -c '#\[test\]'` | 15 and 7; 6 on master | KEPT |
+| Verification, 23 cascade tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_cascades.py` | `23 tests collected` | KEPT |
+| Verification, 2956 passed | `preflight-task-7.txt` | `2956 passed, 16 skipped, 20 warnings, 127 subtests passed` | KEPT |
 | Reference CSV, 500 bins at two mediators | `grep -vc '^#' rust/src/kernels/testdata/three_pion_cascade.csv` | 1001 lines: a column header and 1000 rows | KEPT |
 | Numerical impact, 164 values | `check_public_impact.py` (below) | 164 unchanged | KEPT |
 
@@ -256,5 +274,6 @@ decay, energy and alignment densities) and a `Decay` arm. The
 public contract is the "Polarized cascades" section of
 `docs/source/axial_vector_mediator.rst`. Task 14 should pass its threshold
 helicity fractions as `numpy.diag([F₊, F₀, F₋])`. Binned three-pion
-photons are slow (about 20 ms per bin), because radiative charged-pion
-photons are integrated over each bin inside the fold.
+photons are slow, because radiative charged-pion photons are integrated
+over each bin inside the fold: about 20 ms per bin for 500 bins of 1.8 MeV
+and about 150 ms per bin for wide bins. Timings vary with machine load.

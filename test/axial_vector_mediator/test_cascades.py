@@ -163,7 +163,7 @@ def _rest_polarization(mass: float, vector: float, axial: float) -> float:
 def test_isotropic_muons_are_the_boosted_rest_frame() -> None:
     # An isotropic mediator has isotropic, uniformly polarized muons, so its
     # lab e⁺ are Hazma's boost of the rest-frame pair. quad's 1.5e-8 sets
-    # the tolerance.
+    # the tolerance, with margin for the kinked boost integrand (1e-6).
     polarization = _rest_polarization(parameters.muon_mass, 0.5, 0.7)
 
     def rest(energy: float) -> float:
@@ -194,6 +194,8 @@ def test_isotropic_three_pions_are_the_boosted_rest_frame() -> None:
     photons = _model().mediator_decay_yields(
         energies, LAB, product="photon", density=ISOTROPIC
     )["pi pi pi0"]
+    # dnde_boost's quad meets its tolerance only to about 1e-5 on the
+    # integrand's kinks.
     np.testing.assert_allclose(photons, expected, rtol=1e-5)
 
 
@@ -298,6 +300,8 @@ def test_pair_yield_is_twice_the_branching_sum() -> None:
     )
     charged = ("e e", "mu mu", "pi pi pi0")
     expected = 2.0 * sum(widths[fs] for fs in charged) / widths["total"]
+    # The fold tolerance (1e-8) and the counts below the first edge (one
+    # electron mass, where the spectra vanish) bound the sum's error.
     np.testing.assert_allclose(positrons, [expected], rtol=1e-7)
     neutrinos = model.mediator_pair_counts(
         np.array([0.0, 2000.0]), LAB, product="neutrino", density=TRANSVERSE
@@ -311,7 +315,22 @@ def test_pair_yield_is_twice_the_branching_sum() -> None:
             2.0 * branching["vt vt"],
         ]
     )
+    # The three-pion neutrino bins add the pion decay folds' tolerances
+    # (1e-8 each) and the counts missing below the first edge.
     np.testing.assert_allclose(neutrinos[:, 0], expected, rtol=1e-6)
+
+
+def test_width_override_rescales_the_pair_branching_fractions() -> None:
+    # Branching fractions divide by the model's total width, which is the
+    # override when given, so doubling it halves every pair count.
+    default = _model()
+    doubled = _model(width=2.0 * default.partial_widths()["total"])
+    edges = np.array([parameters.electron_mass, 2000.0])
+    counts = [
+        model.mediator_pair_counts(edges, LAB, product="positron", density=TRANSVERSE)
+        for model in (default, doubled)
+    ]
+    np.testing.assert_allclose(counts[1] / counts[0], 0.5, rtol=1e-12)
 
 
 @pytest.mark.parametrize("product", PRODUCTS)
@@ -327,6 +346,8 @@ def test_counts_round_trip_by_bin_width(product: str) -> None:
             energy, LAB, product=product, density=ORIENTED
         )
         for fs, value in yields.items():
+            # A 1e-4 MeV bin averages the density to 1e-5 (its curvature and
+            # the fold tolerance); atol covers yields that vanish.
             np.testing.assert_allclose(
                 counts[fs][..., 0] / width, value, rtol=1e-5, atol=1e-12
             )

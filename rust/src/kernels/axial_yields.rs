@@ -614,8 +614,8 @@ mod tests {
         }
     }
 
-    /// The three pions share the invariant energy on average:
-    /// `⟨u₀⟩ + 2⟨u±⟩ + 3m = q`.
+    /// The charged pion's alignment is the π⁰-weighted mean of `P₂` of the
+    /// angle between the two pions' momenta.
     #[test]
     fn charged_alignment_is_the_mean_p2_between_pions() {
         // Brute force: the angle between the charged pion and the π⁰ from
@@ -654,6 +654,8 @@ mod tests {
         }
     }
 
+    /// The three pions share the invariant energy on average:
+    /// `⟨u₀⟩ + 2⟨u±⟩ + 3m = q`.
     #[test]
     fn parent_energies_sum_to_the_invariant_energy() {
         let parents = charged(530.0, 0.6);

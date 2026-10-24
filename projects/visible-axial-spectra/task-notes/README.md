@@ -87,10 +87,10 @@ passed, 16 skipped, 20 warnings, 127 subtests passed`. The model suite
 (neutrino yields 2.36 s to 0.22 s over 40 energies, neutrino counts 24.6 s to
 2.5 s over 300 bins at 500 MeV) are in `task-6-rest-frame-yields.md`.
 
-After Task 7 the path-scoped preflight passed with `2955 passed, 16 skipped,
+After Task 7 the path-scoped preflight passed with `2956 passed, 16 skipped,
 127 subtests passed`. The cascade suite
-`test/axial_vector_mediator/test_cascades.py` has 22 tests, and
-`polarized_cascade` and `axial_yields` carry 21 Rust unit
+`test/axial_vector_mediator/test_cascades.py` has 23 tests, and
+`polarized_cascade` and `axial_yields` carry 22 Rust unit
 tests. The literal commands are in `task-7-polarized-cascades.md` and the
 gate output is `projects/visible-axial-spectra/task-notes/preflight-task-7.txt`.
 
@@ -114,10 +114,11 @@ then the task notes and `references/scope-and-acceptance.md`. Task 8
 `polarized_cascade::Cascade` and its `Yields` impl: a new channel needs an
 `Analyzer` (or, for a multibody decay, energy and alignment densities) and a
 `Decay` arm. The public contract is the "Polarized cascades" section of
-`docs/source/axial_vector_mediator.rst`. Binned three-pion photons cost about
-20 ms per bin, because radiative charged-pion photons are integrated over
-each bin inside the fold. Task 14 should pass its threshold helicity
-fractions as `numpy.diag([F₊, F₀, F₋])`.
+`docs/source/axial_vector_mediator.rst`. Binned three-pion photons are slow
+because radiative charged-pion photons are integrated over each bin inside
+the fold: about 20 ms per bin for 500 bins of 1.8 MeV and about 150 ms per
+bin for wide bins, with timings that vary with machine load. Task 14 should
+pass its threshold helicity fractions as `numpy.diag([F₊, F₀, F₋])`.
 
 Earlier handoffs still apply. `polarized_muon.rs` takes the effective
 polarization `P`: the μ⁻ helicity, which is minus the μ⁺ helicity, pinned by
