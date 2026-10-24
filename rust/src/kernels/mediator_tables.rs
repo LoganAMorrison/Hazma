@@ -719,6 +719,90 @@ pub fn cos_theta_min(energy: f64, momentum: f64, gamma: f64, beta: f64, endpoint
     if cos_min < -1.0 { -1.0 } else { cos_min }
 }
 
+/// Where a boost integrand's rest-frame spectrum ends, and where inside
+/// that range it is kinked or discontinuous.
+///
+/// The integrand sums the selected channels, so it is zero above the
+/// widest channel's endpoint, and every other channel's endpoint is a
+/// jump or a kink inside the support, as is any energy where one channel
+/// changes form: the bottom of a `π⁰` box, a table's first abscissa. A
+/// kink inside the `cos θ` window spoils QUADPACK's error estimate on the
+/// subinterval that holds it, so [`Self::cos_theta_points`] hands each one
+/// to [`crate::quad`] as a break point. Recorded in
+/// `docs/followups/done/mediator-decay-boosts-lack-channel-break-points.md`.
+#[derive(Clone, Debug)]
+pub struct RestFrameSupport {
+    endpoint: f64,
+    kinks: Vec<f64>,
+}
+
+impl RestFrameSupport {
+    /// The support of an integrand with no channels: empty, and kinked
+    /// nowhere.
+    #[must_use]
+    pub const fn new() -> Self {
+        Self {
+            endpoint: f64::NEG_INFINITY,
+            kinks: Vec::new(),
+        }
+    }
+
+    /// Add a channel that is zero at and above `endpoint` MeV and kinked
+    /// at each rest-frame energy in `kinks`, MeV.
+    ///
+    /// A closed channel, whose endpoint is not positive, adds no kinks:
+    /// it is zero everywhere, so nothing it would mark is in the
+    /// integrand. Its endpoint still reaches [`widest`], so a `NaN` one
+    /// propagates.
+    pub fn add(&mut self, endpoint: f64, kinks: &[f64]) {
+        self.endpoint = widest(self.endpoint, endpoint);
+        if endpoint > 0.0 {
+            self.kinks.push(endpoint);
+            self.kinks.extend_from_slice(kinks);
+        }
+    }
+
+    /// Add a channel read out of `table`, which ends at the table's
+    /// [`RestFrameTable::support_end`] and changes form at its first
+    /// abscissa, where the lookup leaves the grid for [`BelowGrid`]'s
+    /// extension.
+    pub fn add_table(&mut self, table: &RestFrameTable) {
+        let grid_start = table.energies.first().copied().unwrap_or(f64::NAN);
+        self.add(table.support_end(), &[grid_start]);
+    }
+
+    /// The rest-frame energy in MeV at and above which every added
+    /// channel is zero; `f64::NEG_INFINITY` if none was added.
+    #[must_use]
+    pub const fn endpoint(&self) -> f64 {
+        self.endpoint
+    }
+
+    /// The kinks as `cos θ` break points for a daughter of lab `energy`
+    /// and `momentum`, MeV, from a mediator moving with `gamma` and
+    /// `beta`.
+    ///
+    /// Each is [`cos_theta_min`] of its kink, which is where
+    /// `E' = γ(E − β p cos θ)` crosses it. A kink outside the window maps
+    /// outside `(cos θ_min, 1)`, and the widest endpoint maps onto
+    /// `cos θ_min` itself, the same double; [`crate::quad::quad`] drops
+    /// every point that is not strictly interior, so neither needs
+    /// filtering here.
+    #[must_use]
+    pub fn cos_theta_points(&self, energy: f64, momentum: f64, gamma: f64, beta: f64) -> Vec<f64> {
+        self.kinks
+            .iter()
+            .map(|&kink| cos_theta_min(energy, momentum, gamma, beta, kink))
+            .collect()
+    }
+}
+
+impl Default for RestFrameSupport {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 // ===========================================================================
 // ---- Partial widths and the two ways a kernel can fail --------------------
 // ===========================================================================
@@ -789,9 +873,9 @@ impl<'a> PartialWidths<'a> {
 #[cfg(test)]
 mod tests {
     use super::{
-        BelowGrid, N_INTERP_PTS, PHOTON_GRID_LOG10_START, PhotonMode, PositronMode, RestFrameTable,
-        ScalarPhotonModes, TableCache, cos_theta_min, fsr_photon_endpoint, logspace, photon_tables,
-        photon_tables_for, positron_tables, widest,
+        BelowGrid, N_INTERP_PTS, PHOTON_GRID_LOG10_START, PhotonMode, PositronMode,
+        RestFrameSupport, RestFrameTable, ScalarPhotonModes, TableCache, cos_theta_min,
+        fsr_photon_endpoint, logspace, photon_tables, photon_tables_for, positron_tables, widest,
     };
     use crate::constants::legacy;
     use std::sync::atomic::{AtomicUsize, Ordering};
@@ -1275,5 +1359,54 @@ mod tests {
         assert!(widest(1.0, f64::NAN).is_nan());
         assert_eq!(widest(f64::NEG_INFINITY, 3.0), 3.0);
         assert_eq!(widest(3.0, 2.0), 3.0);
+    }
+
+    #[test]
+    fn each_kink_maps_onto_the_angle_where_the_rest_frame_energy_crosses_it() {
+        // At `γ = 3` and `E = 100` MeV the window spans `E'` from 17 to
+        // 583 MeV, so all three kinks are interior.
+        let gamma = 3.0_f64;
+        let beta = (1.0 - 1.0 / (gamma * gamma)).sqrt();
+        let mut support = RestFrameSupport::new();
+        support.add(270.0, &[30.0]);
+        support.add(200.0, &[]);
+        assert_eq!(support.endpoint(), 270.0);
+        let energy = 100.0;
+        let points = support.cos_theta_points(energy, energy, gamma, beta);
+        assert_eq!(points.len(), 3);
+        // The widest endpoint lands on the integral's lower limit exactly,
+        // which is what lets `quad` discard it as non-interior.
+        assert_eq!(points[0], cos_theta_min(energy, energy, gamma, beta, 270.0));
+        for (&point, kink) in points.iter().zip([270.0, 30.0, 200.0]) {
+            assert!(-1.0 < point && point < 1.0);
+            let rest_frame = gamma * (energy - beta * energy * point);
+            assert!((rest_frame - kink).abs() < 1e-12 * kink);
+        }
+    }
+
+    #[test]
+    fn a_closed_channel_widens_nothing_and_marks_nothing() {
+        let mut support = RestFrameSupport::new();
+        support.add(f64::NEG_INFINITY, &[f64::NAN]);
+        support.add(-3.0, &[1.0]);
+        assert_eq!(support.endpoint(), -3.0);
+        assert!(support.cos_theta_points(10.0, 10.0, 2.0, 0.8).is_empty());
+        // A `NaN` endpoint still reaches the clip.
+        support.add(f64::NAN, &[1.0]);
+        assert!(support.endpoint().is_nan());
+    }
+
+    #[test]
+    fn a_table_is_kinked_at_its_first_abscissa_and_its_edge() {
+        let table = RestFrameTable::from_columns(
+            vec![0.1, 1.0, 2.0, 3.0],
+            vec![1.0, 2.0, 0.0, 0.0],
+            BelowGrid::InverseEnergy,
+        )
+        .unwrap();
+        let mut support = RestFrameSupport::new();
+        support.add_table(&table);
+        assert_eq!(support.endpoint(), 2.0);
+        assert_eq!(support.kinks, vec![2.0, 0.1]);
     }
 }

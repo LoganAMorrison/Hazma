@@ -75,8 +75,10 @@ them under a new `C<n>` label.
 ## Resolution (measured)
 
 **The support.** Each channel's endpoint is written once, beside the
-kernel that owns it, and each kernel's `rest_frame_endpoint` takes the
-widest over the channels its mode selects, as "Risks" asked:
+kernel that owns it, and each kernel's `rest_frame_endpoint` (since
+`rest_frame_support` in the two photon kernels, per the follow-up cited at
+the end of this note) takes the widest over the channels its mode
+selects, as "Risks" asked:
 
 - **FSR** ends at `x_max = 1 − 4μ²`. `mediator_tables::fsr_photon_endpoint`
   serves all four FSR functions.
@@ -253,4 +255,5 @@ sweep found a residual that predates this repair: the vector `total` is
 2.2e-4 from the energy-variable reference at `γ = 1.05` and 0.060 of its
 endpoint. That point is the `π⁰` box's lower edge, a discontinuity
 inside an interval the clip never touches. It is filed as
-[`mediator-decay-boosts-lack-channel-break-points.md`](../todo/mediator-decay-boosts-lack-channel-break-points.md).
+[`mediator-decay-boosts-lack-channel-break-points.md`](mediator-decay-boosts-lack-channel-break-points.md),
+since repaired for the photon kernels as `C9`.

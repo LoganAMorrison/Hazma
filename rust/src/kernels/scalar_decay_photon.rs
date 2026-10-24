@@ -39,9 +39,14 @@
 //! QUADPACK's first 21-point rule can sample nothing but zeros and accept
 //! `0.0`; at `γ = 30` that lost most of every channel's spectrum. The
 //! integral here starts at [`mediator_tables::cos_theta_min`] of the
-//! widest open channel's endpoint ([`rest_frame_endpoint`]), and is
+//! widest open channel's endpoint ([`rest_frame_support`]), and is
 //! skipped outright where that bound reaches `1`. Recorded in
 //! `docs/followups/done/mediator-decay-angular-windows-miss-their-support.md`.
+//!
+//! Inside that window the integrand still jumps or kinks wherever a
+//! narrower channel ends or one changes form, and QUADPACK's error
+//! estimate does not hold across either, so each of those energies is a
+//! break point; see [`mediator_tables::RestFrameSupport`].
 //!
 //! # The FSR normalization is twice the `.pyx`'s
 //!
@@ -332,49 +337,54 @@ fn integrand(
     Ok(jac * result)
 }
 
-/// The rest-frame energy in MeV at and above which [`integrand`] is zero
-/// for every channel `modes` opens.
+/// The rest-frame support of [`integrand`] for the channels `modes` opens.
 ///
 /// Each channel has its own endpoint, all of them below `m_s/2`: the FSR
 /// kinematic edge `x_max`, the charged-pion table's interpolated edge, and
 /// the forward-cone edges of the neutral pion's box and the muon's
 /// spectrum at the daughter energy `m_s/2`. The integrand is their sum,
-/// so its endpoint is the widest open channel's. The `g g` line rides
-/// outside the integral and has none.
-fn rest_frame_endpoint(modes: ScalarPhotonModes, ms: f64, tables: &PhotonTables) -> f64 {
+/// so its endpoint is the widest open channel's, and the others are
+/// kinks inside it. So are the bottom of the `π⁰` box, the charged-pion
+/// table's first abscissa, where its `1/E` tail begins. The `g g` line
+/// rides outside the integral and has none.
+fn rest_frame_support(
+    modes: ScalarPhotonModes,
+    ms: f64,
+    tables: &PhotonTables,
+) -> mediator_tables::RestFrameSupport {
     let daughter_energy = ms / 2.0;
-    let channels = [
-        (
-            ScalarPhotonModes::ELECTRON_FSR,
+    let mut support = mediator_tables::RestFrameSupport::new();
+    if modes.contains(ScalarPhotonModes::ELECTRON_FSR) {
+        support.add(
             mediator_tables::fsr_photon_endpoint(legacy::MASS_E, ms),
-        ),
-        (
-            ScalarPhotonModes::CHARGED_PION_FSR,
+            &[],
+        );
+    }
+    if modes.contains(ScalarPhotonModes::CHARGED_PION_FSR) {
+        support.add(
             mediator_tables::fsr_photon_endpoint(legacy::MASS_PI, ms),
-        ),
-        (
-            ScalarPhotonModes::CHARGED_PION_DECAY,
-            tables.charged_pion.support_end(),
-        ),
-        (
-            ScalarPhotonModes::NEUTRAL_PION_DECAY,
+            &[],
+        );
+    }
+    if modes.contains(ScalarPhotonModes::CHARGED_PION_DECAY) {
+        support.add_table(&tables.charged_pion);
+    }
+    if modes.contains(ScalarPhotonModes::NEUTRAL_PION_DECAY) {
+        support.add(
             photon_pion::neutral_pion_photon_endpoint(daughter_energy),
-        ),
-        (
-            ScalarPhotonModes::MUON_FSR,
+            &[photon_pion::neutral_pion_photon_box(daughter_energy).0],
+        );
+    }
+    if modes.contains(ScalarPhotonModes::MUON_FSR) {
+        support.add(
             mediator_tables::fsr_photon_endpoint(legacy::MASS_MU, ms),
-        ),
-        (
-            ScalarPhotonModes::MUON_DECAY,
-            photon_muon::photon_endpoint(daughter_energy),
-        ),
-    ];
-    channels
-        .into_iter()
-        .filter(|&(bit, _)| modes.contains(bit))
-        .fold(f64::NEG_INFINITY, |end, (_, edge)| {
-            mediator_tables::widest(end, edge)
-        })
+            &[],
+        );
+    }
+    if modes.contains(ScalarPhotonModes::MUON_DECAY) {
+        support.add(photon_muon::photon_endpoint(daughter_energy), &[]);
+    }
+    support
 }
 
 /// The photon spectrum `dN/dE` in MeV⁻¹ at one photon energy — `:166-191`.
@@ -428,13 +438,8 @@ pub fn spectrum_point(
     let eplus = (eng_s * (1.0 + beta)) / 2.0;
     let eminus = (eng_s * (1.0 - beta)) / 2.0;
 
-    let cos_min = mediator_tables::cos_theta_min(
-        eng_gam,
-        eng_gam,
-        gamma,
-        beta,
-        rest_frame_endpoint(modes, ms, tables),
-    );
+    let support = rest_frame_support(modes, ms, tables);
+    let cos_min = mediator_tables::cos_theta_min(eng_gam, eng_gam, gamma, beta, support.endpoint());
     let mut result = if cos_min >= 1.0 {
         // No channel reaches this energy at any angle. The integrand would
         // have read the first four widths at every node, so a short buffer
@@ -455,12 +460,19 @@ pub fn spectrum_point(
                 f64::NAN
             }
         };
-        let value = match quad(&mut kernel, cos_min, 1.0, &BOOST_QUAD) {
+        let points = support.cos_theta_points(eng_gam, eng_gam, gamma, beta);
+        let opts = QuadOpts {
+            points: Some(&points),
+            ..BOOST_QUAD
+        };
+        let value = match quad(&mut kernel, cos_min, 1.0, &opts) {
             Ok(outcome) => outcome.value,
             // Unreachable, and asserted so by
-            // `boost_quad_options_are_always_accepted`: `QuadError` is a
-            // statement about the options, never about the integrand, and
-            // these options are `const`.
+            // `boost_quad_options_are_always_accepted` and
+            // `boost_quad_options_accept_every_break_point`: `QuadError` is a
+            // statement about the options, never about the integrand. The
+            // tolerances are `BOOST_QUAD`'s, and its `limit` exceeds the
+            // eight break points that opening every channel produces.
             Err(_) => f64::NAN,
         };
         if let Some(error) = failure {
@@ -492,11 +504,11 @@ pub fn tables_for(ms: f64) -> std::sync::Arc<PhotonTables> {
 mod tests {
     use super::{
         BOOST_QUAD, PAIR_NORMALIZATION, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_srf, dnde_fsr_l_srf,
-        rest_frame_endpoint, spectrum_point, tables_for,
+        rest_frame_support, spectrum_point, tables_for,
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, ScalarPhotonModes, SpectrumError};
-    use crate::quad::quad;
+    use crate::quad::{QuadOpts, quad};
 
     /// Every channel open, which is the entry point's default `modes`.
     fn all_modes() -> ScalarPhotonModes {
@@ -597,6 +609,28 @@ mod tests {
         let mut integrand = |_: f64| 1.0;
         let outcome = quad(&mut integrand, -1.0, 1.0, &BOOST_QUAD);
         assert!(outcome.is_ok());
+        assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
+    }
+
+    /// The most break points `spectrum_point` can pass, every channel's,
+    /// all inside the window are still accepted: `quad` refuses
+    /// `limit <= npts`, which is the one `QuadError` per-call points can
+    /// raise.
+    #[test]
+    fn boost_quad_options_accept_every_break_point() {
+        let tables = tables_for(550.0);
+        let n = rest_frame_support(all_modes(), 550.0, &tables)
+            .cos_theta_points(100.0, 100.0, 2.0, 0.8)
+            .len();
+        let spacing = 2.0 / f64::from(u32::try_from(n + 1).unwrap());
+        let points: Vec<f64> = (1..=n)
+            .map(|i| f64::from(u32::try_from(i).unwrap()).mul_add(spacing, -1.0))
+            .collect();
+        let opts = QuadOpts {
+            points: Some(&points),
+            ..BOOST_QUAD
+        };
+        let outcome = quad(&mut |_: f64| 1.0, -1.0, 1.0, &opts);
         assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
     }
 
@@ -881,7 +915,8 @@ mod tests {
             ScalarPhotonModes::MUON_FSR,
         ] {
             let modes = ScalarPhotonModes::from_bits(bit);
-            let top = (eng_s / ms) * rest_frame_endpoint(modes, ms, &tables) * (1.0 + beta);
+            let top =
+                (eng_s / ms) * rest_frame_support(modes, ms, &tables).endpoint() * (1.0 + beta);
             for fraction in [0.5, 0.9, 0.99] {
                 let value = spectrum_point(fraction * top, eng_s, ms, widths, modes, &tables);
                 assert!(value.unwrap() > 0.0, "bit {bit} at {fraction} of {top} MeV");

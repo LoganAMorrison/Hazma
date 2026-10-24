@@ -257,8 +257,8 @@ fn integrand(
     Ok(jac * component)
 }
 
-/// The rest-frame energy in MeV at and above which [`integrand`] is zero
-/// for `mode`'s channel, or for the widest of all six under `"total"`.
+/// The rest-frame support of [`integrand`] for `mode`'s channel, or for
+/// all six under `"total"`.
 ///
 /// The FSR kinematic edge `x_max`, the two tables' interpolated edges, and
 /// the top of the `π⁰` box at the `V → π⁰γ` two-body energy. The first
@@ -269,36 +269,45 @@ fn integrand(
 /// `f32`. It is the box's own edge either way, so the bound needs no
 /// margin. The integrand evaluates all six channels whatever
 /// the mode, but only the selected one reaches its value, so only that
-/// one bounds the integral. The `π⁰γ` line rides outside it and has no
-/// endpoint here. `f64::NEG_INFINITY` for an unrecognised mode, whose
-/// integrand is zero everywhere.
-fn rest_frame_endpoint(mode: Option<PhotonMode>, mv: f64, tables: &PhotonTables) -> f64 {
-    let electron_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_E, mv);
-    let muon_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_MU, mv);
-    let charged_pion_fsr = mediator_tables::fsr_photon_endpoint(legacy::MASS_PI, mv);
-    let charged_pion_decay = tables.charged_pion.support_end();
+/// one bounds the integral. Under `"total"` every narrower channel's
+/// endpoint is a kink inside it, and in any mode so are the bottom of the
+/// `π⁰` box and each table's first abscissa, where its `1/E` tail begins.
+/// The `π⁰γ` line rides outside the integral and has no endpoint here.
+/// An unrecognised mode, whose integrand is zero everywhere, has no
+/// support.
+fn rest_frame_support(
+    mode: Option<PhotonMode>,
+    mv: f64,
+    tables: &PhotonTables,
+) -> mediator_tables::RestFrameSupport {
+    use PhotonMode::{
+        ChargedPionDecay, ChargedPionFsr, ElectronFsr, MuonDecay, MuonFsr, NeutralPionLine, Total,
+    };
+    let fsr = |radiator_mass: f64| mediator_tables::fsr_photon_endpoint(radiator_mass, mv);
     let e_pi0 = (0.5 * (legacy::MASS_PI0 * legacy::MASS_PI0 + mv * mv)) / mv;
-    let neutral_pion = photon_pion::neutral_pion_photon_endpoint(e_pi0);
-    let muon_decay = tables.muon.support_end();
-    match mode {
-        None => f64::NEG_INFINITY,
-        Some(PhotonMode::Total) => [
-            electron_fsr,
-            muon_fsr,
-            charged_pion_fsr,
-            charged_pion_decay,
-            neutral_pion,
-            muon_decay,
-        ]
-        .into_iter()
-        .fold(f64::NEG_INFINITY, mediator_tables::widest),
-        Some(PhotonMode::ElectronFsr) => electron_fsr,
-        Some(PhotonMode::ChargedPionFsr) => charged_pion_fsr,
-        Some(PhotonMode::ChargedPionDecay) => charged_pion_decay,
-        Some(PhotonMode::NeutralPionLine) => neutral_pion,
-        Some(PhotonMode::MuonFsr) => muon_fsr,
-        Some(PhotonMode::MuonDecay) => muon_decay,
+    let mut support = mediator_tables::RestFrameSupport::new();
+    if matches!(mode, Some(Total | ElectronFsr)) {
+        support.add(fsr(legacy::MASS_E), &[]);
     }
+    if matches!(mode, Some(Total | MuonFsr)) {
+        support.add(fsr(legacy::MASS_MU), &[]);
+    }
+    if matches!(mode, Some(Total | ChargedPionFsr)) {
+        support.add(fsr(legacy::MASS_PI), &[]);
+    }
+    if matches!(mode, Some(Total | ChargedPionDecay)) {
+        support.add_table(&tables.charged_pion);
+    }
+    if matches!(mode, Some(Total | NeutralPionLine)) {
+        support.add(
+            photon_pion::neutral_pion_photon_endpoint(e_pi0),
+            &[photon_pion::neutral_pion_photon_box(e_pi0).0],
+        );
+    }
+    if matches!(mode, Some(Total | MuonDecay)) {
+        support.add_table(&tables.muon);
+    }
+    support
 }
 
 /// The photon spectrum `dN/dE` in MeV⁻¹ at one photon energy — `:184-227`.
@@ -319,7 +328,8 @@ fn rest_frame_endpoint(mode: Option<PhotonMode>, mv: f64, tables: &PhotonTables)
 ///
 /// The `π⁰γ` line rides outside the integral and is added for `"pi0 g"`
 /// and `"total"` only (`:223`). The integral itself starts at the
-/// selected channel's support edge, as the scalar twin's does, and is
+/// selected channel's support edge and breaks at each kink of
+/// [`rest_frame_support`], as the scalar twin's does, and is
 /// skipped above the lab endpoint with the widths still checked. As in
 /// the scalar twin, the quadrature's
 /// termination flag is discarded because the `.pyx` subscripts
@@ -355,13 +365,9 @@ pub fn spectrum_point(
         lines_contrib = pws.get(2)? / (eng_v * beta);
     }
 
-    let cos_min = mediator_tables::cos_theta_min(
-        eng_gam,
-        eng_gam,
-        eng_v / mv,
-        beta,
-        rest_frame_endpoint(mode, mv, tables),
-    );
+    let gamma = eng_v / mv;
+    let support = rest_frame_support(mode, mv, tables);
+    let cos_min = mediator_tables::cos_theta_min(eng_gam, eng_gam, gamma, beta, support.endpoint());
     let result = if cos_min >= 1.0 {
         // The selected channel is zero at every angle. The integrand would
         // have read the first four widths at every node, so a short buffer
@@ -377,9 +383,16 @@ pub fn spectrum_point(
                 f64::NAN
             }
         };
-        let value = match quad(&mut kernel, cos_min, 1.0, &BOOST_QUAD) {
+        let points = support.cos_theta_points(eng_gam, eng_gam, gamma, beta);
+        let opts = QuadOpts {
+            points: Some(&points),
+            ..BOOST_QUAD
+        };
+        let value = match quad(&mut kernel, cos_min, 1.0, &opts) {
             Ok(outcome) => outcome.value,
-            // Unreachable; see `boost_quad_options_are_always_accepted`.
+            // Unreachable; see `boost_quad_options_are_always_accepted`
+            // and `boost_quad_options_accept_every_break_point`. Opening
+            // all six channels makes nine break points, under `limit`.
             Err(_) => f64::NAN,
         };
         if let Some(error) = failure {
@@ -405,12 +418,12 @@ pub fn tables_for(mv: f64) -> std::sync::Arc<PhotonTables> {
 #[cfg(test)]
 mod tests {
     use super::{
-        BOOST_QUAD, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_vrf, dnde_fsr_l_vrf, rest_frame_endpoint,
+        BOOST_QUAD, PI_SQUARED, QE_SQUARED, dnde_fsr_cp_vrf, dnde_fsr_l_vrf, rest_frame_support,
         spectrum_point, tables_for,
     };
     use crate::constants::legacy;
     use crate::kernels::mediator_tables::{PartialWidths, PhotonMode, SpectrumError};
-    use crate::quad::quad;
+    use crate::quad::{QuadOpts, quad};
 
     /// Four distinct partial widths, so a channel reading the wrong
     /// index cannot pass unnoticed.
@@ -453,6 +466,28 @@ mod tests {
         let mut integrand = |_: f64| 1.0;
         let outcome = quad(&mut integrand, -1.0, 1.0, &BOOST_QUAD);
         assert!(outcome.is_ok());
+        assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
+    }
+
+    /// The most break points `spectrum_point` can pass, every channel's,
+    /// all inside the window are still accepted: `quad` refuses
+    /// `limit <= npts`, which is the one `QuadError` per-call points can
+    /// raise.
+    #[test]
+    fn boost_quad_options_accept_every_break_point() {
+        let tables = tables_for(550.0);
+        let n = rest_frame_support(Some(PhotonMode::Total), 550.0, &tables)
+            .cos_theta_points(100.0, 100.0, 2.0, 0.8)
+            .len();
+        let spacing = 2.0 / f64::from(u32::try_from(n + 1).unwrap());
+        let points: Vec<f64> = (1..=n)
+            .map(|i| f64::from(u32::try_from(i).unwrap()).mul_add(spacing, -1.0))
+            .collect();
+        let opts = QuadOpts {
+            points: Some(&points),
+            ..BOOST_QUAD
+        };
+        let outcome = quad(&mut |_: f64| 1.0, -1.0, 1.0, &opts);
         assert!((outcome.unwrap().value - 2.0).abs() < 1e-12);
     }
 
@@ -640,7 +675,9 @@ mod tests {
         let beta = (1.0 - ratio * ratio).sqrt();
         let line = PWS[2] / (eng_v * beta);
         for mode in ALL_MODES {
-            let top = (eng_v / mv) * rest_frame_endpoint(Some(mode), mv, &tables) * (1.0 + beta);
+            let top = (eng_v / mv)
+                * rest_frame_support(Some(mode), mv, &tables).endpoint()
+                * (1.0 + beta);
             let offset = if mode.has_line() { line } else { 0.0 };
             for fraction in [0.5, 0.9, 0.99] {
                 let value =
