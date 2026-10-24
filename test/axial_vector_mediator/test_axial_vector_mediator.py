@@ -7,6 +7,7 @@ import pytest
 import spinor_oracle as oracle
 
 from hazma import parameters
+from hazma._core import axial_vector_mediator as core
 from hazma.axial_vector_mediator import AxialVectorMediator, LeptonCouplings
 from hazma.form_factors.axial import (
     AxialCurrent,
@@ -319,6 +320,59 @@ def test_three_pion_counts_stay_normalized_at_threshold(excess: float) -> None:
     q = 3.0 * parameters.neutral_pion_mass + excess
     counts = model.rest_frame_counts(np.array([0.0, 400.0]), q, product="positron")
     assert counts["pi pi pi0"][0] == pytest.approx(1.0, rel=1e-9)
+
+
+def test_pion_rest_mean_positron_energy_carries_the_muon_spin() -> None:
+    # Just above the three-pion threshold the π⁺ decays at rest, so the e⁺
+    # yield of "pi pi pi0" is the polarized pion chain's rest spectrum with
+    # its two-body e⁺ line. Bins of 0.2 MeV centered on the line hold it
+    # exactly, and the midpoint sum of the smooth continuum is second order
+    # in the width, near 1e-9 here. The mediator note's closed form with
+    # Hazma's masses gives 36.94069258356754 MeV with the spin and
+    # 38.430221 MeV without it; the kernel reproduces the first to 1e-11
+    # and this binned public path to 1e-8, far inside the 4% the spin moves.
+    model = _model(gaxx=0.0)
+    e_cm = 3.0 * parameters.neutral_pion_mass + 1e-6
+    m_pi, m_e = parameters.charged_pion_mass, parameters.electron_mass
+    line = (m_pi**2 + m_e**2) / (2.0 * m_pi)
+    width = 0.2
+    # The first edge lies between `m_e - 1.5 width` and `m_e - 0.5 width`,
+    # below every e⁺ and above zero.
+    n_low = int(np.floor((line - m_e) / width)) + 1
+    n_high = int(np.ceil(1.0 / width)) + 1
+    edges = line + (np.arange(-n_low, n_high + 1) + 0.5) * width
+    counts = model.rest_frame_counts(edges, e_cm, product="positron")["pi pi pi0"]
+    assert np.sum(counts) == pytest.approx(1.0, rel=1e-9)
+    mean = np.sum((edges[:-1] + edges[1:]) / 2.0 * counts)
+    assert mean == pytest.approx(36.94069258356754, rel=1e-8)
+
+
+@pytest.mark.parametrize("width", [0.0, 30.0])
+def test_muon_polarization_matches_helicity_spinors(width: float) -> None:
+    # The μ⁻ of "mu mu" has the helicity-weighted rate over the rate as its
+    # effective polarization, which the e⁺ and neutrino kernels boost. The
+    # oracle resolves the μ⁻ spinors by helicity along its momentum and
+    # sums the μ⁺ spins, never forming the helicity density; like the rate
+    # test, 1e-12. The yields then carry that value: the public e⁺ density
+    # is the kernel at the oracle's polarization.
+    mass, gv, ga = PAIRS["mu mu"]
+    mx, mv = 106.0, 500.0
+    model = _model(mx=mx, mv=mv, quarks=ZERO, width=width)
+    for e_cm in (2.0 * mx * 1.0001, 300.0, 0.97 * mv, 1.2 * mv):
+        expected = oracle.fermion_polarization(
+            e_cm, mx=mx, gvxx=0.4, gaxx=0.9, mv=mv, width=width, mf=mass, gvf=gv, gaf=ga
+        )
+        assert model._muon_polarization(e_cm) == pytest.approx(expected, rel=1e-12)
+    energies = np.geomspace(1.0, 250.0, 7)
+    expected = oracle.fermion_polarization(
+        600.0, mx=mx, gvxx=0.4, gaxx=0.9, mv=mv, width=width, mf=mass, gvf=gv, gaf=ga
+    )
+    rows = core.muon_pair_yields("charged_lepton", energies, False, 300.0, expected)
+    np.testing.assert_allclose(
+        model.rest_frame_yields(energies, 600.0, product="positron")["mu mu"],
+        rows[0],
+        rtol=1e-12,
+    )
 
 
 def test_rest_frame_counts_round_trip_by_bin_width() -> None:

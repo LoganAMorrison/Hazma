@@ -58,8 +58,31 @@ coupling is nonzero, and a rate at an exact pole of zero width raises. The
 ``pi pi pi0`` and ``pi0 pi0 pi0`` channels open at three times the neutral pion
 mass, because the leading-order action has one common pion mass, so the
 physical charged-pion threshold is not modeled. The :math:`\eta\pi\pi` guard
-covers both ``eta pi pi`` and ``eta pi0 pi0``. The continuum photon and
-positron spectra raise ``NotImplementedError``.
+covers both ``eta pi pi`` and ``eta pi0 pi0``.
+
+Yields
+------
+
+``rest_frame_yields``, ``rest_frame_counts`` and ``rest_frame_lines`` return
+the stable-particle yields of each open final state per annihilation into
+it, in the center-of-mass frame: ``product="photon"``, ``"positron"`` for
+e⁺ alone, ``"electron_positron"`` for the charge-summed e± injection, and
+``"neutrino"`` for ν + ν̄ per flavor with shape ``(3, N)``. Densities are in
+:math:`\mathrm{MeV}^{-1}`, counts are particles per bin between consecutive
+edges, and a line is an ``"energy"`` in MeV with a ``"multiplicity"``, the
+particles per annihilation. ``spectra()`` and ``positron_spectra()`` weight
+the continua by the branching fractions.
+
+The muons of ``mu mu`` decay with the effective polarization their chiral
+couplings give them, and the muon of :math:`\pi \to \mu\nu` fully polarized,
+so the e⁺ and neutrino spectra carry the spin's angular correlation. The
+three-pion final states are produced at the common pion mass of the
+leading-order action; a charged pion then decays with its physical mass at
+its production Lorentz factor. Photons come from the unpolarized radiative
+muon and pion kernels and from the :math:`\pi^0 \to \gamma\gamma` box. The
+:math:`\pi^0` Dalitz pairs are not included, so ``pi0 pi0 pi0`` has no e±
+yield, and ``"tau tau"`` yields raise ``ValueError`` while that state is
+open.
 
 Classes
 -------

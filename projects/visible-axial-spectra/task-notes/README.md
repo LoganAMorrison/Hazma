@@ -13,7 +13,7 @@
 | 3 | Rust port of the Task 1-2 numerics | 1, 2 | Complete | `task-3-rust-port.md` |
 | 4 | Coherent longitudinal poles | 3 | Complete | `task-4-coherent-longitudinal-poles.md` |
 | 5 | Rates and mediator model | 3, 4 | Complete | `task-5-rates-and-mediator-model.md` |
-| 6 | Rest frame yields | 5 | In Progress | `task-6-rest-frame-yields.md` |
+| 6 | Rest frame yields | 5 | Complete | `task-6-rest-frame-yields.md` |
 | 7 | Polarized cascades | 6; 14 for model-generated pair densities | Not started | — |
 | 8 | Resolved photons | 6; 7 for polarized boosts | Not started | — |
 | 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Not started | — |
@@ -46,13 +46,19 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
   with Python as the public surface (`PLAN.md` Implementation layering). The new
   Task 3 ports the Task 1-2 numerics and keeps the NumPy code as the test
   oracle; former Tasks 3-15 are now Tasks 4-16.
+- `rust/src/kernels/axial_yields.rs` is a module the plan's layering table
+  did not name. It folds the three-pion parents and the muon-pair and
+  three-pion decays into yields, while `polarized_muon` was the named module.
+  The neutrino paths of `polarized_muon` are closed forms, and the adaptive
+  quadrature stays as the test oracle.
 
 ## Numerical impact so far
 
-The first cluster adds public primitives, and Task 5 adds the
-`AxialVectorMediator` model; neither changes an existing function. The
-recorded existing-output grid contains 164 values and is bit-identical after
-integration, including after the Task 3 Rust port and after Task 5 (maximum
+The first cluster adds public primitives, Task 5 adds the
+`AxialVectorMediator` model, and Task 6 adds its public yields; none of them
+changes an existing function. The recorded existing-output grid contains 164
+values and is bit-identical after integration, including after the Task 3
+Rust port, after Task 5 and after Task 6 (`check_public_impact.py`: maximum
 absolute difference 0.0). Reproduce it with
 `.venv/bin/python
 projects/visible-axial-spectra/references/check_public_impact.py`.
@@ -68,20 +74,36 @@ it is `projects/visible-axial-spectra/task-notes/preflight-task-4.txt`, and
 for Task 5 it is
 `projects/visible-axial-spectra/task-notes/preflight-task-5.txt`.
 
+After Task 6 the path-scoped preflight on the final tree passed with `2932
+passed, 16 skipped, 20 warnings, 127 subtests passed`. The model suite
+`test/axial_vector_mediator` has 52 tests, and `polarized_muon` and
+`axial_yields` carry 25 Rust unit tests. The literal commands and the timings
+(neutrino yields 2.36 s to 0.22 s over 40 energies, neutrino counts 24.6 s to
+2.5 s over 300 bins at 500 MeV) are in `task-6-rest-frame-yields.md`.
+
 ## Open questions
 
 Later tasks must reconcile external photon source prescriptions and identify
 missing singlet input directions. These do not block LO isovector currents.
 
+Over 704 bins of 0.1 MeV just above the three-pion threshold, the `pi pi pi0`
+e⁺ counts sum to `1 − 5.4e-8`, while 353 bins of 0.2 MeV sum to one within
+1e-12. The cause is not understood, so later tasks should check fine-grid bin
+sums at threshold.
+
 ## Handoff to next task
 
 Read PLAN, ADR-0001 and
 `projects/visible-axial-spectra/adrs/ADR-0002-rust-kernels-and-numpy-oracle.md`,
-then the task notes and `references/scope-and-acceptance.md`. Task 6 should
-read ADR-0004 and ADR-0005 and
-`hazma/axial_vector_mediator/_model.py` (`AxialVectorMediator`) first. It
-implements `_spectrum_funcs` and `_positron_spectrum_funcs`, which raise
-`NotImplementedError` now, and applies particle multiplicities. Tasks 11 and
+then the task notes and `references/scope-and-acceptance.md`. Task 7
+(polarized cascades) should read the handoff in `task-6-rest-frame-yields.md`
+first. It builds on `rust/src/kernels/polarized_muon.rs`, whose `MuonDecay`
+and `PionDecay` take the effective polarization `P`: the μ⁻ helicity, which
+is minus the μ⁺ helicity, pinned by `spinor_oracle.fermion_polarization`. The
+public contract is the "Yields" section of
+`docs/source/axial_vector_mediator.rst`. Two follow-ups sit under
+`docs/followups/todo/`: `axial-mediator-pi0-dalitz-positrons.md` and
+`axial-mediator-polarized-radiative-muon-photons.md`. Tasks 11 and
 14 remove their final states from `AxialVectorMediator._unmodeled_thresholds`
 and add their channels to `list_annihilation_final_states`; Task 11 also
 adds vector quark couplings. The new `hazma._core.axial_vector_mediator`

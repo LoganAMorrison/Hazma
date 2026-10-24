@@ -42,6 +42,23 @@
 //! `cos θ` density by its integral over the part of the window inside the
 //! bin, so a bin of width `ΔE` holds `dN/dE ΔE` as `ΔE → 0`.
 //!
+//! # Closed forms for the neutrinos
+//!
+//! A neutrino's `a` and `b` are `x²` times Laurent polynomials in
+//! `q = 1 − x` with powers −3 to 3: `a = b = 6x²(r²/q − 2r + q)/F` for
+//! ν̄_e, and for ν_μ `KA = 2x²(1 − 3r²/q² + 2r³/q³)/F` and
+//! `KB = x²(q − 3r + 3r²/q − r³/q²)/F`. Along a boost window
+//! `cos θ = α + β'/x` is linear in `1/x`, so once the `x²` pays for the
+//! `1/e` and `1/e²` of the angular factors every muon-level integral above
+//! is a Laurent polynomial in `q`, whose antiderivative is a polynomial
+//! plus `ln q`. [`MuonDecay::dnde`] and [`MuonDecay::counts`] take that
+//! closed form for the neutrinos and keep the adaptive quadrature for the
+//! massive charged lepton, whose `√(x² − 4r)` has no such form. The
+//! quadrature stays available to the tests as the closed form's oracle.
+//! Both forms resolve the lab-energy differences that set a window's
+//! edges to the relative precision of `β`, so neither is more accurate
+//! than that for a muon nearly at rest.
+//!
 //! Lines are kept apart from the continuum. A prompt line of a pion in
 //! flight is a flat box; at rest it is a delta function, which only
 //! [`PionDecay::counts`] can represent, so [`PionDecay::dnde`] at rest is
@@ -165,6 +182,239 @@ fn bin_window(low: f64, high: f64, mass: f64, gamma: f64, gamma_beta: f64) -> (f
     (start, high_upper, [low_lower, low_upper, high_lower])
 }
 
+/// `Σₙ cₙ qⁿ + Σₖ pₖ uᵏ` with `q = 1 − x` and `u = x − x₀`, `n` from −3 to
+/// −1 and `k` from 0 to 3: a Laurent polynomial in `q` whose polynomial
+/// part is expanded about a center `x₀`.
+///
+/// Every neutrino integrand of this module has this form once the `x²`
+/// of its density is spent on the `1/e` and `1/e²` of the boost (see the
+/// module docs), so its integrals are closed forms. The poles are the
+/// endpoint layer at `q → r`, where `q` is the small variable. The
+/// polynomial part is expanded about the middle of the interval it is
+/// integrated over: the angular factors `x cos θ = β' + αx` have `α` and
+/// `β'` of order `1/β` that cancel to order one along the window, so
+/// about `x = 0` their square would carry coefficients of order `1/β²`
+/// cancelling against one another, while about `x₀` every coefficient is
+/// of the order of the values it describes.
+#[derive(Clone, Copy, Debug)]
+struct Laurent {
+    /// The center `x₀` of the polynomial part.
+    center: f64,
+    /// The coefficients of `q⁻³`, `q⁻²` and `q⁻¹`.
+    poles: [f64; 3],
+    /// The coefficients of `1`, `u`, `u²` and `u³`.
+    polynomial: [f64; 4],
+}
+
+/// `C(n, k)` for `n` and `k` at most 3.
+const BINOMIAL: [[f64; 4]; 4] = [
+    [1.0, 0.0, 0.0, 0.0],
+    [1.0, 1.0, 0.0, 0.0],
+    [1.0, 2.0, 1.0, 0.0],
+    [1.0, 3.0, 3.0, 1.0],
+];
+
+impl Laurent {
+    /// Zero, expanded about `center`.
+    fn zero(center: f64) -> Self {
+        Self {
+            center,
+            poles: [0.0; 3],
+            polynomial: [0.0; 4],
+        }
+    }
+
+    /// Add the pole `coefficient · q^power` for `power` from −3 to −1.
+    fn with_pole(mut self, power: i32, coefficient: f64) -> Self {
+        self.poles[(power + 3) as usize] += coefficient;
+        self
+    }
+
+    /// Add the polynomial `Σ pₖ xᵏ` in `x` itself, re-expanded about the
+    /// center.
+    fn with_polynomial(mut self, polynomial: &[f64]) -> Self {
+        for (k, &coefficient) in polynomial.iter().enumerate() {
+            self.add_shifted_power(coefficient, self.center, k);
+        }
+        self
+    }
+
+    /// Add `coefficient · (u + shift)ᵏ` to the polynomial part.
+    fn add_shifted_power(&mut self, coefficient: f64, shift: f64, k: usize) {
+        for (i, term) in self.polynomial.iter_mut().enumerate().take(k + 1) {
+            *term += coefficient * BINOMIAL[k][i] * shift.powi((k - i) as i32);
+        }
+    }
+
+    fn add(mut self, other: Self) -> Self {
+        debug_assert!(
+            self.center == other.center,
+            "expanded about different centers"
+        );
+        for (term, addend) in self.poles.iter_mut().zip(other.poles) {
+            *term += addend;
+        }
+        for (term, addend) in self.polynomial.iter_mut().zip(other.polynomial) {
+            *term += addend;
+        }
+        self
+    }
+
+    fn scale(mut self, factor: f64) -> Self {
+        for term in self.poles.iter_mut().chain(&mut self.polynomial) {
+            *term *= factor;
+        }
+        self
+    }
+
+    /// Multiply by the polynomial `Σ pₖ uᵏ` in `u`, whose degree must keep
+    /// the product within the cubic.
+    fn times(self, polynomial: &[f64]) -> Self {
+        let mut product = Self::zero(self.center);
+        for (k, &factor) in polynomial.iter().enumerate() {
+            if factor == 0.0 {
+                continue;
+            }
+            for (index, &term) in self.polynomial.iter().enumerate() {
+                if term != 0.0 {
+                    product.polynomial[index + k] += term * factor;
+                }
+            }
+            for (index, &term) in self.poles.iter().enumerate() {
+                if term != 0.0 {
+                    product.add_pole_times_power(index as i32 - 3, term * factor, k);
+                }
+            }
+        }
+        product
+    }
+
+    /// Add `coefficient · qⁿ uᵏ`, with `uᵏ = (q₀ − q)ᵏ` for `q₀ = 1 − x₀`
+    /// expanded in `q`, and any power of `q` that comes out nonnegative
+    /// returned to `u` as `(q₀ − u)^m`.
+    fn add_pole_times_power(&mut self, n: i32, coefficient: f64, k: usize) {
+        let q0 = 1.0 - self.center;
+        for (j, &binomial) in BINOMIAL[k].iter().enumerate().take(k + 1) {
+            let sign = if j % 2 == 0 { 1.0 } else { -1.0 };
+            let term = coefficient * binomial * sign * q0.powi((k - j) as i32);
+            let power = n + j as i32;
+            if power < 0 {
+                self.poles[(power + 3) as usize] += term;
+                continue;
+            }
+            let m = power as usize;
+            for (i, polynomial) in self.polynomial.iter_mut().enumerate().take(m + 1) {
+                let sign = if i % 2 == 0 { 1.0 } else { -1.0 };
+                *polynomial += term * BINOMIAL[m][i] * sign * q0.powi((m - i) as i32);
+            }
+        }
+    }
+
+    /// Return `∫ dx` from `x_from` to `x_to`, both in `[0, 1]`, with the
+    /// poles integrated in `q`. A pole whose coefficient is zero is
+    /// skipped, so the massless-electron limit, where `q` reaches zero,
+    /// never forms `0 · ∞`.
+    fn integral(&self, x_from: f64, x_to: f64) -> f64 {
+        let (u_from, u_to) = (x_from - self.center, x_to - self.center);
+        let polynomial: f64 = self
+            .polynomial
+            .iter()
+            .enumerate()
+            .filter(|(_, coefficient)| **coefficient != 0.0)
+            .map(|(k, coefficient)| coefficient * power_integral(k as i32, u_from, u_to))
+            .sum();
+        // `dx = −dq` turns the range `[x_from, x_to]` into `[q(x_to), q(x_from)]`.
+        let poles: f64 = self
+            .poles
+            .iter()
+            .enumerate()
+            .filter(|(_, coefficient)| **coefficient != 0.0)
+            .map(|(index, coefficient)| {
+                coefficient * power_integral(index as i32 - 3, 1.0 - x_to, 1.0 - x_from)
+            })
+            .sum();
+        polynomial + poles
+    }
+}
+
+/// Return `∫ tⁿ dt` from `t_from` to `t_to`, both positive when `n` is
+/// negative.
+///
+/// The difference of the two antiderivatives is factored through
+/// `t_to − t_from`, so a narrow window loses no more precision than its
+/// edges carry; the edges themselves are differences of nearly equal
+/// lab and boosted energies, so the whole stays at the relative
+/// precision of `β`.
+fn power_integral(power: i32, t_from: f64, t_to: f64) -> f64 {
+    let difference = t_to - t_from;
+    if power == -1 {
+        return (difference / t_from).ln_1p();
+    }
+    // `∫ qⁿ = q^m / m` with `m = n + 1`, and
+    // `t_to^m − t_from^m = (t_to − t_from) Σⱼ t_toʲ t_from^(m−1−j)` for
+    // `m > 0`; a negative `m` divides the same sum by `(t_to t_from)^|m|`.
+    let m = power + 1;
+    let degree = m.abs();
+    let sum: f64 = (0..degree)
+        .map(|j| t_to.powi(j) * t_from.powi(degree - 1 - j))
+        .sum();
+    let power_difference = if m > 0 {
+        difference * sum
+    } else {
+        -difference * sum / (t_to * t_from).powi(degree)
+    };
+    power_difference / f64::from(m)
+}
+
+/// The unclamped `cos θ = alpha + beta_prime / x` at which a neutrino of
+/// rest energy `x m_μ/2` reaches one lab energy, as coefficients in `x`.
+#[derive(Clone, Copy, Debug)]
+struct CosineEdge {
+    alpha: f64,
+    beta_prime: f64,
+}
+
+impl CosineEdge {
+    const FORWARD: Self = Self {
+        alpha: 1.0,
+        beta_prime: 0.0,
+    };
+    const BACKWARD: Self = Self {
+        alpha: -1.0,
+        beta_prime: 0.0,
+    };
+
+    /// The edge of lab energy `lab` from a muon of `gamma` and
+    /// `gamma_beta > 0`: `(lab − γe)/(γβe)` with `e = x m_μ/2`.
+    fn at(lab: f64, muon_mass: f64, gamma: f64, gamma_beta: f64) -> Self {
+        Self {
+            alpha: -gamma / gamma_beta,
+            beta_prime: 2.0 * lab / (gamma_beta * muon_mass),
+        }
+    }
+
+    /// The edge of `lab` as it applies between the rest energies `from`
+    /// and `to`, where it is either clamped throughout or unclamped
+    /// throughout: the crossings are the interval's ends.
+    fn between(lab: f64, from: f64, to: f64, muon_mass: f64, gamma: f64, gamma_beta: f64) -> Self {
+        let middle = (from + to) / 2.0;
+        let cosine = (lab - gamma * middle) / (gamma_beta * middle);
+        if cosine >= 1.0 {
+            Self::FORWARD
+        } else if cosine <= -1.0 {
+            Self::BACKWARD
+        } else {
+            Self::at(lab, muon_mass, gamma, gamma_beta)
+        }
+    }
+
+    /// Return `x cos θ = β' + αx` at `x`, which is of order one along the
+    /// window even where `α` and `β'` are of order `1/β`.
+    fn scaled_cosine(&self, x: f64) -> f64 {
+        self.alpha.mul_add(x, self.beta_prime)
+    }
+}
+
 /// A muon daughter, named for the μ⁻ decay; a μ⁺ gives its antiparticle.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Daughter {
@@ -174,6 +424,33 @@ pub enum Daughter {
     ElectronNeutrino,
     /// The muon-flavor neutrino: ν_μ from μ⁻, ν̄_μ from μ⁺.
     MuonNeutrino,
+}
+
+impl Daughter {
+    /// Return the neutrino this daughter is, if it is one.
+    fn neutrino(self) -> Option<Neutrino> {
+        match self {
+            Self::ChargedLepton => None,
+            Self::ElectronNeutrino => Some(Neutrino::Electron),
+            Self::MuonNeutrino => Some(Neutrino::Muon),
+        }
+    }
+}
+
+/// The two massless daughters, whose integrals are closed forms.
+#[derive(Clone, Copy, Debug)]
+enum Neutrino {
+    Electron,
+    Muon,
+}
+
+impl Neutrino {
+    fn daughter(self) -> Daughter {
+        match self {
+            Self::Electron => Daughter::ElectronNeutrino,
+            Self::Muon => Daughter::MuonNeutrino,
+        }
+    }
 }
 
 /// The Born decay of a polarized muon.
@@ -276,9 +553,105 @@ impl MuonDecay {
         }
     }
 
+    /// Return `(ã, b̃)` with `a = x² ã` and `b = x² b̃` for `neutrino`,
+    /// whose coefficients are Laurent polynomials in `q = 1 − x` once the
+    /// `x²` is set aside (see the module docs), expanded about `center`.
+    fn neutrino_coefficients(&self, neutrino: Neutrino, center: f64) -> (Laurent, Laurent) {
+        let r = self.mass_ratio();
+        let f = self.width_factor();
+        match neutrino {
+            Neutrino::Electron => {
+                // `6(q − r)²/q = 6(r²/q + (1 − 2r) − x)`.
+                let a = Laurent::zero(center)
+                    .with_pole(-1, r * r)
+                    .with_polynomial(&[1.0 - 2.0 * r, -1.0])
+                    .scale(6.0 / f);
+                (a, a)
+            }
+            Neutrino::Muon => {
+                // `K A = 2x²(2r³/q³ − 3r²/q² + 1)/F` and
+                // `K B = x²(−r³/q² + 3r²/q + (1 − 3r) − x)/F`.
+                let ka = Laurent::zero(center)
+                    .with_pole(-3, 2.0 * r.powi(3))
+                    .with_pole(-2, -3.0 * r * r)
+                    .with_polynomial(&[1.0])
+                    .scale(2.0 / f);
+                let kb = Laurent::zero(center)
+                    .with_pole(-2, -r.powi(3))
+                    .with_pole(-1, 3.0 * r * r)
+                    .with_polynomial(&[1.0 - 3.0 * r, -1.0])
+                    .scale(1.0 / f);
+                // `1 − x/2 = (1 − x₀/2) − u/2` and `x/2 = x₀/2 + u/2`.
+                let a = ka.times(&[1.0 - center / 2.0, -0.5]).add(kb);
+                let b = kb.add(ka.times(&[-center / 2.0, -0.5]));
+                (a, b)
+            }
+        }
+    }
+
+    /// Return `x = 2E/m_μ` of a rest-frame `energy`.
+    fn x(&self, energy: f64) -> f64 {
+        2.0 * energy / self.muon_mass
+    }
+
     /// Return `dN/dE` in MeV⁻¹ of `daughter` at lab `energy` from a muon
     /// of lab `muon_energy` and effective `polarization` in `[−1, 1]`.
     pub fn dnde(
+        &self,
+        daughter: Daughter,
+        energy: f64,
+        muon_energy: f64,
+        polarization: f64,
+    ) -> f64 {
+        match daughter.neutrino() {
+            Some(neutrino) => self.dnde_neutrino(neutrino, energy, muon_energy, polarization),
+            None => self.dnde_quadrature(daughter, energy, muon_energy, polarization),
+        }
+    }
+
+    /// [`Self::dnde`] for a neutrino in closed form: on the boost window
+    /// `cos θ = α + β'/x`, so `(a + P b cos θ)/e` is
+    /// `(2/m_μ)[x ã + P b̃ (β' + αx)]`, a [`Laurent`] form.
+    fn dnde_neutrino(
+        &self,
+        neutrino: Neutrino,
+        energy: f64,
+        muon_energy: f64,
+        polarization: f64,
+    ) -> f64 {
+        let daughter = neutrino.daughter();
+        let gamma_beta = momentum(muon_energy, self.muon_mass) / self.muon_mass;
+        if gamma_beta == 0.0 {
+            let (a, _) = self.rest_coefficients(daughter, self.x(energy));
+            return 4.0 * a / self.muon_mass;
+        }
+        if energy < 0.0 {
+            return 0.0;
+        }
+        let gamma = muon_energy / self.muon_mass;
+        let (lower, upper) = boost_range(energy, 0.0, gamma, gamma_beta);
+        let (low, high) = (lower.max(0.0), upper.min(self.max_energy(daughter)));
+        if low >= high {
+            return 0.0;
+        }
+        let (x_low, x_high) = (self.x(low), self.x(high));
+        let center = (x_low + x_high) / 2.0;
+        let (a, b) = self.neutrino_coefficients(neutrino, center);
+        let edge = CosineEdge::at(energy, self.muon_mass, gamma, gamma_beta);
+        // `x = x₀ + u` and `β' + αx = (β' + αx₀) + αu`.
+        let density = a.times(&[center, 1.0]).add(
+            b.times(&[edge.scaled_cosine(center), edge.alpha])
+                .scale(polarization),
+        );
+        // `∫ de = (m_μ/2) ∫ dx` cancels the `2/m_μ`, and the boost divides
+        // by `(m_μ/2) γβ` as in quadrature.
+        2.0 * density.integral(x_low, x_high) / (self.muon_mass * gamma_beta)
+    }
+
+    /// [`Self::dnde`] by adaptive quadrature over the rest-frame momentum,
+    /// the only path for the massive charged lepton and the oracle of
+    /// [`Self::dnde_neutrino`].
+    fn dnde_quadrature(
         &self,
         daughter: Daughter,
         energy: f64,
@@ -321,6 +694,104 @@ impl MuonDecay {
     /// `[low, high]` from a muon of lab `muon_energy` and effective
     /// `polarization`.
     pub fn counts(
+        &self,
+        daughter: Daughter,
+        low: f64,
+        high: f64,
+        muon_energy: f64,
+        polarization: f64,
+    ) -> f64 {
+        match daughter.neutrino() {
+            Some(neutrino) => self.counts_neutrino(neutrino, low, high, muon_energy, polarization),
+            None => self.counts_quadrature(daughter, low, high, muon_energy, polarization),
+        }
+    }
+
+    /// [`Self::counts`] for a neutrino in closed form. Between two
+    /// consecutive crossings each bin edge's `cos θ` is clamped or
+    /// `α + β'/x` throughout, so with `c = x cos θ` the angular integral
+    /// `a Δcos θ + P b Δ(cos² θ)/2 = x ã Δc + P b̃ Δ(c²)/2` is a
+    /// [`Laurent`] form, and the bin is a sum of closed forms.
+    fn counts_neutrino(
+        &self,
+        neutrino: Neutrino,
+        low: f64,
+        high: f64,
+        muon_energy: f64,
+        polarization: f64,
+    ) -> f64 {
+        let max_energy = self.max_energy(neutrino.daughter());
+        let gamma_beta = momentum(muon_energy, self.muon_mass) / self.muon_mass;
+        if gamma_beta == 0.0 {
+            let (low, high) = (low.max(0.0), high.min(max_energy));
+            if low >= high {
+                return 0.0;
+            }
+            let (x_low, x_high) = (self.x(low), self.x(high));
+            let center = (x_low + x_high) / 2.0;
+            let (a, _) = self.neutrino_coefficients(neutrino, center);
+            // `∫ 2a dx` with `a = x² ã` and `x² = x₀² + 2x₀u + u²`.
+            return a
+                .times(&[2.0 * center * center, 4.0 * center, 2.0])
+                .integral(x_low, x_high);
+        }
+        let gamma = muon_energy / self.muon_mass;
+        let (start, stop, crossings) = bin_window(low, high, 0.0, gamma, gamma_beta);
+        let stop = stop.min(max_energy);
+        if start >= stop {
+            return 0.0;
+        }
+        // The window starts at the lower crossing of `low`; the other two
+        // crossings fall in either order.
+        let [_, low_upper, high_lower] = crossings;
+        let points = [
+            start,
+            low_upper.min(high_lower).clamp(start, stop),
+            low_upper.max(high_lower).clamp(start, stop),
+            stop,
+        ];
+        let mut total = 0.0;
+        for pair in points.windows(2) {
+            let (from, to) = (pair[0], pair[1]);
+            if from >= to {
+                continue;
+            }
+            let (x_from, x_to) = (self.x(from), self.x(to));
+            let center = (x_from + x_to) / 2.0;
+            let (a, b) = self.neutrino_coefficients(neutrino, center);
+            let lower_edge = CosineEdge::between(low, from, to, self.muon_mass, gamma, gamma_beta);
+            let upper_edge = CosineEdge::between(high, from, to, self.muon_mass, gamma, gamma_beta);
+            // With `c = c₀ + αu` for each edge, `x Δc = (x₀ + u)(Δc₀ + Δα u)`
+            // and `Δ(c²) = Δ(c₀²) + 2Δ(c₀α) u + Δ(α²) u²`.
+            let (lower_c, upper_c) = (
+                lower_edge.scaled_cosine(center),
+                upper_edge.scaled_cosine(center),
+            );
+            let delta_alpha = upper_edge.alpha - lower_edge.alpha;
+            let delta_c = upper_c - lower_c;
+            let delta_c2 = delta_c * (upper_c + lower_c);
+            let delta_cross = upper_c * upper_edge.alpha - lower_c * lower_edge.alpha;
+            let delta_alpha2 = delta_alpha * (upper_edge.alpha + lower_edge.alpha);
+            let angular = a
+                .times(&[
+                    center * delta_c,
+                    delta_c + center * delta_alpha,
+                    delta_alpha,
+                ])
+                .add(
+                    b.times(&[delta_c2, 2.0 * delta_cross, delta_alpha2])
+                        .scale(polarization / 2.0),
+                );
+            // `(2/m_μ) ∫ de = ∫ dx`.
+            total += angular.integral(x_from, x_to);
+        }
+        total
+    }
+
+    /// [`Self::counts`] by adaptive quadrature over the rest-frame
+    /// momentum, the only path for the massive charged lepton and the
+    /// oracle of [`Self::counts_neutrino`].
+    fn counts_quadrature(
         &self,
         daughter: Daughter,
         low: f64,
@@ -696,6 +1167,187 @@ mod tests {
         }
     }
 
+    const NEUTRINOS: [Daughter; 2] = [Daughter::ElectronNeutrino, Daughter::MuonNeutrino];
+
+    /// Assert that the neutrino closed forms of `decay` agree with the
+    /// quadrature they replace at `muon_energy`, for densities and for
+    /// wide, narrow and endpoint-reaching bins, to `rtol`.
+    fn assert_closed_forms_match_quadrature(decay: &MuonDecay, muon_energy: f64, rtol: f64) {
+        let check = |label: String, actual: f64, expected: f64, rtol: f64| {
+            let scale = if expected == 0.0 { 1.0 } else { expected.abs() };
+            let error = (actual - expected).abs() / scale;
+            assert!(
+                error <= rtol,
+                "{label}: closed form {actual:.17e}, quadrature {expected:.17e}, \
+                 relative error {error:e} > {rtol:e}"
+            );
+        };
+        for daughter in NEUTRINOS {
+            for polarization in [-1.0, 0.4, 1.0] {
+                let label = |what: String| {
+                    format!(
+                        "{daughter:?} from a muon of {muon_energy} MeV, P = {polarization}, {what}"
+                    )
+                };
+                for energy in [0.5, 5.0, 31.0, 52.0, 77.0, 140.0, 900.0] {
+                    check(
+                        label(format!("dnde at {energy} MeV")),
+                        decay.dnde(daughter, energy, muon_energy, polarization),
+                        decay.dnde_quadrature(daughter, energy, muon_energy, polarization),
+                        rtol,
+                    );
+                    // A bin of relative width 1e-3 costs the quadrature three
+                    // digits, since it forms each edge's `cos θ` before
+                    // differencing them, where the closed form differences
+                    // the lab energies; the pinned references below show the
+                    // closed form is the accurate side there.
+                    for (width, rtol) in [(0.3 * energy, rtol), (1e-3 * energy, rtol.max(1e-9))] {
+                        let (low, high) = (energy - width / 2.0, energy + width / 2.0);
+                        check(
+                            label(format!("counts in [{low}, {high}] MeV")),
+                            decay.counts(daughter, low, high, muon_energy, polarization),
+                            decay.counts_quadrature(daughter, low, high, muon_energy, polarization),
+                            rtol,
+                        );
+                    }
+                }
+                let top = 2.0 * muon_energy;
+                check(
+                    label(format!("counts in [0, {top}] MeV")),
+                    decay.counts(daughter, 0.0, top, muon_energy, polarization),
+                    decay.counts_quadrature(daughter, 0.0, top, muon_energy, polarization),
+                    rtol,
+                );
+            }
+        }
+    }
+
+    /// Bins pinned against a 40-digit `mpmath` integration of the same
+    /// densities with the same clamped `cos θ` windows: the slow muon's
+    /// endpoint bin and wide bin, a fast muon's narrow bin and a moderate
+    /// case. The reference's kinks sit at crossings it knows only to
+    /// double precision, so 1e-10 covers both sides.
+    #[test]
+    fn neutrino_bins_match_a_high_precision_reference() {
+        let decay = MuonDecay::PDG;
+        let slow = decay.muon_mass / (1.0_f64 - 1e-6).sqrt();
+        let cases = [
+            (
+                Daughter::ElectronNeutrino,
+                51.974,
+                52.026,
+                slow,
+                -1.0,
+                0.0001755283927069126,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                51.974,
+                52.026,
+                slow,
+                -1.0,
+                0.001964288682611424,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                44.2,
+                59.8,
+                slow,
+                0.4,
+                0.12745390189578906,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                44.2,
+                59.8,
+                slow,
+                0.4,
+                0.3184732214239274,
+            ),
+            (
+                Daughter::ElectronNeutrino,
+                0.49975,
+                0.50025,
+                2000.0,
+                1.0,
+                2.3680743028145054e-10,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                0.49975,
+                0.50025,
+                2000.0,
+                1.0,
+                6.423714503561537e-08,
+            ),
+            (
+                Daughter::MuonNeutrino,
+                30.0,
+                31.0,
+                250.0,
+                -0.6,
+                0.006297247697720865,
+            ),
+        ];
+        for (daughter, low, high, muon_energy, polarization, expected) in cases {
+            assert_close(
+                decay.counts(daughter, low, high, muon_energy, polarization),
+                expected,
+                1e-10,
+            );
+        }
+    }
+
+    /// The neutrinos' closed forms agree with the quadrature they replace
+    /// from rest to `γ ≈ 19`. The quadrature meets its 1e-12 target and
+    /// the closed form is exact up to the window edges, so 1e-10.
+    #[test]
+    fn neutrino_closed_forms_match_the_quadrature() {
+        let decay = MuonDecay::PDG;
+        for muon_energy in [decay.muon_mass, 110.0, 250.0, 2000.0] {
+            assert_closed_forms_match_quadrature(&decay, muon_energy, 1e-10);
+        }
+    }
+
+    /// A muon with `β = 1e-3` has boost windows of relative width 2e-3,
+    /// whose edges carry three fewer digits than the energies; both forms
+    /// inherit that, and they still agree to 1e-9.
+    #[test]
+    fn neutrino_closed_forms_hold_for_a_slow_muon() {
+        let decay = MuonDecay::PDG;
+        let muon_energy = decay.muon_mass / (1.0_f64 - 1e-6).sqrt();
+        assert_closed_forms_match_quadrature(&decay, muon_energy, 1e-9);
+    }
+
+    /// With a massless electron `r = 0`, so the Laurent coefficients of
+    /// the negative powers and of `ln q` vanish while `q` reaches zero at
+    /// the endpoint. The closed forms skip those terms rather than form
+    /// `0 · ∞`, and still count one neutrino per decay.
+    #[test]
+    fn neutrino_closed_forms_survive_the_massless_limit() {
+        let decay = MuonDecay {
+            electron_mass: 0.0,
+            ..MuonDecay::PDG
+        };
+        for daughter in NEUTRINOS {
+            let endpoint = decay.max_energy(daughter);
+            assert_close(
+                decay.counts(daughter, 0.0, endpoint, decay.muon_mass, 0.0),
+                1.0,
+                1e-13,
+            );
+            assert_close(decay.counts(daughter, 0.0, 1e4, 300.0, 0.5), 1.0, 1e-11);
+            let near = decay.dnde(daughter, 0.999 * endpoint, 300.0, 1.0);
+            assert!(near.is_finite());
+            assert_close(
+                near,
+                decay.dnde_quadrature(daughter, 0.999 * endpoint, 300.0, 1.0),
+                1e-10,
+            );
+        }
+        assert_closed_forms_match_quadrature(&decay, 250.0, 1e-10);
+    }
+
     /// A muon at the next representable energy above rest decays like one
     /// at rest: the lab density is continuous in the boost.
     #[test]
@@ -730,6 +1382,16 @@ mod tests {
         let (count, energy) = pion_rest_moments(&NOTE_PION, Daughter::ChargedLepton);
         assert_close(count, 1.0, 1e-11);
         assert_close(energy, 36.940_692_886_356_47, 1e-11);
+    }
+
+    /// With `hazma.parameters`' masses the same closed form gives
+    /// 36.94069258356754 MeV, which the Python suite pins through the
+    /// public counts.
+    #[test]
+    fn pion_rest_mean_positron_energy_with_hazma_masses() {
+        let (count, energy) = pion_rest_moments(&PionDecay::PDG, Daughter::ChargedLepton);
+        assert_close(count, 1.0, 1e-11);
+        assert_close(energy, 36.940_692_583_567_54, 1e-11);
     }
 
     /// Without the spin the same mean is the note's 38.430221 MeV, quoted
