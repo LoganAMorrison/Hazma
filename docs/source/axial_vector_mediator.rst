@@ -71,7 +71,9 @@ e⁺ alone, ``"electron_positron"`` for the charge-summed e± injection, and
 :math:`\mathrm{MeV}^{-1}`, counts are particles per bin between consecutive
 edges, and a line is an ``"energy"`` in MeV with a ``"multiplicity"``, the
 particles per annihilation. ``spectra()`` and ``positron_spectra()`` weight
-the continua by the branching fractions.
+the continua by the branching fractions, and the photon ``spectra()`` also
+add the resolved prompt photons described in
+:ref:`axial-gamma-ray-limits-and-the-cmb`.
 
 The muons of ``mu mu`` decay with the effective polarization their chiral
 couplings give them, and the muon of :math:`\pi \to \mu\nu` fully polarized,
@@ -138,6 +140,8 @@ fractions above 1 MeV, :math:`9.1\times10^{-4}` at 450 MeV and
 :math:`3.1\times10^{-3}` at 500 MeV; the model's common pion mass gives
 larger fractions near threshold.
 
+.. _axial-gamma-ray-limits-and-the-cmb:
+
 Gamma-ray limits and the CMB
 ----------------------------
 
@@ -157,6 +161,11 @@ tables as ``f_eff`` does, and normalizes to :math:`2m_\chi`. Like the pair
 yields, it holds no prompt radiation. A transverse pair decaying into
 ``pi pi pi0`` deposits 0.4021864 of its energy at
 :math:`m_\chi/M = 600/450` MeV and 0.3750662 at 900/500 MeV.
+The charged pions of ``pi pi pi0`` decay at their physical mass from a
+common-mass production, as ``rest_frame_yields`` documents, so a ``pi pi pi0``
+pair injects about 2% more than its rest energy (1224.6 MeV per 1200 MeV at
+600/450 MeV) and its efficiency is correspondingly high against an
+energy-conserving cascade.
 
 Classes
 -------

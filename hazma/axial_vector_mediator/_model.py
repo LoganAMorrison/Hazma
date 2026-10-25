@@ -203,9 +203,10 @@ class AxialVectorMediator(TheoryAnn):
     `mediator_decay_yields` and `mediator_decay_counts` give the same
     products of a moving mediator's decays from its helicity density, and
     `mediator_pair_yields` and `mediator_pair_counts` the inclusive yield of
-    a mediator pair. None of them holds prompt radiation:
-    `rest_frame_resolved_photons`, `mediator_decay_resolved_photons` and
-    their counts give the real-emission photons above an infrared cut.
+    a mediator pair. The yields and cascades hold no prompt radiation, and
+    `spectra` alone adds it: `rest_frame_resolved_photons`,
+    `mediator_decay_resolved_photons` and their counts give the
+    real-emission photons above an infrared cut.
     `mediator_pair_f_eff` is the CMB deposition efficiency of a mediator
     pair.
     """
@@ -939,7 +940,8 @@ class AxialVectorMediator(TheoryAnn):
         annihilation into that final state, in the :math:`\chi\bar\chi`
         centre-of-mass frame, of photons above ``cut`` in that frame. It adds
         to the photons of `rest_frame_yields`, which hold no prompt
-        radiation, and like them carries no branching fraction.
+        radiation, and like them carries no branching fraction. `spectra`
+        already includes it, so do not add it to `spectra` again.
 
         Parameters
         ----------
@@ -1537,6 +1539,12 @@ class AxialVectorMediator(TheoryAnn):
         + f_{e^\pm}(E - m_e)\,dN^f_{e^\pm}/dE]` over the decays
         :math:`f` of one mediator, with the integral in Rust, broken at
         every table node and at the ends of an e± box.
+
+        The charged pions of ``pi pi pi0`` decay at their physical mass from
+        a common-mass production, as `rest_frame_yields` documents, so such a
+        pair injects about 2% more than its rest energy (1224.6 MeV per
+        1200 MeV at 600/450 MeV) and its efficiency is correspondingly high
+        against an energy-conserving cascade.
         """
         x_kd = _finite_real(x_kd, "x_kd", positive=True)
         e_cm = 2.0 * self._mx * (1.0 + 0.5 * vx_cmb(self._mx, x_kd) ** 2)

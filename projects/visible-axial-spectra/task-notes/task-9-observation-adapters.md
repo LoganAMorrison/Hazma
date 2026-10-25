@@ -24,8 +24,9 @@ Decisions).
   (900/500 MeV) for a transverse pair decaying into `pi pi pi0`.
 - The line efficiencies 0.7241273 and 0.6053788 (note `sec:spd-feff`, read
   with tables linear in E).
-- The secluded L_mu-L_tau conditional efficiency 0.9544662; p_ann of 1.286%
-  of the Planck limit moves to Task 14.
+- The secluded L_mu-L_tau conditional efficiency 0.9544662; p_ann of about
+  1.288% of the Planck limit (the note's 1.286% scaled to linear-in-E tables)
+  moves to Task 14.
 - `references/check_public_impact.py` reports existing public outputs
   bit-identical.
 
@@ -87,8 +88,9 @@ Decisions).
   published f_eff. The gates are 0.4021864, 0.3750662, 0.7241273, 0.6053788
   and 0.9544662, each also checked against an independent fold.
 - **L_mu-L_tau split (user decision).** The conditional efficiency is pinned
-  here with a hand-supplied transverse density; p_ann of 1.286% of Planck
-  needs sigma v(Z'Z') and moves to Task 14's gate.
+  here with a hand-supplied transverse density; p_ann needs sigma v(Z'Z')
+  and moves to Task 14's gate as about 1.288% of Planck, the note's 1.286%
+  (log-E tables) times 0.9544662/0.9527711 for Hazma's linear-in-E tables.
 - **Photon hooks.** `_spectrum_funcs` maps each state to
   `_final_state_photons`, the continuum plus `_radiation` with the cut at the
   smallest requested energy. No `include_fsr` exists or is added, so nothing
@@ -125,8 +127,10 @@ Decisions).
 - `rust/src/axial_vector_mediator.rs` — the two deposition entry points and
   the shared cascade constructors.
 - `hazma/axial_vector_mediator/_model.py` — `_final_state_photons`,
-  `_cascade_deposition`, `mediator_pair_f_eff`, `_DEPOSITED`, class docstring.
-- `test/axial_vector_mediator/test_observation_adapters.py` (new) — 10 tests.
+  `_cascade_deposition`, `mediator_pair_f_eff`, `_DEPOSITED`, class and
+  method docstrings (the `pi pi pi0` energy excess, the resolved photons
+  already in `spectra`).
+- `test/axial_vector_mediator/test_observation_adapters.py` (new) — 11 tests.
 - `docs/source/axial_vector_mediator.rst` — "Gamma-ray limits and the CMB".
 - `CHANGELOG.md` — Unreleased entry.
 - `../PLAN.md` Task 9 and Task 14 gates; `../references/scope-and-acceptance.md`
@@ -135,20 +139,24 @@ Decisions).
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features --features
-  test-probes -- box_edges deposition`: 5 passed. `cargo clippy ... -D
+  test-probes -- box_edges deposition`: 5 passed; the narrow-box test's
+  tolerance is relative, `(width / center)^2`. `cargo clippy ... -D
   warnings`: clean.
 - `.venv/bin/python -m pytest -n 0 -q
-  test/axial_vector_mediator/test_observation_adapters.py`: 10 passed in
-  7.25s. Oracles: the photon line against `f_eff_g` itself (1e-14); the
+  test/axial_vector_mediator/test_observation_adapters.py`: 11 passed in
+  7.0s. Oracles: the photon line against `f_eff_g` itself (1e-14); the
   transverse and isotropic e± boxes and the L_mu-L_tau box against scipy
-  angular and energy integrals with the exact tensor power (1e-8); the `e e`
+  angular and energy integrals with the exact tensor power (1e-8); the
+  `mu mu` plus neutrino pair against a scipy fold of `mediator_pair_yields`
+  with break points at the table nodes (1e-8, the kernel's `epsrel`; the
+  measured agreement is 3e-10); the `e e`
   photons and `binned_limit(comptel_diffuse)` against `SingleChannelAnn("e
   e")` (1e-13, 1e-12); the spectra hook against `rest_frame_yields` plus
-  `rest_frame_resolved_photons` at cut 1 MeV (1e-14).
+  `rest_frame_resolved_photons` at cut 1 MeV (1e-14), with `mu mu` open.
 - `env PATH=".venv/bin:$PATH" scripts/agents/preflight.sh --paths
   "hazma/axial_vector_mediator test/axial_vector_mediator" --md "<the four
-  Markdown files>"`: RESULT: PASS across all eleven rows; pytest 3025 passed,
-  16 skipped, 127 subtests passed in 77.03s; ruff 0 new.
+  Markdown files>"`: RESULT: PASS across all eleven rows; pytest 3026 passed,
+  16 skipped, 127 subtests passed; ruff 0 new.
 - The cascade pins agree with a 16000-point trapezoid over
   `mediator_pair_yields` (0.4021865, 0.3750662) to 1.2e-7 at both points.
 
@@ -156,9 +164,16 @@ Decisions).
 
 `.venv/bin/python projects/visible-axial-spectra/references/check_public_impact.py`:
 164 existing outputs, maximum absolute difference 0.0, "unchanged on the
-recorded grid", hazma imported from this worktree. The unreleased
+recorded grid", hazma imported from this worktree. That script evaluates only
+`dnde_photon_neutral_pion`, `dnde_positron_muon`, `dnde_neutrino_muon` and
+`VectorFormFactorPiPi.width`, so it cannot observe this diff, and its result
+is not the reason no released value moves. The reason is that the diff touches
+only `AxialVectorMediator`, which is unreleased (absent from tag 2.2.0),
+`Cascade::box_edges` and two new entry points. The unreleased
 `AxialVectorMediator.spectra` and `total_spectrum` gain the resolved photons
-of `e e`, `mu mu` and `pi pi pi0`; no released value moves.
+of `e e`, `mu mu` and `pi pi pi0`. The `pair_cascade_yields` and
+`three_pion_cascade_yields` refactor only moved construction into shared
+helpers, and the existing cascade tests pin their values.
 
 ## Open Questions
 
@@ -174,6 +189,17 @@ and `../references/scope-and-acceptance.md`)
 `../PLAN.md` Task 9's gate now names the model's values with the two
 convention differences, and Task 14's gate takes the p_ann item. The
 acceptance table follows. No ADR: the decisions bind only these gates.
+
+## Review fixes
+
+PR #136 review round 1 (reviewers A and E) added the `mu mu` plus neutrino
+pair-efficiency test and a `mu mu` channel in the resolved-photon test, wrote
+the `pi pi pi0` 2% energy excess into the docs, corrected three stale
+statements about `spectra` and the resolved photons, restated Task 14's p_ann
+gate as about 1.288%, made the narrow-box Rust tolerance relative, and
+corrected the numerical-impact reasoning. The nested line-energy dicts in
+`SingleChannelAnn` are deferred to
+`docs/followups/todo/single-channel-nested-line-dicts.md`.
 
 ## Stale-state sweep
 
@@ -224,7 +250,8 @@ this block.
   `scope-and-acceptance.md` rows 24-26, 28 and 29, the adapter test
   comments, and this note's Findings, Decisions, Open Questions and
   Handoff. All KEPT: each names the superseded value beside the pinned
-  one, and p_ann of 1.286% stands in Task 14's gate. This note's Exit
+  one, and p_ann stands in Task 14's gate as about 1.288% (1.286% is the log-E
+  reading). This note's Exit
   Criteria (EDITED) now list the patched gates, where they had listed the
   original ones.
 - **Doc consistency edits made by this sweep.** The note's Exit Criteria
@@ -264,11 +291,11 @@ this block.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification and README, 10 adapter tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_observation_adapters.py` | `10 tests collected` | KEPT |
+| Verification and README, 11 adapter tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_observation_adapters.py` | `11 tests collected` | EDITED from 10 |
 | Verification and README, 5 Rust tests | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- box_edges deposition` | `5 passed` | KEPT |
 | Files Changed, 4 + 1 split of those 5 | `grep -c '#\[test\]' rust/src/kernels/deposition.rs` | 4, plus `box_edges_bound_the_electron_support` | KEPT |
-| Verification, 10 passed | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator/test_observation_adapters.py` | `10 passed in 7.16s` | KEPT |
-| Verification and README, 3025 passed | path-scoped `preflight.sh` of the implementing pass | not re-run: only Markdown changed since | KEPT, recorded |
+| Verification, 11 passed | `.venv/bin/python -m pytest -n 0 -q test/axial_vector_mediator/test_observation_adapters.py` | `11 passed` | EDITED from 10 |
+| Verification and README, 3026 passed | path-scoped `preflight.sh` of the review-fix pass | `3026 passed` | EDITED from 3025 |
 | Numerical impact, 164 values | `check_public_impact.py` (below) | maximum absolute difference 0.0 | KEPT |
 
 - **Exit Criteria to test mapping.**
@@ -279,13 +306,15 @@ this block.
 | Cascade efficiencies 0.4021864 and 0.3750662 | `test_three_pion_cascade_efficiency` |
 | Line efficiencies 0.7241273 and 0.6053788 | `test_a_photon_line_deposits_the_table_at_its_energy` |
 | L_mu-L_tau conditional efficiency 0.9544662 | `test_secluded_l_mu_l_tau_conditional_efficiency` |
+| `mu mu` and neutrino pair efficiency against an independent fold | `test_the_dimuon_and_neutrino_pair_efficiency_folds_the_pair_yields` |
 | Public outputs bit-identical | `references/check_public_impact.py` |
 
 - **Numerical-impact statement.** No existing public value changes
   (verified: `.venv/bin/python
   projects/visible-axial-spectra/references/check_public_impact.py`, which
   reports a maximum absolute difference of 0.0 over 164 values, hazma
-  imported from this worktree). The unreleased
+  imported from this worktree), though that script does not observe this
+  diff (see Numerical impact). The unreleased
   `AxialVectorMediator.spectra` and `total_spectrum` gain the resolved
   photons of `e e`, `mu mu` and `pi pi pi0`, and `mediator_pair_f_eff` is
   new; both belong to the unreleased model.
@@ -298,8 +327,8 @@ this block.
 ## Handoff to Next Task
 
 - Task 14 can route `"v v"` through `mediator_pair_f_eff`'s fold once it
-  supplies the pair's density and sigma v; p_ann of 1.286% of Planck is its
-  gate.
+  supplies the pair's density and sigma v; p_ann of about 1.288% of Planck
+  (linear-in-E tables) is its gate.
 - `_spectrum_funcs` photons now include prompt radiation; a channel added
   later must give `_radiation` a branch or a zero.
 - The pair efficiency holds no prompt radiation; adding it would need a

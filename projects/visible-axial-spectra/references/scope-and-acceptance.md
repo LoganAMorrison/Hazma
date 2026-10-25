@@ -26,7 +26,7 @@ error.
 | gamma gamma line f_eff at m_chi = 67.488 MeV (pi0) and 273.93 MeV (eta), tables linear in E (note, linear in log E: 0.723585, 0.600670) | 0.7241273, 0.6053788 | `sec:spd-feff` | 9 |
 | Secluded L_mu-L_tau: sigma v(chi chibar -> Z'Z') | 3.73093e-9 GeV^-2 = 4.35523e-26 cm^3/s | `sec:axl6-cmb` | 14 |
 | Secluded L_mu-L_tau: conditional f_eff, tables linear in E (note, linear in log E: 0.952771) | 0.9544662 | `sec:axl6-cmb` | 9 |
-| Secluded L_mu-L_tau: p_ann / Planck (3.2e-28) | 1.286% | `sec:axl6-cmb` | 14 |
+| Secluded L_mu-L_tau: p_ann / Planck (3.2e-28), tables linear in E (note, linear in log E: 1.286%; scaled by 0.9544662/0.9527711) | about 1.288% | `sec:axl6-cmb` | 14 |
 | NA62 invisible-pi0 bound on kappa = g_A^chi g_q/M^2 at m_chi = 60 MeV | <= 5.34e-6 GeV^-2 | `sec:ax-inv` | 15 |
 | Illustrative hypercharge card excluded by NA62 | 1.355 MeV < m_chi < m_pi0/2 - 5.5 eV | `sec:ax` | 15 |
 | Illustrative hypercharge card embeddability in H1H2S | M_Z' >= 15.55 GeV or abs(g_A^chi) <= 0.0268 | `sec:ax` | 12 |

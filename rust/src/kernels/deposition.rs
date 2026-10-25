@@ -102,6 +102,8 @@ mod tests {
     fn a_narrow_box_tends_to_its_line() {
         // A box of width w about E folds to E f(E − m) up to O(w²) of the
         // linear cell, whose curvature is only the E weight's.
+        // The box average of the quadratic E f(E) errs by g'' w² / (24 g),
+        // well below (w / E)².
         let (rest_mass, center) = (0.0, 30.0);
         for width in [1e-2, 1e-3] {
             let (a, b) = (center - width / 2.0, center + width / 2.0);
@@ -115,7 +117,7 @@ mod tests {
             let folded = deposited_energy(dnde, 0.01, 200.0, rest_mass, &TABLE, &[a, b]);
             let line = center * TABLE.at(center);
             assert!(
-                (folded / line - 1.0).abs() < width * width,
+                (folded / line - 1.0).abs() < (width / center).powi(2),
                 "{width}: {folded}"
             );
         }

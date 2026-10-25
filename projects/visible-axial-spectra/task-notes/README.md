@@ -110,9 +110,9 @@ After Task 8 the path-scoped preflight passed with `2978 passed, 16 skipped,
 `axial_radiation` carries 17 Rust unit tests. The literal commands are in
 `task-8-resolved-photons.md`.
 
-After Task 9 the path-scoped preflight passed with `3025 passed, 16 skipped,
+After Task 9 the path-scoped preflight passed with `3026 passed, 16 skipped,
 127 subtests passed`. The adapter suite
-`test/axial_vector_mediator/test_observation_adapters.py` has 10 tests, and
+`test/axial_vector_mediator/test_observation_adapters.py` has 11 tests, and
 the `deposition` and `box_edges` Rust unit tests number 5. The literal
 commands are in `task-9-observation-adapters.md`.
 

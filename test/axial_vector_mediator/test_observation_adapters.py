@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
+
 import numpy as np
 import pytest
 from scipy import integrate
@@ -40,6 +42,17 @@ ELECTRONS = LeptonCouplings(
     gnue=0.0,
     gnumu=0.0,
     gnutau=0.0,
+)
+MUONS_AND_NEUTRINOS = LeptonCouplings(
+    gvee=0.0,
+    gaee=0.0,
+    gvmumu=1e-3,
+    gamumu=0.0,
+    gvtautau=0.0,
+    gatautau=0.0,
+    gnue=1e-3,
+    gnumu=1e-3,
+    gnutau=1e-3,
 )
 #: L_mu - L_tau below the dimuon threshold: the electrons couple only through
 #: a small vector mixing, so nearly every mediator decays into neutrinos.
@@ -185,6 +198,52 @@ def test_secluded_l_mu_l_tau_conditional_efficiency() -> None:
     assert conditional == pytest.approx(0.9544662, abs=5e-8)
 
 
+def test_the_dimuon_and_neutrino_pair_efficiency_folds_the_pair_yields() -> None:
+    # The mediator decays into mu mu and nu nu; the neutrinos deposit nothing
+    # and dilute the branching fractions. The fold is taken over the public
+    # yields, whose photons start at the photon table's first node and whose
+    # e± start at the electron mass, with the kinetic energy E - m_e as the
+    # e± table's argument.
+    model = _model(mx=400.0, mv=300.0, leptons=MUONS_AND_NEUTRINOS)
+    assert model.partial_widths()["mu mu"] > 0.0
+    mediator_energy = _cmb_e_cm(model.mx) / 2.0
+    electron_mass = parameters.electron_mass
+
+    def fold(product: str, nodes: np.ndarray, deposit: object) -> float:
+        def integrand(energy: float) -> float:
+            density = model.mediator_pair_yields(
+                energy, mediator_energy, product=product, density=TRANSVERSE
+            )
+            return energy * deposit(energy) * density
+
+        low = nodes[0]
+        points = nodes[(nodes > low) & (nodes < mediator_energy)]
+        return integrate.quad(
+            integrand,
+            low,
+            mediator_energy,
+            points=points,
+            epsabs=0.0,
+            epsrel=1e-10,
+            limit=2000,
+        )[0]
+
+    photons = fold(
+        "photon", f_eff_g.x, lambda energy: np.interp(energy, f_eff_g.x, f_eff_g.y)
+    )
+    pairs = fold(
+        "electron_positron",
+        f_eff_ep.x + electron_mass,
+        lambda energy: np.interp(energy - electron_mass, f_eff_ep.x, f_eff_ep.y),
+    )
+    expected = (photons + pairs) / (2.0 * model.mx)
+    # The kernel's relative accuracy is 1e-8; the comparison measured 3e-10
+    # for mu mu, and the quad here converges well below both.
+    assert model.mediator_pair_f_eff(density=TRANSVERSE) == pytest.approx(
+        expected, rel=1e-8
+    )
+
+
 @pytest.mark.parametrize(
     ("mx", "mv", "pinned"),
     # The model's own fold, which a 16000-point trapezoid over
@@ -213,7 +272,8 @@ def test_the_pair_efficiency_is_validated() -> None:
 
 
 def test_the_photon_spectra_add_the_resolved_prompt_photons() -> None:
-    model = _model(mx=290.0, mv=500.0, gaxx=0.0, gvxx=1.0, leptons=ELECTRONS)
+    leptons = replace(ELECTRONS, gvmumu=1e-3)
+    model = _model(mx=290.0, mv=500.0, gaxx=0.0, gvxx=1.0, leptons=leptons)
     model.quarks = ISOVECTOR
     e_cm = 590.0
     energies = np.array([[2.0, 20.0], [150.0, 280.0]])
@@ -222,7 +282,7 @@ def test_the_photon_spectra_add_the_resolved_prompt_photons() -> None:
     continuum = model.rest_frame_yields(energies, e_cm, product="photon")
     # The resolved density above the cut is the same for any cut below it.
     resolved = model.rest_frame_resolved_photons(energies, e_cm, cut=1.0)
-    for fs in ("e e", "pi pi pi0"):
+    for fs in ("e e", "mu mu", "pi pi pi0"):
         assert branching[fs] > 0.0
         expected = branching[fs] * (continuum[fs] + resolved[fs])
         np.testing.assert_allclose(spectra[fs], expected, rtol=1e-14)
