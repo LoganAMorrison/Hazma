@@ -21,11 +21,12 @@ error.
 | a1 fit (m_A = 1230 MeV, Gamma_A = 420 MeV): kappa_A, beta | 0.1539, 0.9408 | `sec:ax-match` | 11 |
 | BR(tau -> pi- pi- pi+ nu), BR(tau -> pi- 2pi0 nu) from the fit | 9.03%, 9.23% (PDG 8.99, 9.26) | `sec:ax-match` | 11 |
 | Mean e+ energy per pi+ at rest, polarized / unpolarized muon | 36.94069288635647 / 38.430221 MeV | `sec:k22` | 6 |
-| Cascade f_eff, A -> pi+ pi- pi0, 600/450 MeV (spin-corrected; unpolarized 0.4022) | 0.3967 | `tab:spd-cascade` | 9 |
-| Cascade f_eff, A -> pi+ pi- pi0, 900/500 MeV (spin-corrected; unpolarized 0.3750) | 0.3705 | `tab:spd-cascade` | 9 |
-| gamma gamma line f_eff at m_chi = 67.488 MeV (pi0) and 273.93 MeV (eta) | 0.724, 0.601 | `sec:spd-feff` | 9 |
+| Cascade f_eff, A -> pi+ pi- pi0, 600/450 MeV (note: spin-corrected 0.3967, unpolarized 0.4022; Hazma's mass hybrid, Task 9) | 0.4021864 | `tab:spd-cascade` | 9 |
+| Cascade f_eff, A -> pi+ pi- pi0, 900/500 MeV (note: spin-corrected 0.3705, unpolarized 0.3750; Hazma's mass hybrid, Task 9) | 0.3750662 | `tab:spd-cascade` | 9 |
+| gamma gamma line f_eff at m_chi = 67.488 MeV (pi0) and 273.93 MeV (eta), tables linear in E (note, linear in log E: 0.723585, 0.600670) | 0.7241273, 0.6053788 | `sec:spd-feff` | 9 |
 | Secluded L_mu-L_tau: sigma v(chi chibar -> Z'Z') | 3.73093e-9 GeV^-2 = 4.35523e-26 cm^3/s | `sec:axl6-cmb` | 14 |
-| Secluded L_mu-L_tau: conditional f_eff, p_ann / Planck (3.2e-28) | 0.952771, 1.286% | `sec:axl6-cmb` | 9 |
+| Secluded L_mu-L_tau: conditional f_eff, tables linear in E (note, linear in log E: 0.952771) | 0.9544662 | `sec:axl6-cmb` | 9 |
+| Secluded L_mu-L_tau: p_ann / Planck (3.2e-28) | 1.286% | `sec:axl6-cmb` | 14 |
 | NA62 invisible-pi0 bound on kappa = g_A^chi g_q/M^2 at m_chi = 60 MeV | <= 5.34e-6 GeV^-2 | `sec:ax-inv` | 15 |
 | Illustrative hypercharge card excluded by NA62 | 1.355 MeV < m_chi < m_pi0/2 - 5.5 eV | `sec:ax` | 15 |
 | Illustrative hypercharge card embeddability in H1H2S | M_Z' >= 15.55 GeV or abs(g_A^chi) <= 0.0268 | `sec:ax` | 12 |

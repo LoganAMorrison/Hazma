@@ -79,6 +79,9 @@
 //! soft eikonal limit, by the Born spectral functions of
 //! [`axial_three_pi`], by the mediator note's restricted LO fractions and by
 //! the NumPy Monte Carlo in `test/axial_vector_mediator/radiation_oracle.py`.
+//! [`deposition`] folds those cascades' photons and e± with the CMB
+//! deposition-efficiency tables, as `TheoryCMB.f_eff` folds annihilation
+//! spectra; it is pinned by closed-form box and line folds.
 
 pub mod axial_poles;
 pub mod axial_radiation;
@@ -86,6 +89,7 @@ pub mod axial_rates;
 pub mod axial_tensors;
 pub mod axial_three_pi;
 pub mod axial_yields;
+pub mod deposition;
 pub mod mediator_decay_positron;
 pub mod mediator_tables;
 pub mod neutrino_flavors;

@@ -138,6 +138,26 @@ fractions above 1 MeV, :math:`9.1\times10^{-4}` at 450 MeV and
 :math:`3.1\times10^{-3}` at 500 MeV; the model's common pion mass gives
 larger fractions near threshold.
 
+Gamma-ray limits and the CMB
+----------------------------
+
+The photon ``spectra`` add each final state's resolved prompt photons to its
+continuum. In the centre-of-mass frame the resolved density at a photon energy
+does not depend on a cut below that energy, so these spectra need no cut, and
+``total_spectrum``, ``total_conv_spectrum_fn``, ``binned_limit``,
+``unbinned_limit``, ``f_eff`` and ``cmb_limit`` use them as they use any
+``TheoryAnn`` model's. The ``e e`` photons are those of
+``SingleChannelAnn("e e")``.
+
+``mediator_pair_f_eff`` is the CMB deposition efficiency of annihilation into
+a mediator pair alone. It folds the photons and charge-summed e± of
+``mediator_pair_yields``, for two mediators of half the centre-of-mass energy
+``f_eff`` uses, with the deposition curves of arXiv:1506.03811, reads the
+tables as ``f_eff`` does, and normalizes to :math:`2m_\chi`. Like the pair
+yields, it holds no prompt radiation. A transverse pair decaying into
+``pi pi pi0`` deposits 0.4021864 of its energy at
+:math:`m_\chi/M = 600/450` MeV and 0.3750662 at 900/500 MeV.
+
 Classes
 -------
 
