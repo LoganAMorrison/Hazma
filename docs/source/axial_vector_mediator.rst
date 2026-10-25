@@ -109,6 +109,35 @@ yield :math:`2\sum_f B_f K_f` of a mediator pair sharing one density, with
 the branching fractions of ``partial_widths``; the probability that both
 mediators decay into :math:`f` is :math:`B_f^2`, which is not that yield.
 
+Resolved photons
+----------------
+
+``rest_frame_resolved_photons``, ``rest_frame_resolved_photon_counts``,
+``mediator_decay_resolved_photons`` and
+``mediator_decay_resolved_photon_counts`` return the prompt real-emission
+photons at :math:`O(\alpha)` per Born annihilation or decay into each open
+final state, above an infrared ``cut`` in MeV on the photon energy in the
+centre-of-mass or mediator rest frame. They add to the photons of the yields
+above, which hold no prompt radiation, and are zero for the states without
+charged particles.
+
+``pi pi pi0`` is exact at tree level within the leading-order current: in
+sigma-model coordinates the photon couples only to the external charged
+pions, so the amplitude is the Born current at :math:`\tilde s = (q - p_0)^2`
+times the eikonal factor, for the transverse and source-longitudinal densities
+alike. A photon from a moving mediator keeps its
+:math:`(3F_0 - 1)P_2` alignment. ``e e`` and ``mu mu`` take the
+Altarelli-Parisi leading-log spectrum of each lepton, an approximation that
+needs :math:`\sqrt{s} \gg 2m` and whose photons follow their leptons' angular
+density. Each final state takes exactly
+one of the two, so nothing is counted twice. The virtual corrections that
+cancel the logarithm of the cut, and the :math:`O(\alpha)` recoil and virtual
+corrections to the decay yields, are not included. With the physical pion
+masses of the mediator note, the exact emission reproduces its restricted LO
+fractions above 1 MeV, :math:`9.1\times10^{-4}` at 450 MeV and
+:math:`3.1\times10^{-3}` at 500 MeV; the model's common pion mass gives
+larger fractions near threshold.
+
 Classes
 -------
 

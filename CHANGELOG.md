@@ -75,6 +75,19 @@ user-facing change even when no signature did.
   charged pions' photon edge, which moves those yields by at most 5e-10 of
   their peak and restores the sliver just inside the edge. Released public
   values are unchanged.
+- **Resolved prompt photons of `AxialVectorMediator`.**
+  `rest_frame_resolved_photons`, `rest_frame_resolved_photon_counts`,
+  `mediator_decay_resolved_photons` and `mediator_decay_resolved_photon_counts`
+  return the real-emission photons at O(α) per Born annihilation or decay,
+  above a required infrared `cut` in MeV on the rest-frame photon energy, as
+  densities in MeV⁻¹ and counts per bin. `pi pi pi0` is exact at tree level
+  within the LO current, for both the transverse and the source-longitudinal
+  densities, and keeps its helicity alignment in a moving mediator's decay;
+  with physical pion masses it reproduces the mediator note's resolved
+  fractions, about 9.1e-4 at 450 MeV and 3.1e-3 at 500 MeV. `e e` and `mu mu`
+  take the Altarelli-Parisi leading-log approximation, valid for `√s ≫ 2m`.
+  No final state takes both, and virtual corrections are not included.
+  Existing yields and public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

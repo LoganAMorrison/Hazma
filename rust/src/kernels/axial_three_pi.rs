@@ -187,7 +187,7 @@ pub fn angular_rule(order: usize) -> Vec<(f64, f64)> {
 /// mpmath evaluation at order 511, the nodes are accurate to about an ulp
 /// and the weights to about 3e-12 relative; NumPy's `leggauss` has the same
 /// node accuracy but weights good to only 2e-10.
-fn gauss_legendre(order: usize) -> Vec<(f64, f64)> {
+pub(super) fn gauss_legendre(order: usize) -> Vec<(f64, f64)> {
     let n = order as f64;
     // (P_n(x), P_n'(x)).
     let legendre = |x: f64| {

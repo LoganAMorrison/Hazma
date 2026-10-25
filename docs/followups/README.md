@@ -53,6 +53,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [the axial mediator's three-pion yields omit the π⁰ Dalitz e±](todo/axial-mediator-pi0-dalitz-positrons.md) | 2026-10-23 | visible-axial-spectra Task 6 | project |
 | [the axial mediator's muon photons ignore the muon polarization](todo/axial-mediator-polarized-radiative-muon-photons.md) | 2026-10-23 | visible-axial-spectra Task 6 | project |
 | [the radiative-muon photon spectrum is negative just below its endpoint](todo/muon-photon-endpoint-approximation-is-signed.md) | 2026-10-24 | PR #132 review round 2 | cross-cutting |
+| [soft lab muon-decay neutrinos are signed rounding residue](todo/soft-muon-neutrinos-are-signed-residue.md) | 2026-10-24 | PR #133 review round 2 | cross-cutting |
 | [the deprecated Altarelli-Parisi functions keep the old endpoint](todo/deprecated-altarelli-parisi-keeps-the-old-endpoint.md) | 2026-10-24 | the AP endpoint repair | cross-cutting |
 | [`RHNeutrino`'s `ν ℓ ℓ'` invariant-mass distributions go negative](todo/rhn-three-body-invariant-mass-probabilities-go-negative.md) | 2026-10-24 | measuring the AP endpoint repair | cross-cutting |
 
