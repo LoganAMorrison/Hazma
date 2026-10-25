@@ -48,8 +48,12 @@ def _make_fsr(mass, charge, scalar):
 
     # Our invariant mass distributions are distributions in sqrt(s) rather than
     # s. The AP functions take in `s`, so we wrap the function to convert.
-    def fsr(energies, sqrts):
-        return ap(energies, sqrts**2, mass=mass, charge=charge)
+    # `partner_mass` is the mass of the particle the radiator pairs with, which
+    # sets the photon endpoint.
+    def fsr(energies, sqrts, partner_mass: float):
+        return ap(
+            energies, sqrts**2, mass=mass, charge=charge, partner_mass=partner_mass
+        )
 
     return fsr
 
@@ -74,7 +78,7 @@ _dnde_photon_dict: Dict[str, Callable[[RealArray, float], RealArray]] = {
 }
 
 
-_dnde_fsr_dict: Dict[str, Callable[[RealArray, float], RealArray]] = {
+_dnde_fsr_dict: Dict[str, Callable[[RealArray, float, float], RealArray]] = {
     "e": _make_fsr(mass=sm_masses["e"], charge=-1.0, scalar=False),
     "mu": _make_fsr(mass=sm_masses["mu"], charge=-1.0, scalar=False),
     "pi": _make_fsr(mass=sm_masses["pi"], charge=1.0, scalar=True),
@@ -135,7 +139,6 @@ _dnde_vt_dict: Dict[str, Callable[[RealArray, float], RealArray]] = {
 
 _spectra_dict: Dict[str, Dict[str, Callable[[RealArray, float], RealArray]]] = {
     "photon": _dnde_photon_dict,
-    "fsr": _dnde_fsr_dict,
     "positron": _dnde_positron_dict,
     "neutrino": _dnde_neutrino_dict,
     "ve": _dnde_ve_dict,
@@ -343,7 +346,7 @@ def _dnde_photon_fsr(
         The convolved FSR spectrum.
     """
     dnde = np.zeros_like(photon_energies)
-    dnde_fns = _spectra_dict["fsr"]
+    dnde_fns = _dnde_fsr_dict
 
     has_fsr = any(s in dnde_fns for s in final_states)
     if has_fsr:
@@ -372,8 +375,10 @@ def _dnde_photon_fsr(
             if key in dnde_fns
         }
 
+        masses = _get_masses(final_states)
         for pair, dist in dists.items():
-            for s in [final_states[p] for p in pair]:
+            for radiator, partner in [pair, pair[::-1]]:
+                s = final_states[radiator]
                 # Skip neutral particles
                 if s not in dndes:
                     continue
@@ -382,8 +387,16 @@ def _dnde_photon_fsr(
                 # particle, skip it.
                 if average_fsr or counts[s] == 0:
                     counts[s] += 1
-                    dndes[s] = dndes[s] + _conv_dnde_dist(
-                        photon_energies, dist, s, "fsr"
+                    fsr = np.array(
+                        [
+                            dnde_fns[s](photon_energies, sqrts, masses[partner])
+                            for sqrts in dist.bin_centers
+                        ]
+                    )
+                    dndes[s] = dndes[s] + np.trapezoid(
+                        np.expand_dims(dist.probabilities, 1) * fsr,
+                        dist.bin_centers,
+                        axis=0,
                     )
 
         for key in dndes.keys():
@@ -421,7 +434,7 @@ def _dnde_two_body(
     assert len(states) == 2
     s1, s2 = states
     dnde_fn = _spectra_dict[product]
-    dnde_fsr = _spectra_dict["fsr"]
+    dnde_fsr = _dnde_fsr_dict
 
     m1, m2 = _get_masses(states)
     e1 = (cme**2 + m1**2 - m2**2) / (2.0 * cme)
@@ -438,9 +451,9 @@ def _dnde_two_body(
 
     if product == "photon" and include_fsr:
         if s1 in dnde_fsr:
-            dnde += dnde_fsr[s1](product_energies, cme)
+            dnde += dnde_fsr[s1](product_energies, cme, m2)
         if s2 in dnde_fsr:
-            dnde += dnde_fsr[s2](product_energies, cme)
+            dnde += dnde_fsr[s2](product_energies, cme, m1)
 
     return dnde
 

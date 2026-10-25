@@ -94,9 +94,41 @@ user-facing change even when no signature did.
   so the boosted values no longer depend on the lab energies requested.
   With it, `energies` may also be a scalar, and a float is returned.
   Without it the function behaves as before.
+- **The Altarelli-Parisi FSR functions take `partner_mass`.**
+  `dnde_photon_ap_fermion`, `dnde_photon_ap_scalar` and their `dndx_*`
+  counterparts accept the mass, in MeV, of the particle the radiator
+  recoils against, which sets the photon endpoint
+  `x = 1 - (mass + partner_mass)²/s`. The default is `mass`, a pair of
+  equal masses. The change to their values is listed under `Changed`.
 
 ### Changed
 
+- **The Altarelli-Parisi FSR spectra stop at the photon endpoint.**
+  `dnde_photon_ap_fermion` and `dnde_photon_ap_scalar` kept the spectrum
+  wherever the bracket `ln(s(1 - x)/m²) - 1` was positive, out to
+  `x = 1 - e m²/s`, which lies past the endpoint `x = 1 - 4m²/s` of an
+  equal pair. A muon pair at `sqrt(s) = 300` MeV radiated out to
+  99.42 MeV rather than 75.58 MeV. They now stop at
+  `x = 1 - (m + m_Y)²/s` for a partner of mass `m_Y` (by default the
+  radiator's own mass), or at the bracket's zero when that comes first,
+  so an equal pair's spectrum ends in a step of height `ln 4 - 1`. The
+  share of one leg's photon energy removed is 5.8% for muons at 300 MeV
+  and 8.2e-4 at 1 GeV, 1.1% for pions at 500 MeV, 5.3e-3 for kaons at
+  2 GeV, under 2e-8 for electrons above 500 MeV, and about a third
+  just above threshold. `hazma.spectra.dnde_photon` now pairs each
+  radiator with its partner's mass, both for two-body states and for
+  each pair of a many-body state. The FSR of a radiator paired with a
+  light partner, such as a muon with a neutrino, is unchanged. The
+  photon energy per event falls by 1.0% for `mu mu` at 300 MeV, 0.98%
+  for `mu pi` at 400 MeV and 6.3% for `e mu pi` at 600 MeV, where the
+  electron now stops at its endpoint against the heavier pair. For
+  `VectorMediatorGeV` (`m_x = 100` MeV, `m_V = 1` GeV, unit quark and
+  lepton couplings) the total photon energy falls by 3.1e-3 at
+  `e_cm = 250` MeV and by 5.8e-5 at 1 GeV. For `RHNeutrino` with
+  `theta = 1e-3` it falls by 1.9% at `m_N = 300` MeV mixing with `e`,
+  by 0.26% mixing with `mu`, and by 0.23% at 600 MeV mixing with `mu`.
+  No parity-corpus value moves. Details:
+  `docs/followups/done/altarelli-parisi-fsr-runs-past-its-endpoint.md`.
 - **Every thermal average now integrates at the true `x` past
   `x = 300`.** Above `x = m_x / T = 300` the `ScalarMediator` kernel
   behind `thermal_cross_section` returned exactly `0.0`, the

@@ -51,7 +51,9 @@ def test_l_rho_photon_is_boosted_charged_rho_plus_electron_fsr(mx: float) -> Non
     model, e_rho, es = _setup(mx)
     expected = 2.0 * (
         spectra.dnde_photon_charged_rho(es, e_rho)
-        + spectra.dnde_photon_ap_fermion(es, mx**2, mass=ME, charge=-1.0)
+        + spectra.dnde_photon_ap_fermion(
+            es, mx**2, mass=ME, charge=-1.0, partner_mass=MRHO
+        )
     )
     actual = model._spectrum_funcs()["e rho"](es)
     np.testing.assert_allclose(actual, expected, rtol=RTOL, atol=0.0)
