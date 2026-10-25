@@ -15,7 +15,7 @@
 | 5 | Rates and mediator model | 3, 4 | Complete | `task-5-rates-and-mediator-model.md` |
 | 6 | Rest frame yields | 5 | Complete | `task-6-rest-frame-yields.md` |
 | 7 | Polarized cascades | 6; 14 for model-generated pair densities | Complete | `task-7-polarized-cascades.md` |
-| 8 | Resolved photons | 6; 7 for polarized boosts | Not started | — |
+| 8 | Resolved photons | 6; 7 for polarized boosts | Complete | `task-8-resolved-photons.md` |
 | 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Not started | — |
 | 10 | Fitted input overlays (optional) | 5; 6-9 for derived yields | Not started | — |
 | 11 | Remaining hadronic channels | 5 | Not started | — |
@@ -56,14 +56,19 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
   `Yields` impl fold polarized parents into spectra. The pair yield takes its
   branching fractions from `partial_widths`, so it inherits ADR-0004's
   refusal while an unmodeled final state is open.
+- Task 8 adds `rust/src/kernels/axial_radiation.rs`: exact LO `pi pi pi0`
+  photons (eikonal for both densities) and Altarelli-Parisi `e e` and `mu mu`
+  photons, each state taking one path. Its reference fractions need the
+  physical pion masses, while the model keeps its common π⁰ mass.
 
 ## Numerical impact so far
 
 The first cluster adds public primitives, Task 5 adds the
-`AxialVectorMediator` model, Task 6 adds its public yields, and Task 7 adds
-its polarized cascades; none of them changes an existing function. The
-recorded existing-output grid contains 164 values and is bit-identical after
-integration, including after the Task 3 Rust port and after Tasks 5, 6 and 7
+`AxialVectorMediator` model, Task 6 adds its public yields, Task 7 adds its
+polarized cascades, and Task 8 adds its resolved photons; none of them changes
+an existing function. The recorded existing-output grid contains 164 values
+and is bit-identical after integration, including after the Task 3 Rust port
+and after Tasks 5, 6, 7 and 8
 (`check_public_impact.py`: maximum absolute difference 0.0). Reproduce it
 with
 `.venv/bin/python
@@ -94,6 +99,12 @@ After Task 7 the path-scoped preflight passed with `2957 passed, 16 skipped,
 tests. The literal commands are in `task-7-polarized-cascades.md` and the
 gate output is `projects/visible-axial-spectra/task-notes/preflight-task-7.txt`.
 
+After Task 8 the path-scoped preflight passed with `2976 passed, 16 skipped,
+127 subtests passed`. The radiation suite
+`test/axial_vector_mediator/test_radiation.py` has 19 tests, and
+`axial_radiation` carries 16 Rust unit tests. The literal commands are in
+`task-8-resolved-photons.md`.
+
 ## Open questions
 
 Later tasks must reconcile external photon source prescriptions and identify
@@ -108,9 +119,11 @@ sums at threshold.
 
 Read PLAN, ADR-0001 and
 `projects/visible-axial-spectra/adrs/ADR-0002-rust-kernels-and-numpy-oracle.md`,
-then the task notes and `references/scope-and-acceptance.md`. Task 8
-(resolved photons) should read the handoff in
-`task-7-polarized-cascades.md` first. It builds on
+then the task notes and `references/scope-and-acceptance.md`. Task 9
+(observation adapters) should read the handoff in
+`task-8-resolved-photons.md` first: it feeds the resolved
+photons of the four `*_resolved_photon*` methods to the adapters with an
+explicit cut and must not add `include_fsr` on top. Task 8 built on
 `polarized_cascade::Cascade` and its `Yields` impl: a new channel needs an
 `Analyzer` (or, for a multibody decay, energy and alignment densities) and a
 `Decay` arm. The public contract is the "Polarized cascades" section of

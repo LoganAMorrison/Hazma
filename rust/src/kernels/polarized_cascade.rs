@@ -128,13 +128,13 @@ impl Helicities {
 
     /// Return the alignment `3F₀ − 1`, the weight of a daughter's
     /// `P₂(cos θ)`.
-    fn alignment(self) -> f64 {
+    pub(super) fn alignment(self) -> f64 {
         3.0 * self.zero - 1.0
     }
 }
 
 /// Return the Legendre polynomial `P₂(c) = (3c² − 1)/2`.
-fn legendre2(cosine: f64) -> f64 {
+pub(super) fn legendre2(cosine: f64) -> f64 {
     (3.0 * cosine * cosine - 1.0) / 2.0
 }
 
@@ -178,8 +178,8 @@ impl Analyzer {
 /// The mediator's boost from its rest frame to the lab, along `ẑ`.
 #[derive(Clone, Copy, Debug)]
 pub struct Boost {
-    gamma: f64,
-    gamma_beta: f64,
+    pub(super) gamma: f64,
+    pub(super) gamma_beta: f64,
 }
 
 impl Boost {
@@ -205,7 +205,7 @@ impl Boost {
 
     /// Return the cosine at which a daughter of mediator-frame `energy`
     /// and `momentum` reaches `lab_energy`, unclipped.
-    fn cosine(self, lab_energy: f64, energy: f64, momentum: f64) -> f64 {
+    pub(super) fn cosine(self, lab_energy: f64, energy: f64, momentum: f64) -> f64 {
         (lab_energy - self.gamma * energy) / (self.gamma_beta * momentum)
     }
 }
