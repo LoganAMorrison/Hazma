@@ -405,3 +405,8 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   misattributes the rest, and a fixed grid near a moving endpoint is not
   interchangeable with adaptive quadrature: re-derive any table measured
   on a grid as coarse as the feature that moved (PR #134).
+- [open-test-on-a-closed-range] When a fix extends a range to include its
+  threshold (a table held at its first point down to zero kinetic energy, a
+  support that starts at a mass), every membership test on that range must
+  be inclusive too, or the value exactly at the threshold is still dropped.
+  Pin the threshold itself, not one ulp inside it (PR #135).
