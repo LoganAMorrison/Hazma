@@ -119,6 +119,21 @@ class TestLines:
         model = StubAnnihilation(mx, positron_lines={"e e": (mx, 1.0)})
         assert_allclose(model.f_eff_ep(), f_eff_ep_data[1][0], rtol=LINE_RTOL)
 
+    def test_pair_line_at_rest_is_counted(self) -> None:
+        # A pair at rest has zero kinetic energy, the bottom of the range the
+        # table's first point covers.
+        model = StubAnnihilation(
+            electron_mass, positron_lines={"e e": (electron_mass, 1.0)}
+        )
+        assert_allclose(model.f_eff_ep(), f_eff_ep_data[1][0], rtol=LINE_RTOL)
+        assert np.isfinite(model.cmb_limit())
+
+    def test_photon_line_at_the_table_edge_is_counted(self) -> None:
+        energy = f_eff_g_data[0][0] / 1e6
+        model = StubAnnihilation(1.0, gamma_lines={"pi0 g": (energy, 1.0)})
+        expected = energy * f_eff_g_data[1][0] / 2.0
+        assert_allclose(model.f_eff_g(), expected, rtol=LINE_RTOL)
+
     def test_below_the_electron_mass_the_pair_channel_is_empty(self) -> None:
         # Photon-only annihilation: the pair continuum must not reach the
         # table at negative kinetic energy.

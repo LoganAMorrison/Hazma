@@ -1774,3 +1774,14 @@ branch of the underlying kernel that "any" reaches.
   plus 4000 even energies. That moved `VectorMediatorGeV` at 250 MeV from
   3.1e-3 to 2.9e-3, and the `RHNeutrino` `ν e μ` rise from 0.2% at 42
   energies to 1.1% at 1723.
+
+### open-test-on-a-closed-range
+
+- PR #135 moved the electron-positron fold's lower bound from the table's
+  first kinetic point to `E = m_e`, holding the table at that point below
+  it, but the line loop kept `energy > e_min`. Review built a stub line at
+  exactly `electron_mass`: `f_eff_ep` returned 0 and `cmb_limit` returned
+  `inf`, while one ulp above gave 0.306555 and a finite limit. A photon
+  line exactly on the photon table's first point was dropped the same way.
+  The loop now uses `>=`, and tests pin both lines at the bound; each test
+  fails with the strict comparison restored.

@@ -127,7 +127,7 @@ class TheoryCMB:
         for ch, line in lines.items():  # type: ignore
             energy = line["energy"]
 
-            if energy > e_min:
+            if energy >= e_min:
                 bf = line["bf"]
                 multiplicity = 2.0 if ch == fs else 1.0
                 f_eff_line_dm += energy * bf * f_eff_base(energy) * multiplicity
