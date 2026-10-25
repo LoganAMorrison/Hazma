@@ -334,7 +334,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   the numerator at zero as well as nonzero; `0 / 0` turns a returned `0.0`
   into `NaN` that no tolerance catches. A closed form that divides by a bare
   factor before applying the term that regularizes it has the same zero set
-  (PR #103, #118, #128).
+  (PR #103, #118, #128, #132).
 - [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
   `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
   becomes a finite limit and a finite result. Clip with a comparison that
@@ -390,3 +390,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   to every member and every derived output, such as thresholds and the
   resonances the channel produces. Keyed on the one name that prompted it,
   it misses the siblings that share the property (PR #129).
+- [fold-blind-to-the-response-support-edge] An adaptive fold over a
+  parent's energy or angle samples nothing but zeros when its response is
+  supported only on a sliver of the parent range, such as the photons
+  within 1e-3 of their lab endpoint that only the fastest parents reach,
+  and returns zero with a converged error estimate. Give every fold a break
+  point where each response's support edge crosses each probe edge, at
+  every fold site, and pin a density and a bin just inside each endpoint
+  against an integral over the supported window alone (PR #132).

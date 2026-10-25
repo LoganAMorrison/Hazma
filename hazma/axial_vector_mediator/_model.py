@@ -1055,14 +1055,30 @@ class AxialVectorMediator(TheoryAnn):
             for fs in decays
         }
 
+    def _pair_branching_fractions(self) -> dict[str, float]:
+        """Return each open decay's partial width over the total `width_v`."""
+        widths = {
+            fs: width
+            for fs, width in self.partial_widths().items()
+            if fs != "total" and width > 0.0
+        }
+        if widths and self.width_v <= 0.0:
+            raise ValueError(
+                "The pair yield needs a positive total width, but width is zero "
+                "while decays are open."
+            )
+        return {fs: width / self.width_v for fs, width in widths.items()}
+
+    @staticmethod
     def _inclusive_pair(
-        self, per_decay: dict[str, float | np.ndarray], shape: tuple[int, ...]
+        per_decay: dict[str, float | np.ndarray],
+        branching: dict[str, float],
+        shape: tuple[int, ...],
     ) -> np.ndarray:
         """Return ``2 Σ_f B_f K_f`` over the per-decay yields ``K_f``."""
-        widths = self.partial_widths()
         total = np.zeros(shape)
         for fs, value in per_decay.items():
-            total += 2.0 * widths[fs] / self.width_v * np.asarray(value)
+            total += 2.0 * branching[fs] * np.asarray(value)
         return total
 
     def mediator_pair_yields(
@@ -1098,17 +1114,19 @@ class AxialVectorMediator(TheoryAnn):
         Raises
         ------
         ValueError
-            As `mediator_decay_yields` does, and when `partial_widths`
-            raises because a decay this model does not compute is open, even
-            when a ``width`` override supplies the total.
+            As `mediator_decay_yields` does, when `partial_widths` raises
+            because a decay this model does not compute is open, even when a
+            ``width`` override supplies the total, and when a ``width`` of
+            zero leaves open decays without a branching fraction.
         """
+        branching = self._pair_branching_fractions()
         per_decay = self.mediator_decay_yields(
             energies, mediator_energy, product=product, density=density
         )
         shape = np.shape(energies)
         if product == "neutrino":
             shape = (3, *shape)
-        return _scalar_or_array(self._inclusive_pair(per_decay, shape))
+        return _scalar_or_array(self._inclusive_pair(per_decay, branching, shape))
 
     def mediator_pair_counts(
         self,
@@ -1139,12 +1157,13 @@ class AxialVectorMediator(TheoryAnn):
         ValueError
             As `mediator_pair_yields` does.
         """
+        branching = self._pair_branching_fractions()
         per_decay = self.mediator_decay_counts(
             edges, mediator_energy, product=product, density=density
         )
         bins = np.size(edges) - 1
         shape = (3, bins) if product == "neutrino" else (bins,)
-        return self._inclusive_pair(per_decay, shape)
+        return self._inclusive_pair(per_decay, branching, shape)
 
     def _spectrum_funcs(
         self,

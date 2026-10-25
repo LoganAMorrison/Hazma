@@ -419,7 +419,9 @@ impl ThreePionParents {
                 charged_pion_photon_endpoint(decay_energy),
             )
         };
-        self.fold(Self::charged_density, response, probe, &[])
+        // The photon edge rides on the pion as a massless daughter's box does.
+        let features = [(charged_pion_photon_endpoint(MASS_PI), 0.0)];
+        self.fold(Self::charged_density, response, probe, &features)
     }
 }
 
@@ -616,6 +618,35 @@ mod tests {
 
     /// The charged pion's alignment is the π⁰-weighted mean of `P₂` of the
     /// angle between the two pions' momenta.
+    #[test]
+    fn charged_pion_photons_reach_their_endpoint() {
+        // Near the endpoint only the fastest charged pions radiate; the oracle
+        // folds over them alone. The fold's tolerance is 1e-8.
+        let parents = charged(590.0, 0.6);
+        let mass = parents.pion_mass;
+        let top = parents.charged_decay_energy(parents.max_kinetic());
+        let endpoint = charged_pion_photon_endpoint(top);
+        let rest_edge = charged_pion_photon_endpoint(MASS_PI);
+        for gap in [1e-3, 1e-6] {
+            let low = endpoint * (1.0 - gap);
+            for probe in [
+                Probe::Density(low),
+                Probe::Bin(low, endpoint * (1.0 + 1e-3)),
+            ] {
+                let from = mass * (threshold_gamma(low, rest_edge, 0.0) - 1.0);
+                let mut integrand = |kinetic: f64| {
+                    let decay = parents.charged_decay_energy(kinetic);
+                    let dnde = |photon: f64| dnde_photon_charged_pion(photon, decay);
+                    parents.charged_density(kinetic)
+                        * photon_response(probe, dnde, charged_pion_photon_endpoint(decay))
+                };
+                let expected = integrate(&mut integrand, from, parents.max_kinetic(), &[], 1e-10);
+                assert!(expected > 0.0, "{probe:?}");
+                assert_close(parents.charged_pion_photons(probe), expected, 1e-7);
+            }
+        }
+    }
+
     #[test]
     fn charged_alignment_is_the_mean_p2_between_pions() {
         // Brute force: the angle between the charged pion and the π⁰ from

@@ -1522,6 +1522,14 @@ branch of the underlying kernel that "any" reaches.
   array cases. The same idiom in `positron_pion.rs` predates the PR and is
   filed as `docs/followups/todo/positron-pion-clip-turns-nan-into-a-spectrum.md`.
 
+- PR #132 added `mediator_pair_yields` and `mediator_pair_counts`, whose
+  branching fractions divide by the model's total width. A `width=0`
+  override is permitted, and review found that the pair methods then raised
+  `ZeroDivisionError` while decays were open.
+  `_pair_branching_fractions` now raises a `ValueError` before any yield is
+  computed, and `test_pair_yields_refuse_a_zero_total_width` pins both
+  methods.
+
 ### integration-window-anchored-at-the-first-feature
 
 - PR #112 moved both mediator thermal kernels from a fixed `[2, 150]` to
@@ -1715,3 +1723,19 @@ branch of the underlying kernel that "any" reaches.
   does not vanish. `thermal_cross_section(1e4, model)` for `mx = 150`,
   `mv = 500`, hypercharge quarks and electrons only went from raising to
   4.476589112591885e-12 MeV⁻².
+
+### fold-blind-to-the-response-support-edge
+
+- PR #132 folded radiative muon photons over the muon's angle in a
+  mediator cascade, with break points only at the bin edges. Review found
+  that at a mediator mass of 450 MeV and lab energy of 600 MeV, the photon
+  density at 468.5 MeV came out as zero. The lab endpoint is 469.233 MeV,
+  and the supported angular window gives 4.88e-15 MeV⁻¹. The rest-frame
+  lab photon edge of a muon or charged pion rides on its parent as a
+  massless daughter's box does, so `threshold_gamma(edge, E*, 0)` gives the
+  crossing. The same gap sat in the cascade's charged-pion photon fold and
+  in the rest-frame three-pion fold of PR #130. Each fold now breaks at the
+  crossing. `muon_photons_reach_their_lab_endpoint`,
+  `charged_pion_photons_reach_their_lab_endpoint` and
+  `charged_pion_photons_reach_their_endpoint` pin densities and bins just
+  inside the endpoints, and all three fail without the break points.

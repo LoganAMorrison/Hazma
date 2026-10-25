@@ -70,8 +70,11 @@ user-facing change even when no signature did.
   transverse LO current. The radiative photons of muons and charged pions
   stay unpolarized
   (`docs/followups/todo/axial-mediator-polarized-radiative-muon-photons.md`),
-  and a model-generated density waits for the mediator-pair channel. Existing
-  public values are unchanged.
+  and a model-generated density waits for the mediator-pair channel. The
+  rest-frame `pi pi pi0` photon fold gains the same break point at the
+  charged pions' photon edge, which moves those yields by at most 5e-10 of
+  their peak and restores the sliver just inside the edge. Released public
+  values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

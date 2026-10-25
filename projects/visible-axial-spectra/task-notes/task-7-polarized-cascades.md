@@ -105,6 +105,14 @@ photon, positron and neutrino yields of each decay channel.
   raises while an unmodeled decay is open. The lab second-moment test pins
   the charged pions' alignment wiring, and the tolerances of the cascade
   tests state their reasons.
+- **Second review round.** A radiative photon's lab edge rides on its
+  parent as a massless daughter's box does, so every fold over a muon or
+  charged pion breaks at `threshold_gamma(edge, E*, 0)` for each probe
+  edge. Before, a probe within 1e-3 of the edge sampled only zeros; at
+  450/600 MeV the μ⁺μ⁻ photon density at 468.5 MeV is now
+  4.876e-15 MeV⁻¹ instead of 0. The same break point now guards Task 6's
+  rest-frame three-pion fold. A `width` of zero with open decays makes the
+  pair methods raise `ValueError` instead of dividing by zero.
 - **Unchanged physics.** Radiative muon and charged-pion photons stay
   unpolarized, as in Task 6 (see
   `docs/followups/todo/axial-mediator-polarized-radiative-muon-photons.md`).
@@ -113,13 +121,13 @@ photon, positron and neutrino yields of each decay channel.
 ## Files Changed
 
 - `rust/src/kernels/polarized_cascade.rs` (new): the cascade kernel and its
-  15 tests.
+  17 tests.
 - `rust/src/kernels/testdata/three_pion_cascade.csv` (new): the reference
   spectra, with their provenance in the header.
 - `rust/src/kernels/axial_yields.rs`: adds the `Yields` trait, the
-  `charged_alignment` and `spectator_alignment` densities and the
-  brute-force alignment test, and opens the response helpers to the
-  sibling module.
+  `charged_alignment` and `spectator_alignment` densities, the brute-force
+  alignment test and the photon-endpoint break point with its test, and
+  opens the response helpers to the sibling module.
 - `rust/src/kernels.rs`, `rust/src/axial_vector_mediator.rs`: register the
   module and add `pair_cascade_yields` and `three_pion_cascade_yields`.
 - `hazma/axial_vector_mediator/_model.py`: adds the four public methods,
@@ -135,26 +143,35 @@ photon, positron and neutrino yields of each decay channel.
   the handoff.
 - `projects/visible-axial-spectra/task-notes/preflight-task-7.txt` (new):
   the gate log.
+- `docs/agents/lessons.md`, `docs/agents/lessons-examples.md`: the
+  `fold-blind-to-the-response-support-edge` class, and PR #132 under
+  `new-divisor-zero-set`.
 
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes -- polarized_cascade axial_yields`: 22 passed
-  (15 + 7). `cargo clippy … -D warnings` and `cargo fmt --check` are clean.
-- `pytest -n 0 test/axial_vector_mediator/test_cascades.py`: 23 passed.
+  --features test-probes -- polarized_cascade axial_yields`: 25 passed
+  (17 + 8). `cargo clippy … -D warnings` and `cargo fmt --check` are clean.
+- `pytest -n 0 test/axial_vector_mediator/test_cascades.py`: 24 passed.
 - `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths
   "hazma/axial_vector_mediator test/axial_vector_mediator" --md "…"`:
-  RESULT: PASS on every row; pytest `2956 passed, 16 skipped, 127 subtests
-  passed in 49.29s` (`preflight-task-7.txt`).
+  RESULT: PASS on every row; pytest `2957 passed, 16 skipped, 127 subtests
+  passed in 53.36s` (`preflight-task-7.txt`).
 
 ## Numerical impact
 
-None. Against a built `origin/master` (`d109b65b`), every value of
-`rest_frame_yields` and `rest_frame_counts` is bit-identical (all four
-products, `e_cm` of 450, 520 and 590 MeV), and so are `partial_widths` and
-`annihilation_sigma_v_funcs`; the maximum difference is 0.0 over 220
-arrays. `references/check_public_impact.py` reports 164 values unchanged,
-with a maximum difference of 0.0.
+In budget. `references/check_public_impact.py` reports 164 values
+unchanged, with a maximum difference of 0.0. Before the second review
+round, every value of `rest_frame_yields` and `rest_frame_counts` was
+bit-identical to a built `origin/master` (`d109b65b`), and so were
+`partial_widths` and `annihilation_sigma_v_funcs`, over 220 arrays. The
+photon-endpoint break point then moves Task 6's rest-frame `pi pi pi0`
+photon yields by at most 5e-10 of their peak, within the fold's 1e-8
+tolerance: 400 densities and 200 bins at `q` of 420, 450, 520 and 590 MeV
+and transverse fractions of 1 and 0.6, against the build before the
+change. The `mu mu` rest-frame photons are bit-identical. Probes within
+1e-3 of the charged pions' photon edge, which the fold had returned as
+zero, now carry their sliver.
 
 ## Open Questions
 
@@ -235,10 +252,10 @@ for this note include this block.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 22 Rust tests (15 + 7) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_cascade axial_yields` | `running 22 tests`, `22 passed` | KEPT |
-| Files Changed, 15 tests in `polarized_cascade.rs`; `axial_yields.rs` gains one | `grep -c '#\[test\]' rust/src/kernels/polarized_cascade.rs rust/src/kernels/axial_yields.rs`; `git show origin/master:rust/src/kernels/axial_yields.rs \| grep -c '#\[test\]'` | 15 and 7; 6 on master | KEPT |
-| Verification, 23 cascade tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_cascades.py` | `23 tests collected` | KEPT |
-| Verification, 2956 passed | `preflight-task-7.txt` | `2956 passed, 16 skipped, 20 warnings, 127 subtests passed` | KEPT |
+| Verification, 25 Rust tests (17 + 8) | `cargo test --manifest-path rust/Cargo.toml --no-default-features --features test-probes -- polarized_cascade axial_yields` | `running 25 tests`, `25 passed` | EDITED |
+| Files Changed, 17 tests in `polarized_cascade.rs`; `axial_yields.rs` gains two | `grep -c '#\[test\]' rust/src/kernels/polarized_cascade.rs rust/src/kernels/axial_yields.rs`; `git show origin/master:rust/src/kernels/axial_yields.rs \| grep -c '#\[test\]'` | 17 and 8; 6 on master | EDITED |
+| Verification, 24 cascade tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_cascades.py` | `24 tests collected` | EDITED |
+| Verification, 2957 passed | `preflight-task-7.txt` | `2957 passed, 16 skipped, 20 warnings, 127 subtests passed` | EDITED |
 | Reference CSV, 500 bins at two mediators | `grep -vc '^#' rust/src/kernels/testdata/three_pion_cascade.csv` | 1001 lines: a column header and 1000 rows | KEPT |
 | Numerical impact, 164 values | `check_public_impact.py` (below) | 164 unchanged | KEPT |
 
@@ -254,14 +271,13 @@ for this note include this block.
 | 600/450 and 900/500 MeV references | `three_pion_cascades_reproduce_the_reference_spectra` |
 | Public outputs bit-identical | `references/check_public_impact.py` |
 
-- **Numerical-impact statement.** No existing public value changes
+- **Numerical-impact statement.** No released public value changes
   (verified: `.venv/bin/python
   projects/visible-axial-spectra/references/check_public_impact.py`, which
-  reports a maximum absolute difference of 0.0 over 164 values; and a
-  comparison against a built `origin/master` at `d109b65b`, where
-  `rest_frame_yields`, `rest_frame_counts`, `partial_widths` and
-  `annihilation_sigma_v_funcs` agree bit for bit over 220 arrays). The new
-  methods return values that no earlier release did.
+  reports a maximum absolute difference of 0.0 over 164 values). Task 6's
+  unreleased rest-frame `pi pi pi0` photons move by at most 5e-10 of their
+  peak, inside the fold tolerance (see Numerical impact). The new methods
+  return values that no earlier release did.
 - **Task-note self-consistency.** The `**Status:**` header reads `Complete`,
   matching the README's Tasks cell. Every file, function and class cited in
   Files Changed appears in `git diff --stat origin/master --`.

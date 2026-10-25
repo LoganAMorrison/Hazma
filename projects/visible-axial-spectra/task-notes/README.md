@@ -87,10 +87,10 @@ passed, 16 skipped, 20 warnings, 127 subtests passed`. The model suite
 (neutrino yields 2.36 s to 0.22 s over 40 energies, neutrino counts 24.6 s to
 2.5 s over 300 bins at 500 MeV) are in `task-6-rest-frame-yields.md`.
 
-After Task 7 the path-scoped preflight passed with `2956 passed, 16 skipped,
+After Task 7 the path-scoped preflight passed with `2957 passed, 16 skipped,
 127 subtests passed`. The cascade suite
-`test/axial_vector_mediator/test_cascades.py` has 23 tests, and
-`polarized_cascade` and `axial_yields` carry 22 Rust unit
+`test/axial_vector_mediator/test_cascades.py` has 24 tests, and
+`polarized_cascade` and `axial_yields` carry 25 Rust unit
 tests. The literal commands are in `task-7-polarized-cascades.md` and the
 gate output is `projects/visible-axial-spectra/task-notes/preflight-task-7.txt`.
 

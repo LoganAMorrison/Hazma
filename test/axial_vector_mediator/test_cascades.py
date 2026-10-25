@@ -333,6 +333,16 @@ def test_width_override_rescales_the_pair_branching_fractions() -> None:
     np.testing.assert_allclose(counts[1] / counts[0], 0.5, rtol=1e-12)
 
 
+def test_pair_yields_refuse_a_zero_total_width() -> None:
+    model = _model(width=0.0)
+    for method, points in (
+        (model.mediator_pair_yields, 50.0),
+        (model.mediator_pair_counts, [1.0, 500.0]),
+    ):
+        with pytest.raises(ValueError, match="positive total width"):
+            method(points, LAB, product="positron", density=ISOTROPIC)
+
+
 @pytest.mark.parametrize("product", PRODUCTS)
 def test_counts_round_trip_by_bin_width(product: str) -> None:
     model = _model()

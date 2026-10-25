@@ -74,7 +74,7 @@
 
 use std::f64::consts::SQRT_2;
 
-use crate::constants::pdg::{MASS_PI, MASS_PI0};
+use crate::constants::pdg::{MASS_MU, MASS_PI, MASS_PI0};
 
 use super::axial_three_pi::Channel as PionChannel;
 use super::axial_yields::{
@@ -407,6 +407,9 @@ impl Cascade {
     fn muon_photons(&self, pair: &PairDecay, probe: Probe) -> f64 {
         let (energy, momentum) = (pair.energy(), pair.momentum());
         let analyzer = pair.analyzer();
+        // The photon edge rides on the muon as a massless daughter's box does,
+        // so near the lab endpoint only a sliver of forward muons contributes.
+        let points = self.muon_points(pair, probe, &[(photon_endpoint(MASS_MU), 0.0)]);
         let mut integrand = |cosine: f64| {
             let weight = analyzer.density(self.helicities, cosine)
                 + analyzer.density(self.helicities, -cosine);
@@ -414,7 +417,7 @@ impl Cascade {
             let dnde = |photon: f64| dnde_photon_muon(photon, lab_energy);
             weight * photon_response(probe, dnde, photon_endpoint(lab_energy))
         };
-        integrate(&mut integrand, -1.0, 1.0, &[], FOLD_EPSREL)
+        integrate(&mut integrand, -1.0, 1.0, &points, FOLD_EPSREL)
     }
 
     /// Return the cosines at which a muon's response to `probe` breaks:
@@ -560,7 +563,8 @@ impl Cascade {
                 charged_pion_photon_endpoint(decay_energy),
             )
         };
-        self.pion_fold(parents, CHARGED, response, probe, &[])
+        let features = [(charged_pion_photon_endpoint(MASS_PI), 0.0)];
+        self.pion_fold(parents, CHARGED, response, probe, &features)
     }
 
     fn is_charged(parents: &ThreePionParents) -> bool {
@@ -1204,6 +1208,74 @@ mod tests {
                 pions.neutrinos(density)[1],
                 1e-5,
             );
+        }
+    }
+
+    /// Return density and bin probes the relative `gaps` below an
+    /// `endpoint`, the bins reaching past it.
+    fn endpoint_probes(endpoint: f64, gaps: &[f64]) -> Vec<Probe> {
+        gaps.iter()
+            .flat_map(|gap| {
+                let low = endpoint * (1.0 - gap);
+                [
+                    Probe::Density(low),
+                    Probe::Bin(low, endpoint * (1.0 + 1e-3)),
+                ]
+            })
+            .collect()
+    }
+
+    #[test]
+    fn muon_photons_reach_their_lab_endpoint() {
+        // Near the endpoint only a sliver of forward muons radiates; the oracle
+        // integrates over that sliver alone. The fold's tolerance is 1e-8.
+        // Hazma's unpolarized radiative-muon density dips to about −3e-13
+        // MeV⁻¹ within 1e-3 of its edge, so the oracle is held to be nonzero,
+        // not positive.
+        let pair = pairs()[0];
+        let muons = cascade(Decay::MuonPair(pair), 600.0, ORIENTED);
+        let (energy, momentum) = (pair.energy(), pair.momentum());
+        let analyzer = pair.analyzer();
+        let endpoint = photon_endpoint(muons.boost.lab_energy(energy, momentum, 1.0));
+        for probe in endpoint_probes(endpoint, &[1e-2, 1e-3]) {
+            let threshold = threshold_gamma(probe.edges()[0], photon_endpoint(MASS_MU), 0.0);
+            let from = muons.boost.cosine(pair.mass * threshold, energy, momentum);
+            let mut integrand = |cosine: f64| {
+                let lab = muons.boost.lab_energy(energy, momentum, cosine);
+                let weight =
+                    analyzer.density(ORIENTED, cosine) + analyzer.density(ORIENTED, -cosine);
+                let dnde = |photon: f64| dnde_photon_muon(photon, lab);
+                weight * photon_response(probe, dnde, photon_endpoint(lab))
+            };
+            let expected = integrate(&mut integrand, from, 1.0, &[], 1e-10);
+            assert!(expected != 0.0, "{probe:?}");
+            assert_close(muons.photons(probe), expected, 1e-7);
+        }
+        assert_eq!(muons.photons(Probe::Density(endpoint * (1.0 + 1e-9))), 0.0);
+    }
+
+    #[test]
+    fn charged_pion_photons_reach_their_lab_endpoint() {
+        // As for muons: only the fastest charged pions radiate near the edge.
+        let parents = three_pions(MEDIATOR);
+        let pions = cascade(Decay::ThreePion(parents), 600.0, TRANSVERSE);
+        let mass = parents.pion_mass;
+        let boost = pions.boost;
+        let fastest = mass + parents.max_kinetic();
+        let (_, top) = boost_range(fastest, mass, boost.gamma, boost.gamma_beta);
+        let endpoint = charged_pion_photon_endpoint(Cascade::charged_decay_energy(&parents, top));
+        let rest_edge = charged_pion_photon_endpoint(MASS_PI);
+        for probe in endpoint_probes(endpoint, &[1e-3, 1e-6]) {
+            let from = mass * threshold_gamma(probe.edges()[0], rest_edge, 0.0);
+            let mut integrand = |lab: f64| {
+                let decay = Cascade::charged_decay_energy(&parents, lab);
+                let dnde = |photon: f64| dnde_photon_charged_pion(photon, decay);
+                pions.pion_lab_density(&parents, CHARGED, lab)
+                    * photon_response(probe, dnde, charged_pion_photon_endpoint(decay))
+            };
+            let expected = integrate(&mut integrand, from, top, &[], 1e-10);
+            assert!(expected > 0.0, "{probe:?}");
+            assert_close(pions.charged_pion_photons(&parents, probe), expected, 1e-7);
         }
     }
 
