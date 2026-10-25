@@ -37,9 +37,14 @@ class TheoryCMB:
         Returns
         -------
         <sigma v> : float
-            Upper bound on <sigma v>, in cm^3 s^-1.
+            Upper bound on <sigma v>, in cm^3 s^-1. It is ``inf`` when the
+            annihilation products deposit no energy, as below the electron
+            mass with no photon above 5 keV.
         """
-        return 2.0 * p_ann * self.mx / self.f_eff(x_kd)  # type: ignore
+        f_eff = self.f_eff(x_kd)
+        if f_eff == 0.0:
+            return np.inf
+        return 2.0 * p_ann * self.mx / f_eff  # type: ignore
 
     def _f_eff_helper(self, fs, x_kd=1e-4, mode="quad"):
         """Computes f_eff^gg or f_eff^ep, one term of the fold f_eff states.
@@ -65,31 +70,33 @@ class TheoryCMB:
         mx = self.mx  # type: ignore
         e_cm = 2.0 * mx * (1.0 + 0.5 * vx_cmb(mx, x_kd) ** 2)
 
+        # Upper bounds on integrals are many GeV, so we don't need to do error
+        # checking there.
         if fs == "g g":
-            f_eff_table = f_eff_g
-            rest_mass = 0.0
             lines = self.gamma_ray_lines(e_cm)  # type: ignore
             spec_fn = self.total_spectrum  # type: ignore
+            # Photons below the table's first point are not counted.
+            e_min = f_eff_g.x[0]
+            f_eff_base = f_eff_g
         elif fs == "e e":
-            f_eff_table = f_eff_ep
-            rest_mass = electron_mass
             lines = self.positron_lines(e_cm)  # type: ignore
 
             def spec_fn(es, e_cm):
                 return 2.0 * self.total_positron_spectrum(es, e_cm)  # type: ignore
 
-        def f_eff_base(e: float) -> float:
-            # The tables are indexed by kinetic energy.
-            return f_eff_table(e - rest_mass)  # type: ignore
+            # Every pair member is counted. The table is indexed by kinetic
+            # energy and is flat at its first point, 5 keV, which stands in for
+            # every kinetic energy below it.
+            e_min = electron_mass
+            k_min = f_eff_ep.x[0]  # type: ignore
 
-        # Lower bound on integrals: the total energy at the first table point.
-        # Upper bound is many GeV, so we don't need to do error checking.
-        e_min = f_eff_table.x[0] + rest_mass  # type: ignore
+            def f_eff_base(e: float) -> float:
+                return f_eff_ep(max(e - electron_mass, k_min))  # type: ignore
 
         # Continuum contributions. Create an interpolator to avoid recomputing
         # spectrum.
         if e_cm / 2 <= e_min:
-            # No particle can be injected at an energy the table covers.
+            # No particle of this species can be injected.
             f_eff_dm = 0.0
         elif mode == "interp":
             # If RAMBO is needed to compute the spectrum, it is prohibitively
@@ -120,7 +127,6 @@ class TheoryCMB:
         for ch, line in lines.items():  # type: ignore
             energy = line["energy"]
 
-            # Make sure the base f_eff is defined at this energy
             if energy > e_min:
                 bf = line["bf"]
                 multiplicity = 2.0 if ch == fs else 1.0

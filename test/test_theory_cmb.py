@@ -44,10 +44,11 @@ def f_ee(kinetic_energy: float) -> float:
 
 
 class StubAnnihilation(TheoryCMB):
-    """Dark matter injecting fixed lines and an optional flat positron box.
+    """Dark matter injecting fixed lines and optional flat boxes.
 
-    Lines map a final state to ``(energy, branching fraction)``. The box is
-    ``(e_low, e_high)`` and carries one positron per annihilation.
+    Lines map a final state to ``(energy, branching fraction)``. A box is
+    ``(e_low, e_high)`` and carries one photon or one positron per
+    annihilation.
     """
 
     def __init__(
@@ -55,11 +56,13 @@ class StubAnnihilation(TheoryCMB):
         mx: float,
         gamma_lines: dict[str, tuple[float, float]] | None = None,
         positron_lines: dict[str, tuple[float, float]] | None = None,
+        photon_box: tuple[float, float] | None = None,
         positron_box: tuple[float, float] | None = None,
     ) -> None:
         self.mx = mx
         self._gamma_lines = gamma_lines or {}
         self._positron_lines = positron_lines or {}
+        self._photon_box = photon_box
         self._positron_box = positron_box
 
     @staticmethod
@@ -72,14 +75,18 @@ class StubAnnihilation(TheoryCMB):
     def positron_lines(self, e_cm: float) -> dict[str, dict]:
         return self._lines(self._positron_lines)
 
+    @staticmethod
+    def _box(es: np.ndarray, box: tuple[float, float] | None) -> np.ndarray:
+        if box is None:
+            return np.zeros_like(es)
+        lo, hi = box
+        return np.where((lo <= es) & (es <= hi), 1.0 / (hi - lo), 0.0)
+
     def total_spectrum(self, es: np.ndarray, e_cm: float) -> np.ndarray:
-        return np.zeros_like(es)
+        return self._box(es, self._photon_box)
 
     def total_positron_spectrum(self, es: np.ndarray, e_cm: float) -> np.ndarray:
-        if self._positron_box is None:
-            return np.zeros_like(es)
-        lo, hi = self._positron_box
-        return np.where((lo <= es) & (es <= hi), 1.0 / (hi - lo), 0.0)
+        return self._box(es, self._positron_box)
 
 
 class TestLines:
@@ -105,11 +112,12 @@ class TestLines:
         assert_allclose(model.f_eff_ep(), expected, rtol=LINE_RTOL)
         assert model.f_eff_g() == 0.0
 
-    def test_pair_line_below_the_table_deposits_nothing(self) -> None:
-        # Kinetic energy 1 keV, below the table's first point at 5.02 keV.
+    def test_pair_line_below_the_table_reads_its_first_point(self) -> None:
+        # Kinetic energy 1 keV, below the table's first point at 5.02 keV,
+        # where the table is flat.
         mx = electron_mass + 1e-3
         model = StubAnnihilation(mx, positron_lines={"e e": (mx, 1.0)})
-        assert model.f_eff_ep() == 0.0
+        assert_allclose(model.f_eff_ep(), f_eff_ep_data[1][0], rtol=LINE_RTOL)
 
     def test_below_the_electron_mass_the_pair_channel_is_empty(self) -> None:
         # Photon-only annihilation: the pair continuum must not reach the
@@ -119,9 +127,19 @@ class TestLines:
         assert_allclose(model.f_eff(), f_g(0.3), rtol=LINE_RTOL)
 
 
-class TestPositronBox:
+class TestBoxes:
+    def test_photon_box_folds_the_photon_spectrum(self) -> None:
+        mx, lo, hi = 100.0, 0.1, 90.0
+        model = StubAnnihilation(mx, photon_box=(lo, hi))
+        es = np.linspace(lo, hi, 400_001)
+        table = np.interp(es * 1e6, *f_eff_g_data)
+        expected = np.trapezoid(es / (hi - lo) * table, es) / (2.0 * mx)
+        assert_allclose(model.f_eff_g(), expected, rtol=CONTINUUM_RTOL)
+
     @pytest.mark.parametrize(
-        ("mx", "box"), [(50.0, (1.0, 40.0)), (5.0, (0.52, 4.5))], ids=str
+        ("mx", "box"),
+        [(50.0, (1.0, 40.0)), (5.0, (0.52, 4.5)), (1.0, (electron_mass, 0.6))],
+        ids=str,
     )
     def test_box_folds_the_charge_summed_spectrum(
         self, mx: float, box: tuple[float, float]
@@ -130,7 +148,8 @@ class TestPositronBox:
         model = StubAnnihilation(mx, positron_box=box)
         # Two particles (e+ and e-) per annihilation, flat in total energy,
         # each weighted by its total energy and the table at its kinetic
-        # energy. The integrand is piecewise quadratic, so a fine trapezoid
+        # energy, which ``numpy.interp`` holds at the first table point below
+        # it. The integrand is piecewise quadratic, so a fine trapezoid
         # converges far below CONTINUUM_RTOL.
         es = np.linspace(lo, hi, 400_001)
         table = np.interp((es - electron_mass) * 1e6, *f_eff_ep_data)
@@ -143,6 +162,10 @@ class TestCMBLimit:
         model = StubAnnihilation(100.0, gamma_lines={"g g": (100.0, 1.0)})
         expected = 2.0 * 100.0 * p_ann_planck_temp_pol / f_g(100.0)
         assert_allclose(model.cmb_limit(), expected, rtol=LINE_RTOL)
+
+    def test_limit_is_infinite_without_deposition(self) -> None:
+        # Below the electron mass with no photons, nothing is deposited.
+        assert StubAnnihilation(0.3).cmb_limit() == np.inf
 
     def test_limit_class_agrees_with_the_model(self) -> None:
         model = StubAnnihilation(100.0, gamma_lines={"g g": (100.0, 1.0)})

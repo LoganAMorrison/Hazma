@@ -126,7 +126,8 @@ user-facing change even when no signature did.
   every CMB bound on `<σv>` is twice as weak. `f_eff_ep` evaluated the
   electron-positron deposition curve of arXiv:1506.03811 at the total
   energy of each particle, but that curve is tabulated in kinetic energy;
-  it now reads the curve at `E - m_e`, still weighting by the total energy.
+  it now reads the curve at `E - m_e`, still weighting by the total energy,
+  and at the curve's first point, 5 keV, for the kinetic energies below it.
   Both `f_eff_g` and `f_eff_ep` are normalized to `2 m_χ` rather than to
   `e_cm`, which differ by `v²/2` at recombination. For `KineticMixing` and
   `HiggsPortal` with a 1 GeV mediator, `f_eff_ep` falls by 5.4% at
@@ -628,7 +629,9 @@ user-facing change even when no signature did.
   continuum integrand passed `quad` the one-element array that
   `total_spectrum` returns for a single energy. NumPy 2.5 refuses to convert
   it to a scalar, so there every model's `f_eff`, `f_eff_g`, `f_eff_ep` and
-  `cmb_limit` raised `TypeError`.
+  `cmb_limit` raised `TypeError`. Where the annihilation products deposit no
+  energy, as below the electron mass with no photon above 5 keV,
+  `cmb_limit` returns `inf` rather than raising `ZeroDivisionError`.
 - **`hazma.limits.CMBLimit` constrains models.** Its `_constrain` passed
   `x_kd` where `f_eff` expected a model and raised `AttributeError`, and its
   private copy of the deposition fold squared the recombination velocity
