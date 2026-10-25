@@ -128,13 +128,13 @@ impl Helicities {
 
     /// Return the alignment `3F₀ − 1`, the weight of a daughter's
     /// `P₂(cos θ)`.
-    fn alignment(self) -> f64 {
+    pub(super) fn alignment(self) -> f64 {
         3.0 * self.zero - 1.0
     }
 }
 
 /// Return the Legendre polynomial `P₂(c) = (3c² − 1)/2`.
-fn legendre2(cosine: f64) -> f64 {
+pub(super) fn legendre2(cosine: f64) -> f64 {
     (3.0 * cosine * cosine - 1.0) / 2.0
 }
 
@@ -178,8 +178,8 @@ impl Analyzer {
 /// The mediator's boost from its rest frame to the lab, along `ẑ`.
 #[derive(Clone, Copy, Debug)]
 pub struct Boost {
-    gamma: f64,
-    gamma_beta: f64,
+    pub(super) gamma: f64,
+    pub(super) gamma_beta: f64,
 }
 
 impl Boost {
@@ -205,8 +205,17 @@ impl Boost {
 
     /// Return the cosine at which a daughter of mediator-frame `energy`
     /// and `momentum` reaches `lab_energy`, unclipped.
-    fn cosine(self, lab_energy: f64, energy: f64, momentum: f64) -> f64 {
+    pub(super) fn cosine(self, lab_energy: f64, energy: f64, momentum: f64) -> f64 {
         (lab_energy - self.gamma * energy) / (self.gamma_beta * momentum)
+    }
+
+    /// Return the mediator-frame energies `[E/(γ + γβ), (γ + γβ)E]` of the
+    /// massless daughters that reach `lab_energy`. Unlike [`boost_range`],
+    /// it never squares the energy, which underflows for the soft photons
+    /// of a radiative spectrum.
+    pub(super) fn massless_range(self, lab_energy: f64) -> (f64, f64) {
+        let doppler = self.gamma + self.gamma_beta;
+        (lab_energy / doppler, doppler * lab_energy)
     }
 }
 
@@ -1368,6 +1377,19 @@ mod tests {
                 .collect();
             let tv = total_variation(&spectra[0], &spectra[2]);
             assert!((tv - expected_tv).abs() < 5e-5, "{tv}");
+        }
+    }
+
+    /// The massless Doppler edges are `E(γ ∓ γβ)`, here `E/2` and `2E`
+    /// exactly, even at energies whose square underflows.
+    #[test]
+    fn massless_range_survives_soft_energies() {
+        let boost = Boost {
+            gamma: 1.25,
+            gamma_beta: 0.75,
+        };
+        for energy in [1e-200, 1.0, 1e150] {
+            assert_eq!(boost.massless_range(energy), (energy * 0.5, energy * 2.0));
         }
     }
 }

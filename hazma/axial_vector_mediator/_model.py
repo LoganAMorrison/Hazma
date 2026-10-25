@@ -41,6 +41,11 @@ _CASCADE_LEPTONS = {
     "vm vm": "vm",
     "vt vt": "vt",
 }
+#: The lepton pairs whose prompt photons take the Altarelli-Parisi
+#: approximation; ``"pi pi pi0"`` radiates exactly.
+_RADIATING_PAIRS = ("e e", "mu mu")
+#: The π⁰ and π± masses of the LO three-pion current, one common mass.
+_PION_MASSES = (parameters.neutral_pion_mass, parameters.neutral_pion_mass)
 #: Absolute tolerance of a helicity density's Hermiticity, trace and spectrum.
 _DENSITY_ATOL = 1e-12
 
@@ -177,7 +182,9 @@ class AxialVectorMediator(TheoryAnn):
     `mediator_decay_yields` and `mediator_decay_counts` give the same
     products of a moving mediator's decays from its helicity density, and
     `mediator_pair_yields` and `mediator_pair_counts` the inclusive yield of
-    a mediator pair.
+    a mediator pair. None of them holds prompt radiation:
+    `rest_frame_resolved_photons`, `mediator_decay_resolved_photons` and
+    their counts give the real-emission photons above an infrared cut.
     """
 
     def __init__(  # noqa: PLR0913 - the model's parameters
@@ -780,8 +787,8 @@ class AxialVectorMediator(TheoryAnn):
         spectra mix the transverse and longitudinal Dalitz weights in
         proportion to each one's :math:`\sigma v`. Photons are
         :math:`\pi^0\to\gamma\gamma` and Hazma's unpolarized radiative
-        muon and charged-pion decays; the :math:`\pi^0` Dalitz decay and
-        primary radiation are not included.
+        muon and charged-pion decays; the :math:`\pi^0` Dalitz decay is not
+        included, and the prompt radiation is `rest_frame_resolved_photons`.
         """
         kernel_product = self._kernel_product(product)
         values = _real_array(energies, "energies")
@@ -872,6 +879,139 @@ class AxialVectorMediator(TheoryAnn):
                     selected[..., index] += multiplicity
             counts[fs] = selected
         return counts
+
+    def _radiation(
+        self,
+        final_state: str,
+        points: np.ndarray,
+        e_cm: float,
+        cut: float,
+        *,
+        binned: bool,
+    ) -> np.ndarray:
+        """Return one open final state's resolved photons, as `_continuum` does."""
+        emission = (parameters.alpha_em, cut)
+        if final_state == "tau tau":
+            raise ValueError(
+                "The tau tau yields are undefined: this model has no tau decay "
+                "kernels."
+            )
+        if final_state == "pi pi pi0":
+            transverse, longitudinal = self._rate_parts(final_state, e_cm)
+            fraction = transverse / (transverse + longitudinal)
+            return _rates.three_pion_radiation(
+                points, binned, e_cm, _PION_MASSES, fraction, emission
+            )
+        if final_state in _RADIATING_PAIRS:
+            mass = self._fermion_pair(final_state)[0]
+            return _rates.pair_radiation(points, binned, e_cm, mass, emission)
+        return np.zeros(points.size - 1 if binned else points.size)
+
+    def rest_frame_resolved_photons(
+        self, energies: RealOrRealArray, e_cm: float, *, cut: float
+    ) -> dict[str, float | np.ndarray]:
+        r"""Return each open final state's resolved prompt photons :math:`dN/dE`.
+
+        The yield is the real emission at :math:`O(\alpha)` per Born
+        annihilation into that final state, in the :math:`\chi\bar\chi`
+        centre-of-mass frame, of photons above ``cut`` in that frame. It adds
+        to the photons of `rest_frame_yields`, which hold no prompt
+        radiation, and like them carries no branching fraction.
+
+        Parameters
+        ----------
+        energies : float or array_like
+            Positive photon energies in MeV.
+        e_cm : float
+            Center-of-mass energy in MeV.
+        cut : float
+            Infrared cut on the photon energy in MeV, positive.
+
+        Returns
+        -------
+        dict of str to float or numpy.ndarray
+            :math:`dN/dE` in MeV⁻¹ for each final state with a nonzero rate
+            at ``e_cm``, shaped like ``energies``, and zero for the states
+            without charged particles.
+
+        Raises
+        ------
+        ValueError
+            As `rest_frame_yields` does, or if ``cut`` is not positive.
+
+        Notes
+        -----
+        ``"pi pi pi0"`` is exact at tree level within the LO current. In
+        sigma-model coordinates the photon couples only to the external charged
+        pions, whose Born vertex sees only their total momentum, so the
+        amplitude is the Born current at :math:`\tilde s = (q - p_0)^2`
+        times :math:`e[p_+\cdot\epsilon^*/(p_+\cdot k)
+        - p_-\cdot\epsilon^*/(p_-\cdot k)]`, for the transverse and the
+        source-longitudinal densities alike and at any photon energy. The
+        pions share :data:`hazma.parameters.neutral_pion_mass`, as in
+        `rest_frame_yields`, and near threshold the yield is sensitive to
+        that choice. ``"e e"`` and ``"mu mu"`` take the Altarelli-Parisi
+        spectrum of `hazma.spectra.altarelli_parisi.dnde_photon_ap_fermion`
+        for each lepton up to the kinematic endpoint, a leading-log
+        approximation that needs :math:`\sqrt{s} \gg 2m`: near the
+        ``"mu mu"`` threshold its soft limit exceeds the exact eikonal one
+        9.2 times at 215 MeV and 1.67 times at 250 MeV. Every final state
+        takes exactly one of the two, and Hazma's generic final-state
+        radiation is never added, so no emission is counted twice. The
+        virtual corrections, which cancel the logarithm of ``cut``, and the
+        :math:`O(\alpha)` recoil and virtual corrections to the decay
+        yields are not included.
+        """
+        values = _real_array(energies, "energies")
+        self._check_energies(values, "photon", "energies")
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        cut = _finite_real(cut, "cut", positive=True)
+        points = np.ascontiguousarray(values.reshape(-1))
+        return {
+            fs: _scalar_or_array(
+                self._radiation(fs, points, e_cm, cut, binned=False).reshape(
+                    values.shape
+                )
+            )
+            for fs in self._open_final_states(e_cm)
+        }
+
+    def rest_frame_resolved_photon_counts(
+        self, edges: np.ndarray, e_cm: float, *, cut: float
+    ) -> dict[str, np.ndarray]:
+        """Return each open final state's resolved prompt photons in energy bins.
+
+        Bin ``i`` is ``[edges[i], edges[i + 1])``, and a bin of width ``ΔE``
+        tends to ``rest_frame_resolved_photons(E) ΔE`` as it shrinks.
+
+        Parameters
+        ----------
+        edges : array_like
+            Strictly increasing positive photon bin edges in MeV, at least
+            two.
+        e_cm : float
+            Center-of-mass energy in MeV.
+        cut : float
+            Infrared cut on the photon energy in MeV, positive.
+
+        Returns
+        -------
+        dict of str to numpy.ndarray
+            Photons per Born annihilation into each final state with a
+            nonzero rate, one per bin.
+
+        Raises
+        ------
+        ValueError
+            As `rest_frame_resolved_photons` does.
+        """
+        points = self._checked_edges(edges, "photon")
+        e_cm = _finite_real(e_cm, "e_cm", positive=True)
+        cut = _finite_real(cut, "cut", positive=True)
+        return {
+            fs: self._radiation(fs, points, e_cm, cut, binned=True)
+            for fs in self._open_final_states(e_cm)
+        }
 
     def _mediator_decays(
         self, mediator_energy: float, density: np.ndarray
@@ -986,8 +1126,8 @@ class AxialVectorMediator(TheoryAnn):
         plane. ``"pi pi pi0"`` comes from the transverse LO current alone,
         with every pion at :data:`hazma.parameters.neutral_pion_mass` as in
         `rest_frame_yields`. Radiative muon and charged-pion photons stay
-        unpolarized, and the :math:`\pi^0` Dalitz decay and primary
-        radiation are not included.
+        unpolarized, the :math:`\pi^0` Dalitz decay is not included, and
+        the prompt radiation is `mediator_decay_resolved_photons`.
         """
         kernel_product = self._kernel_product(product)
         values = _real_array(energies, "energies")
@@ -1052,6 +1192,144 @@ class AxialVectorMediator(TheoryAnn):
                     fs, kernel_product, points, (mediator, helicities), binned=True
                 ),
             )
+            for fs in decays
+        }
+
+    def _cascade_radiation(
+        self,
+        final_state: str,
+        points: np.ndarray,
+        state: tuple[tuple[float, float], tuple[float, float, float]],
+        cut: float,
+        *,
+        binned: bool,
+    ) -> np.ndarray:
+        """Return one decay's resolved photons, as `_cascade` does."""
+        mediator, helicities = state
+        emission = (parameters.alpha_em, cut)
+        if final_state == "pi pi pi0":
+            return _rates.three_pion_radiation_cascade(
+                points, binned, _PION_MASSES, emission, mediator, helicities
+            )
+        if final_state in _RADIATING_PAIRS:
+            return _rates.pair_radiation_cascade(
+                points,
+                binned,
+                self._fermion_pair(final_state),
+                emission,
+                mediator,
+                helicities,
+            )
+        return np.zeros(points.size - 1 if binned else points.size)
+
+    def mediator_decay_resolved_photons(
+        self,
+        energies: RealOrRealArray,
+        mediator_energy: float,
+        *,
+        density: np.ndarray,
+        cut: float,
+    ) -> dict[str, float | np.ndarray]:
+        r"""Return the lab resolved prompt photons :math:`dN/dE` of each open decay.
+
+        The yield is the real emission at :math:`O(\alpha)` per Born decay of
+        one mediator of lab energy ``mediator_energy`` into that final
+        state, of photons above ``cut`` in the mediator's rest frame. It adds
+        to the photons of `mediator_decay_yields`.
+
+        Parameters
+        ----------
+        energies : float or array_like
+            Positive lab photon energies in MeV.
+        mediator_energy : float
+            The mediator's lab energy in MeV, above its mass.
+        density : array_like
+            The mediator's helicity density, as in `mediator_decay_yields`.
+        cut : float
+            Infrared cut on the rest-frame photon energy in MeV, positive.
+
+        Returns
+        -------
+        dict of str to float or numpy.ndarray
+            :math:`dN/dE` in MeV⁻¹ for each decay with a positive partial
+            width, shaped like ``energies``, and zero for the decays without
+            charged particles.
+
+        Raises
+        ------
+        ValueError
+            As `mediator_decay_yields` does, or if ``cut`` is not positive.
+
+        Notes
+        -----
+        The emission is that of `rest_frame_resolved_photons` at the
+        mediator mass. ``"pi pi pi0"`` comes from the transverse current an
+        on-shell mediator has, and a photon of rest-frame energy ω has the
+        angular density :math:`[f + (3F_0 - 1)h(\omega)P_2(\cos\theta)]/2`
+        about the flight direction, with no :math:`P_1` term because the
+        current is a polar vector. The Altarelli-Parisi photons of ``"e e"``
+        and ``"mu mu"`` are collinear with their leptons and take the
+        pair's angular density, whose :math:`P_1` terms cancel between the
+        two leptons; the spin correlations of the emission itself are not
+        modeled.
+        """
+        values = _real_array(energies, "energies")
+        self._check_energies(values, "photon", "energies")
+        cut = _finite_real(cut, "cut", positive=True)
+        mediator, helicities, decays = self._mediator_decays(mediator_energy, density)
+        points = np.ascontiguousarray(values.reshape(-1))
+        state = (mediator, helicities)
+        return {
+            fs: _scalar_or_array(
+                self._cascade_radiation(fs, points, state, cut, binned=False).reshape(
+                    values.shape
+                )
+            )
+            for fs in decays
+        }
+
+    def mediator_decay_resolved_photon_counts(
+        self,
+        edges: np.ndarray,
+        mediator_energy: float,
+        *,
+        density: np.ndarray,
+        cut: float,
+    ) -> dict[str, np.ndarray]:
+        """Return each open decay's lab resolved prompt photons in energy bins.
+
+        Bin ``i`` is ``[edges[i], edges[i + 1])``, and a bin of width ``ΔE``
+        tends to ``mediator_decay_resolved_photons(E) ΔE`` as it shrinks.
+
+        Parameters
+        ----------
+        edges : array_like
+            Strictly increasing positive lab photon bin edges in MeV, at
+            least two.
+        mediator_energy : float
+            The mediator's lab energy in MeV, above its mass.
+        density : array_like
+            The mediator's helicity density, as in `mediator_decay_yields`.
+        cut : float
+            Infrared cut on the rest-frame photon energy in MeV, positive.
+
+        Returns
+        -------
+        dict of str to numpy.ndarray
+            Photons per Born decay into each decay with a positive partial
+            width, one per bin.
+
+        Raises
+        ------
+        ValueError
+            As `mediator_decay_resolved_photons` does.
+        """
+        points = self._checked_edges(edges, "photon")
+        cut = _finite_real(cut, "cut", positive=True)
+        mediator, helicities, decays = self._mediator_decays(mediator_energy, density)
+        state = (mediator, helicities)
+        return {
+            fs: self._cascade_radiation(fs, points, state, cut, binned=True)
             for fs in decays
         }
 

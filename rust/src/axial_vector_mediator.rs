@@ -1,9 +1,11 @@
-//! `hazma._core.axial_vector_mediator` — rates, rest-frame yields and
-//! polarized decay cascades of the axial-vector mediator model.
+//! `hazma._core.axial_vector_mediator` — rates, rest-frame yields,
+//! polarized decay cascades and resolved radiative photons of the
+//! axial-vector mediator model.
 //!
 //! Registration only: the math is in [`crate::kernels::axial_rates`],
-//! [`crate::kernels::axial_yields`] and
-//! [`crate::kernels::polarized_cascade`]. The caller is
+//! [`crate::kernels::axial_yields`],
+//! [`crate::kernels::polarized_cascade`] and
+//! [`crate::kernels::axial_radiation`]. The caller is
 //! `hazma/axial_vector_mediator/_model.py`, which validates every argument
 //! and flattens it, so each entry point takes flat batches of equal length
 //! and returns one value per sample, or per bin between consecutive edges.
@@ -13,6 +15,9 @@ use pyo3::exceptions::PyValueError;
 use pyo3::prelude::*;
 
 use crate::dispatch::component_major;
+use crate::kernels::axial_radiation::{
+    PairRadiation, RestPhotons, ThreePionRadiation, lab_photons, rest_photons,
+};
 use crate::kernels::axial_rates::{self, DarkSector, FermionPair};
 use crate::kernels::axial_three_pi::Channel as PionChannel;
 use crate::kernels::axial_yields::{Channel, Probe, ThreePionParents, Yields};
@@ -136,6 +141,23 @@ fn fermion_pair_helicity_density<'py>(
     values.into_pyarray(py)
 }
 
+/// Return the probes of `points`: a density at each energy, or a count
+/// between consecutive edges when `binned`.
+fn probes(points: &PyReadonlyArray1<'_, f64>, binned: bool) -> Vec<Probe> {
+    let points = points.as_array().to_vec();
+    if binned {
+        points
+            .windows(2)
+            .map(|edges| Probe::Bin(edges[0], edges[1]))
+            .collect()
+    } else {
+        points
+            .iter()
+            .map(|&energy| Probe::Density(energy))
+            .collect()
+    }
+}
+
 /// Evaluate `channel`'s `product` yields at `points`: densities at each
 /// energy, or counts between consecutive edges when `binned`. The rows are
 /// one for `"photon"`, `[e⁺, e⁻]` for `"charged_lepton"` and the flavors
@@ -147,18 +169,7 @@ fn channel_yields<'py>(
     points: &PyReadonlyArray1<'py, f64>,
     binned: bool,
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let points = points.as_array().to_vec();
-    let probes: Vec<Probe> = if binned {
-        points
-            .windows(2)
-            .map(|edges| Probe::Bin(edges[0], edges[1]))
-            .collect()
-    } else {
-        points
-            .iter()
-            .map(|&energy| Probe::Density(energy))
-            .collect()
-    };
+    let probes = probes(points, binned);
     let probes = probes.iter().copied();
     match product {
         "photon" => Ok(component_major(
@@ -315,6 +326,136 @@ fn three_pion_cascade_yields<'py>(
     channel_yields(py, &cascade, product, &points, binned)
 }
 
+/// Return the rest-frame resolved photons of `spectrum` at `points`, as
+/// `channel_yields` evaluates them.
+fn rest_radiation<'py>(
+    py: Python<'py>,
+    spectrum: &impl RestPhotons,
+    points: &PyReadonlyArray1<'py, f64>,
+    binned: bool,
+) -> Bound<'py, PyArray1<f64>> {
+    let values: Vec<f64> = probes(points, binned)
+        .into_iter()
+        .map(|probe| rest_photons(spectrum, probe))
+        .collect();
+    values.into_pyarray(py)
+}
+
+/// Return the lab resolved photons of `spectrum` from a mediator with
+/// `boost` and `helicities`, at `points`.
+fn lab_radiation<'py>(
+    py: Python<'py>,
+    spectrum: &impl RestPhotons,
+    (boost, helicities): (Boost, Helicities),
+    points: &PyReadonlyArray1<'py, f64>,
+    binned: bool,
+) -> Bound<'py, PyArray1<f64>> {
+    let values: Vec<f64> = probes(points, binned)
+        .into_iter()
+        .map(|probe| lab_photons(spectrum, boost, helicities, probe))
+        .collect();
+    values.into_pyarray(py)
+}
+
+/// Return the resolved `π⁺π⁻π⁰γ` photons per Born annihilation of a source
+/// of invariant `energy` in MeV whose rate is `transverse_fraction`
+/// transverse, with the π⁰ and π± `masses` in MeV and `emission`
+/// `(α, cut in MeV)`.
+#[pyfunction]
+fn three_pion_radiation<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    energy: f64,
+    masses: (f64, f64),
+    transverse_fraction: f64,
+    emission: (f64, f64),
+) -> Bound<'py, PyArray1<f64>> {
+    let (alpha, cut) = emission;
+    let spectrum = ThreePionRadiation::new(
+        energy,
+        [masses.0, masses.1],
+        transverse_fraction,
+        alpha,
+        cut,
+    );
+    rest_radiation(py, &spectrum, &points, binned)
+}
+
+/// Return the lab resolved `π⁺π⁻π⁰γ` photons per decay of a moving
+/// mediator, with `masses` and `emission` as in `three_pion_radiation` and
+/// `mediator` and `helicities` as in `pair_cascade_yields`.
+#[pyfunction]
+fn three_pion_radiation_cascade<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    masses: (f64, f64),
+    emission: (f64, f64),
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> Bound<'py, PyArray1<f64>> {
+    let (alpha, cut) = emission;
+    let spectrum = ThreePionRadiation::new(mediator.0, [masses.0, masses.1], 1.0, alpha, cut);
+    let state = mediator_state(mediator, helicities);
+    lab_radiation(py, &spectrum, state, &points, binned)
+}
+
+/// Return the Altarelli–Parisi photons per annihilation into a lepton pair
+/// of `mass` in MeV from a source of invariant `energy` in MeV, with
+/// `emission` as in `three_pion_radiation`.
+#[pyfunction]
+fn pair_radiation<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    energy: f64,
+    mass: f64,
+    emission: (f64, f64),
+) -> Bound<'py, PyArray1<f64>> {
+    let (alpha, cut) = emission;
+    let spectrum = PairRadiation {
+        energy,
+        mass,
+        alpha,
+        cut,
+        tensor: 0.0,
+    };
+    rest_radiation(py, &spectrum, &points, binned)
+}
+
+/// Return the lab Altarelli–Parisi photons per decay of a moving mediator
+/// into the lepton pair of `fermion` `(mass in MeV, g_V, g_A)`, each photon
+/// along its lepton, with `emission` as in `three_pion_radiation` and
+/// `mediator` and `helicities` as in `pair_cascade_yields`.
+#[pyfunction]
+fn pair_radiation_cascade<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray1<'py, f64>,
+    binned: bool,
+    fermion: (f64, f64, f64),
+    emission: (f64, f64),
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> Bound<'py, PyArray1<f64>> {
+    let ((mass, vector, axial), (alpha, cut)) = (fermion, emission);
+    let decay = PairDecay {
+        mediator_mass: mediator.0,
+        mass,
+        vector,
+        axial,
+    };
+    let spectrum = PairRadiation {
+        energy: mediator.0,
+        mass,
+        alpha,
+        cut,
+        tensor: decay.analyzer().tensor,
+    };
+    let state = mediator_state(mediator, helicities);
+    lab_radiation(py, &spectrum, state, &points, binned)
+}
+
 pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(fermion_pair_densities, module)?)?;
     module.add_function(wrap_pyfunction!(fermion_pair_helicity_density, module)?)?;
@@ -322,6 +463,10 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(three_pion_yields, module)?)?;
     module.add_function(wrap_pyfunction!(pair_cascade_yields, module)?)?;
     module.add_function(wrap_pyfunction!(three_pion_cascade_yields, module)?)?;
+    module.add_function(wrap_pyfunction!(three_pion_radiation, module)?)?;
+    module.add_function(wrap_pyfunction!(three_pion_radiation_cascade, module)?)?;
+    module.add_function(wrap_pyfunction!(pair_radiation, module)?)?;
+    module.add_function(wrap_pyfunction!(pair_radiation_cascade, module)?)?;
     module.add_function(wrap_pyfunction!(sigma_v, module)?)?;
     module.add_function(wrap_pyfunction!(cross_section, module)?)?;
     Ok(())

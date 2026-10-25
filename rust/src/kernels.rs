@@ -73,9 +73,15 @@
 //! [`polarized_cascade`] boosts the decays of a mediator with a declared
 //! helicity density into the lab through the same decay kernels; it is
 //! pinned by its decay matrix, by the isotropic boost, and by the mediator
-//! note's three-pion cascade spectra.
+//! note's three-pion cascade spectra. [`axial_radiation`] gives the same
+//! model's resolved prompt photons: exact LO emission for `π⁺π⁻π⁰γ` and
+//! the Altarelli–Parisi approximation for lepton pairs. It is pinned by the
+//! soft eikonal limit, by the Born spectral functions of
+//! [`axial_three_pi`], by the mediator note's restricted LO fractions and by
+//! the NumPy Monte Carlo in `test/axial_vector_mediator/radiation_oracle.py`.
 
 pub mod axial_poles;
+pub mod axial_radiation;
 pub mod axial_rates;
 pub mod axial_tensors;
 pub mod axial_three_pi;

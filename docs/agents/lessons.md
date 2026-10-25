@@ -56,7 +56,7 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   claim is verified by sweeping the argument to the floating-point
   extreme, not by testing a few large values; either measure the
   supported range, state it, and reject beyond it at every entry point, or
-  do not claim it (PRs #124, #127).
+  do not claim it (PRs #124, #127, #133).
 - [offset-blamed-on-the-quadrature-before-the-inputs] A constant relative
   offset between two implementations of one integral, unchanged across its
   argument, points at a shared input such as a physical constant, not at
