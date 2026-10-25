@@ -323,6 +323,22 @@ pub struct Cascade {
 }
 
 impl Cascade {
+    /// Return the lab energies in MeV where a yield of this decay jumps: the
+    /// ends of a stable pair's box. The muon and pion decays smooth their
+    /// parents' boxes, so their yields have no jump.
+    pub fn box_edges(&self) -> Vec<f64> {
+        match self.decay {
+            Decay::ElectronPair(pair) | Decay::NeutrinoPair(pair, _) => {
+                let (energy, momentum) = (pair.energy(), pair.momentum());
+                vec![
+                    self.boost.lab_energy(energy, momentum, -1.0),
+                    self.boost.lab_energy(energy, momentum, 1.0),
+                ]
+            }
+            Decay::MuonPair(_) | Decay::ThreePion(_) => Vec::new(),
+        }
+    }
+
     /// Return the yield at `probe` of a stable daughter of `pair` with the
     /// angular `analyzer`.
     fn stable(&self, pair: &PairDecay, analyzer: Analyzer, probe: Probe) -> f64 {
@@ -1074,6 +1090,23 @@ mod tests {
             analyzer.density(ORIENTED, 1.0) / (boost.gamma_beta * momentum),
             1e-12,
         );
+    }
+
+    #[test]
+    fn box_edges_bound_the_electron_support() {
+        let pair = pairs()[3];
+        let electrons = cascade(Decay::ElectronPair(pair), 700.0, ORIENTED);
+        let edges = electrons.box_edges();
+        assert_eq!(edges.len(), 2);
+        let (low, high) = (edges[0], edges[1]);
+        let [_, below] = electrons.charged_leptons(Probe::Density(low * (1.0 - 1e-9)));
+        let [_, inside] = electrons.charged_leptons(Probe::Density(low * (1.0 + 1e-9)));
+        let [_, above] = electrons.charged_leptons(Probe::Density(high * (1.0 + 1e-9)));
+        assert_eq!(below, 0.0);
+        assert!(inside > 0.0);
+        assert_eq!(above, 0.0);
+        let muons = cascade(Decay::MuonPair(pairs()[3]), 700.0, ORIENTED);
+        assert!(muons.box_edges().is_empty());
     }
 
     // ----- three pions -----

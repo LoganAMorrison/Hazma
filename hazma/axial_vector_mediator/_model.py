@@ -9,6 +9,7 @@ import numpy as np
 
 from hazma import parameters
 from hazma._core import axial_vector_mediator as _rates
+from hazma.cmb import f_eff_ep, f_eff_g, vx_cmb
 from hazma.form_factors.axial import (
     MIXING_GUARD,
     AxialCurrent,
@@ -48,6 +49,24 @@ _RADIATING_PAIRS = ("e e", "mu mu")
 _PION_MASSES = (parameters.neutral_pion_mass, parameters.neutral_pion_mass)
 #: Absolute tolerance of a helicity density's Hermiticity, trace and spectrum.
 _DENSITY_ATOL = 1e-12
+#: The deposited products of a cascade, each with its efficiency table, rest
+#: mass in MeV and lower limit in MeV, as `TheoryCMB.f_eff` folds them:
+#: photons below the photon table are not counted, and an electron below the
+#: e± table's first kinetic energy takes its first fraction.
+_DEPOSITED = (
+    (
+        "photon",
+        (np.ascontiguousarray(f_eff_g.x), np.ascontiguousarray(f_eff_g.y)),
+        0.0,
+        float(f_eff_g.x[0]),
+    ),
+    (
+        "charged_lepton",
+        (np.ascontiguousarray(f_eff_ep.x), np.ascontiguousarray(f_eff_ep.y)),
+        parameters.electron_mass,
+        parameters.electron_mass,
+    ),
+)
 
 
 def _line_multiplicity(final_state: str, product: str) -> float | np.ndarray | None:
@@ -177,14 +196,19 @@ class AxialVectorMediator(TheoryAnn):
 
     `rest_frame_yields`, `rest_frame_counts` and `rest_frame_lines` give the
     photon, e⁺, e± and neutrino yields of each final state in the
-    centre-of-mass frame, and `spectra` and `positron_spectra` weight their
-    photon and e⁺ continua by the branching fractions.
+    centre-of-mass frame. `spectra` and `positron_spectra` weight their
+    photon and e⁺ continua by the branching fractions, the photons with the
+    resolved prompt photons of `rest_frame_resolved_photons` added, and so
+    feed the gamma-ray limits and `f_eff` of `TheoryAnn`.
     `mediator_decay_yields` and `mediator_decay_counts` give the same
     products of a moving mediator's decays from its helicity density, and
     `mediator_pair_yields` and `mediator_pair_counts` the inclusive yield of
-    a mediator pair. None of them holds prompt radiation:
-    `rest_frame_resolved_photons`, `mediator_decay_resolved_photons` and
-    their counts give the real-emission photons above an infrared cut.
+    a mediator pair. The yields and cascades hold no prompt radiation, and
+    `spectra` alone adds it: `rest_frame_resolved_photons`,
+    `mediator_decay_resolved_photons` and their counts give the
+    real-emission photons above an infrared cut.
+    `mediator_pair_f_eff` is the CMB deposition efficiency of a mediator
+    pair.
     """
 
     def __init__(  # noqa: PLR0913 - the model's parameters
@@ -916,7 +940,8 @@ class AxialVectorMediator(TheoryAnn):
         annihilation into that final state, in the :math:`\chi\bar\chi`
         centre-of-mass frame, of photons above ``cut`` in that frame. It adds
         to the photons of `rest_frame_yields`, which hold no prompt
-        radiation, and like them carries no branching fraction.
+        radiation, and like them carries no branching fraction. `spectra`
+        already includes it, so do not add it to `spectra` again.
 
         Parameters
         ----------
@@ -1443,11 +1468,104 @@ class AxialVectorMediator(TheoryAnn):
         shape = (3, bins) if product == "neutrino" else (bins,)
         return self._inclusive_pair(per_decay, branching, shape)
 
+    def _cascade_deposition(
+        self,
+        final_state: str,
+        state: tuple[tuple[float, float], tuple[float, float, float]],
+    ) -> float:
+        """Return the energy in MeV one decay's photons and e± deposit."""
+        mediator, helicities = state
+        deposited = 0.0
+        for product, efficiency, rest_mass, lower in _DEPOSITED:
+            if final_state == "pi pi pi0":
+                deposited += _rates.three_pion_cascade_deposition(
+                    product,
+                    parameters.neutral_pion_mass,
+                    mediator,
+                    helicities,
+                    efficiency,
+                    rest_mass,
+                    lower,
+                )
+            else:
+                deposited += _rates.pair_cascade_deposition(
+                    product,
+                    _CASCADE_LEPTONS[final_state],
+                    self._fermion_pair(final_state),
+                    mediator,
+                    helicities,
+                    efficiency,
+                    rest_mass,
+                    lower,
+                )
+        return deposited
+
+    def mediator_pair_f_eff(self, *, density: np.ndarray, x_kd: float = 1e-4) -> float:
+        r"""Return the CMB deposition efficiency of a mediator pair.
+
+        It is the :math:`f_\mathrm{eff}` of annihilation into
+        :math:`Z'Z'` alone: the photons and charge-summed e± of
+        `mediator_pair_yields`, for two mediators of half the
+        centre-of-mass energy that `f_eff` uses at ``x_kd``, folded with
+        the deposition curves of arXiv:1506.03811 as `f_eff` folds the
+        annihilation spectra and normalized to :math:`2m_\chi`. Like
+        `mediator_pair_yields`, it holds no prompt radiation.
+
+        Parameters
+        ----------
+        density : numpy.ndarray
+            The mediators' shared 3x3 helicity density, as in
+            `mediator_decay_yields`; pair production at threshold is
+            transverse, ``diag(1/2, 0, 1/2)``.
+        x_kd : float, optional
+            :math:`T_\mathrm{kd}/m_\chi`, positive, as in `f_eff`.
+
+        Returns
+        -------
+        float
+            The fraction of the pair's rest energy deposited in the plasma,
+            dimensionless.
+
+        Raises
+        ------
+        ValueError
+            If the mediator pair is closed, with the mediator at least as
+            heavy as the dark matter, or as `mediator_pair_yields` raises.
+
+        Notes
+        -----
+        The deposited energy is
+        :math:`2\sum_f B_f\int dE\,E\,[f_\gamma(E)\,dN^f_\gamma/dE
+        + f_{e^\pm}(E - m_e)\,dN^f_{e^\pm}/dE]` over the decays
+        :math:`f` of one mediator, with the integral in Rust, broken at
+        every table node and at the ends of an e± box.
+
+        The charged pions of ``pi pi pi0`` decay at their physical mass from
+        a common-mass production, as `rest_frame_yields` documents, so such a
+        pair injects about 2% more than its rest energy (1224.6 MeV per
+        1200 MeV at 600/450 MeV) and its efficiency is correspondingly high
+        against an energy-conserving cascade.
+        """
+        x_kd = _finite_real(x_kd, "x_kd", positive=True)
+        e_cm = 2.0 * self._mx * (1.0 + 0.5 * vx_cmb(self._mx, x_kd) ** 2)
+        if e_cm <= 2.0 * self._mv:
+            raise ValueError(
+                "The mediator pair is closed: its energy does not exceed twice "
+                "the mediator mass."
+            )
+        branching = self._pair_branching_fractions()
+        mediator, helicities, decays = self._mediator_decays(e_cm / 2.0, density)
+        deposited = sum(
+            2.0 * branching[fs] * self._cascade_deposition(fs, (mediator, helicities))
+            for fs in decays
+        )
+        return deposited / (2.0 * self._mx)
+
     def _spectrum_funcs(
         self,
     ) -> dict[str, Callable[[RealOrRealArray, float], float | np.ndarray]]:
         return {
-            fs: partial(self._final_state_yield, fs, "photon")
+            fs: partial(self._final_state_photons, fs)
             for fs in self.list_annihilation_final_states()
         }
 
@@ -1471,6 +1589,24 @@ class AxialVectorMediator(TheoryAnn):
             final_state, self._kernel_product(product), points, e_cm, binned=False
         )
         return _scalar_or_array(self._product_rows(product, rows).reshape(values.shape))
+
+    def _final_state_photons(
+        self, final_state: str, energies: RealOrRealArray, e_cm: float
+    ) -> float | np.ndarray:
+        """Return one final state's continuum and resolved prompt photons.
+
+        In the centre-of-mass frame the resolved density at a photon energy
+        does not depend on an infrared cut below it, so the cut is the
+        smallest requested energy and every energy gets its real emission.
+        """
+        continuum = self._final_state_yield(final_state, "photon", energies, e_cm)
+        points = np.ascontiguousarray(np.reshape(energies, -1), dtype=float)
+        if points.size == 0:
+            return continuum
+        radiation = self._radiation(
+            final_state, points, float(e_cm), float(points.min()), binned=False
+        )
+        return _scalar_or_array(continuum + radiation.reshape(np.shape(continuum)))
 
     def _gamma_ray_line_energies(self, e_cm: float) -> dict[str, float]:
         """Return the photon energy in MeV of each line final state."""

@@ -1,11 +1,12 @@
 //! `hazma._core.axial_vector_mediator` — rates, rest-frame yields,
-//! polarized decay cascades and resolved radiative photons of the
-//! axial-vector mediator model.
+//! polarized decay cascades, resolved radiative photons and the CMB
+//! deposition of the cascades of the axial-vector mediator model.
 //!
 //! Registration only: the math is in [`crate::kernels::axial_rates`],
 //! [`crate::kernels::axial_yields`],
-//! [`crate::kernels::polarized_cascade`] and
-//! [`crate::kernels::axial_radiation`]. The caller is
+//! [`crate::kernels::polarized_cascade`],
+//! [`crate::kernels::axial_radiation`] and
+//! [`crate::kernels::deposition`]. The caller is
 //! `hazma/axial_vector_mediator/_model.py`, which validates every argument
 //! and flattens it, so each entry point takes flat batches of equal length
 //! and returns one value per sample, or per bin between consecutive edges.
@@ -21,6 +22,7 @@ use crate::kernels::axial_radiation::{
 use crate::kernels::axial_rates::{self, DarkSector, FermionPair};
 use crate::kernels::axial_three_pi::Channel as PionChannel;
 use crate::kernels::axial_yields::{Channel, Probe, ThreePionParents, Yields};
+use crate::kernels::deposition::{Efficiency, deposited_energy};
 use crate::kernels::polarized_cascade::{Boost, Cascade, Decay, Helicities, PairDecay};
 
 /// `(m, g_V^χ, g_A^χ, M, Γ)`, masses and width in MeV.
@@ -272,29 +274,7 @@ fn pair_cascade_yields<'py>(
     mediator: (f64, f64),
     helicities: (f64, f64, f64),
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
-    let (mass, vector, axial) = fermion;
-    let pair = PairDecay {
-        mediator_mass: mediator.0,
-        mass,
-        vector,
-        axial,
-    };
-    let decay = match lepton {
-        "e" => Decay::ElectronPair(pair),
-        "mu" => Decay::MuonPair(pair),
-        "ve" => Decay::NeutrinoPair(pair, 0),
-        "vm" => Decay::NeutrinoPair(pair, 1),
-        "vt" => Decay::NeutrinoPair(pair, 2),
-        _ => {
-            return Err(PyValueError::new_err(format!("unknown lepton {lepton:?}.")));
-        }
-    };
-    let (boost, helicities) = mediator_state(mediator, helicities);
-    let cascade = Cascade {
-        decay,
-        boost,
-        helicities,
-    };
+    let cascade = pair_cascade(lepton, fermion, mediator, helicities)?;
     channel_yields(py, &cascade, product, &points, binned)
 }
 
@@ -316,14 +296,164 @@ fn three_pion_cascade_yields<'py>(
     mediator: (f64, f64),
     helicities: (f64, f64, f64),
 ) -> PyResult<Bound<'py, PyArray2<f64>>> {
+    let cascade = three_pion_cascade(pion_mass, mediator, helicities);
+    channel_yields(py, &cascade, product, &points, binned)
+}
+
+/// Return the decay of a moving mediator into the fermion pair of
+/// `lepton`, with the arguments of `pair_cascade_yields`.
+fn pair_cascade(
+    lepton: &str,
+    fermion: (f64, f64, f64),
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> PyResult<Cascade> {
+    let (mass, vector, axial) = fermion;
+    let pair = PairDecay {
+        mediator_mass: mediator.0,
+        mass,
+        vector,
+        axial,
+    };
+    let decay = match lepton {
+        "e" => Decay::ElectronPair(pair),
+        "mu" => Decay::MuonPair(pair),
+        "ve" => Decay::NeutrinoPair(pair, 0),
+        "vm" => Decay::NeutrinoPair(pair, 1),
+        "vt" => Decay::NeutrinoPair(pair, 2),
+        _ => {
+            return Err(PyValueError::new_err(format!("unknown lepton {lepton:?}.")));
+        }
+    };
+    let (boost, helicities) = mediator_state(mediator, helicities);
+    Ok(Cascade {
+        decay,
+        boost,
+        helicities,
+    })
+}
+
+/// Return the decay of a moving mediator into `π⁺π⁻π⁰`, with the arguments
+/// of `three_pion_cascade_yields`.
+fn three_pion_cascade(
+    pion_mass: f64,
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+) -> Cascade {
     let parents = ThreePionParents::new(PionChannel::Charged, mediator.0, pion_mass, 1.0);
     let (boost, helicities) = mediator_state(mediator, helicities);
-    let cascade = Cascade {
+    Cascade {
         decay: Decay::ThreePion(parents),
         boost,
         helicities,
+    }
+}
+
+/// Return the energy in MeV that a mediator decay's `product`
+/// (`"photon"` or `"charged_lepton"`, both charges summed) deposits, per
+/// decay: `∫ E dN/dE f(E − rest_mass) dE` from `lower` to `upper`, the
+/// mediator's lab energy, with `f` linear in the `efficiency` table of
+/// `(kinetic energies in MeV, fractions)`.
+///
+/// # Errors
+///
+/// `ValueError` for an unknown `product` or a table whose two arrays differ
+/// in length or are empty.
+fn cascade_deposition(
+    cascade: &Cascade,
+    product: &str,
+    efficiency: &(PyReadonlyArray1<'_, f64>, PyReadonlyArray1<'_, f64>),
+    rest_mass: f64,
+    (lower, upper): (f64, f64),
+) -> PyResult<f64> {
+    let (kinetic_energies, fractions) = (efficiency.0.as_slice()?, efficiency.1.as_slice()?);
+    if kinetic_energies.is_empty() || kinetic_energies.len() != fractions.len() {
+        return Err(PyValueError::new_err(
+            "the efficiency table needs equal, nonempty arrays.",
+        ));
+    }
+    let table = Efficiency {
+        kinetic_energies,
+        fractions,
     };
-    channel_yields(py, &cascade, product, &points, binned)
+    let edges = cascade.box_edges();
+    match product {
+        "photon" => Ok(deposited_energy(
+            |energy| cascade.photons(Probe::Density(energy)),
+            lower,
+            upper,
+            rest_mass,
+            &table,
+            &edges,
+        )),
+        "charged_lepton" => Ok(deposited_energy(
+            |energy| cascade.charged_leptons(Probe::Density(energy)).iter().sum(),
+            lower,
+            upper,
+            rest_mass,
+            &table,
+            &edges,
+        )),
+        _ => Err(PyValueError::new_err(format!(
+            "unknown deposited product {product:?}."
+        ))),
+    }
+}
+
+/// Return the energy in MeV that `product` of a moving mediator's decay into
+/// the fermion pair of `lepton` deposits, as `cascade_deposition` folds it,
+/// with the decay's arguments as in `pair_cascade_yields`.
+///
+/// # Errors
+///
+/// As `pair_cascade_yields` and `cascade_deposition`.
+#[pyfunction]
+#[allow(clippy::too_many_arguments)]
+fn pair_cascade_deposition(
+    product: &str,
+    lepton: &str,
+    fermion: (f64, f64, f64),
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+    efficiency: (PyReadonlyArray1<'_, f64>, PyReadonlyArray1<'_, f64>),
+    rest_mass: f64,
+    lower: f64,
+) -> PyResult<f64> {
+    let cascade = pair_cascade(lepton, fermion, mediator, helicities)?;
+    cascade_deposition(
+        &cascade,
+        product,
+        &efficiency,
+        rest_mass,
+        (lower, mediator.1),
+    )
+}
+
+/// Return the energy in MeV that `product` of a moving mediator's decay into
+/// `π⁺π⁻π⁰` deposits, as `cascade_deposition` folds it, with the decay's
+/// arguments as in `three_pion_cascade_yields`.
+///
+/// # Errors
+///
+/// As `cascade_deposition`.
+#[pyfunction]
+fn three_pion_cascade_deposition(
+    product: &str,
+    pion_mass: f64,
+    mediator: (f64, f64),
+    helicities: (f64, f64, f64),
+    efficiency: (PyReadonlyArray1<'_, f64>, PyReadonlyArray1<'_, f64>),
+    rest_mass: f64,
+    lower: f64,
+) -> PyResult<f64> {
+    let cascade = three_pion_cascade(pion_mass, mediator, helicities);
+    cascade_deposition(
+        &cascade,
+        product,
+        &efficiency,
+        rest_mass,
+        (lower, mediator.1),
+    )
 }
 
 /// Return the rest-frame resolved photons of `spectrum` at `points`, as
@@ -463,6 +593,8 @@ pub fn register(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(three_pion_yields, module)?)?;
     module.add_function(wrap_pyfunction!(pair_cascade_yields, module)?)?;
     module.add_function(wrap_pyfunction!(three_pion_cascade_yields, module)?)?;
+    module.add_function(wrap_pyfunction!(pair_cascade_deposition, module)?)?;
+    module.add_function(wrap_pyfunction!(three_pion_cascade_deposition, module)?)?;
     module.add_function(wrap_pyfunction!(three_pion_radiation, module)?)?;
     module.add_function(wrap_pyfunction!(three_pion_radiation_cascade, module)?)?;
     module.add_function(wrap_pyfunction!(pair_radiation, module)?)?;

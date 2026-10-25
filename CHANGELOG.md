@@ -88,6 +88,15 @@ user-facing change even when no signature did.
   take the Altarelli-Parisi leading-log approximation, valid for `√s ≫ 2m`.
   No final state takes both, and virtual corrections are not included.
   Existing yields and public values are unchanged.
+- **Gamma-ray and CMB adapters of `AxialVectorMediator`.** The photon
+  `spectra`, and so `total_spectrum`, `total_conv_spectrum_fn`, `binned_limit`,
+  `unbinned_limit` and `f_eff`, now add the resolved prompt photons to each
+  final state's continuum; the `e e` photons equal those of
+  `SingleChannelAnn("e e")`. `mediator_pair_f_eff(density=..., x_kd=...)` is the
+  CMB deposition efficiency of annihilation into a mediator pair, folded in
+  Rust from `mediator_pair_yields` as `f_eff` folds the annihilation spectra:
+  0.4021864 for a transverse pair decaying into `pi pi pi0` at 600/450 MeV and
+  0.3750662 at 900/500 MeV. Existing public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

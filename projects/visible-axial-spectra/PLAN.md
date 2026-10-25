@@ -291,11 +291,16 @@ lines once, and uses `p_ann = f_eff <sigma v>/(2 m_chi)` for symmetric Dirac
 dark matter. Requires the standalone `_f_eff_helper` correction PR
 (`hazma/theory/_theory_cmb.py`, `hazma/limits/_cmb.py`).
 
-**Deliverable / gate:** Monoenergetic and e+- box tests; the spin-corrected
-cascade efficiencies 0.3967 (600/450 MeV) and 0.3705 (900/500 MeV) of note
-`tab:spd-cascade`; the line efficiencies 0.724 and 0.601 of note `sec:spd-feff`;
-the secluded L_mu-L_tau efficiency 0.952771 and p_ann of 1.286% of the Planck
-limit (note `sec:axl6-cmb`, after Task 14).
+**Deliverable / gate:** Monoenergetic and e+- box tests; the model's cascade
+efficiencies 0.4021864 (600/450 MeV) and 0.3750662 (900/500 MeV); the line
+efficiencies 0.7241273 and 0.6053788; the secluded L_mu-L_tau conditional
+efficiency 0.9544662. Hazma's deposition tables are linear in E, where the
+note's line values 0.723585 and 0.600670 and its 0.952771 read the same tables
+linearly in log E. The note's spin-corrected cascade values 0.3967 and 0.3705
+(`tab:spd-cascade`) conserve the pair's energy, where the Task 6 mass hybrid
+decays each charged pion at its physical mass and injects 2% more; the
+p_ann of 1.286% of the Planck limit (`sec:axl6-cmb`, read linearly in log E)
+moves to Task 14 as about 1.288% with Hazma's linear-in-E tables.
 
 ### Task 10 Fitted input overlays (optional)
 
@@ -371,8 +376,10 @@ with dark-Higgs exchange only for named completions.
 pair (note `eq:vv-threshold`) as the production density for Task 7.
 
 **Deliverable / gate:** The secluded L_mu-L_tau benchmark gives sigma v =
-4.35523e-26 cm^3/s (note `sec:axl6-cmb`); the helicity fractions sum to one and
-are positive.
+4.35523e-26 cm^3/s and p_ann of about 1.288% of the Planck limit with
+Hazma's linear-in-E deposition tables (1.286% x 0.9544662/0.9527711; the note's
+1.286%, `sec:axl6-cmb`, reads them linearly in log E); the helicity
+fractions sum to one and are positive.
 
 ### Task 15 Invisible meson decays
 

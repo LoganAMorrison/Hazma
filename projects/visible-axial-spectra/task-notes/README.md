@@ -16,7 +16,7 @@
 | 6 | Rest frame yields | 5 | Complete | `task-6-rest-frame-yields.md` |
 | 7 | Polarized cascades | 6; 14 for model-generated pair densities | Complete | `task-7-polarized-cascades.md` |
 | 8 | Resolved photons | 6; 7 for polarized boosts | Complete | `task-8-resolved-photons.md` |
-| 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Not started | — |
+| 9 | Observation adapters | 6, 7; standalone `_f_eff_helper` PR | Complete | `task-9-observation-adapters.md` |
 | 10 | Fitted input overlays (optional) | 5; 6-9 for derived yields | Not started | — |
 | 11 | Remaining hadronic channels | 5 | Not started | — |
 | 12 | UV model cards | 3 | Not started | — |
@@ -60,17 +60,22 @@ Tasks 4 and 12 have no dependency on each other and can run in parallel.
   photons (eikonal for both densities) and Altarelli-Parisi `e e` and `mu mu`
   photons, each state taking one path. Its reference fractions need the
   physical pion masses, while the model keeps its common π⁰ mass.
+- Task 9 adds `rust/src/kernels/deposition.rs` and the observation adapters
+  (CMB `f_eff`, gamma-ray limits and the spectra hook) on
+  `AxialVectorMediator`. The `_spectrum_funcs` photons now include prompt
+  radiation, so a channel added later must give `_radiation` a branch or a
+  zero.
 
 ## Numerical impact so far
 
 The first cluster adds public primitives, Task 5 adds the
 `AxialVectorMediator` model, Task 6 adds its public yields, Task 7 adds its
-polarized cascades, and Task 8 adds its resolved photons; none of them changes
-an existing function. The recorded existing-output grid contains 164 values
-and is bit-identical after integration, including after the Task 3 Rust port
-and after Tasks 5, 6, 7 and 8
-(`check_public_impact.py`: maximum absolute difference 0.0). Reproduce it
-with
+polarized cascades, Task 8 adds its resolved photons, and Task 9 adds its
+observation adapters; none of them changes an existing function. The recorded
+existing-output grid contains 164 values and is bit-identical after
+integration, including after the Task 3 Rust port and after Tasks 5, 6, 7, 8
+and 9 (`check_public_impact.py`: maximum absolute difference 0.0). Reproduce
+it with
 `.venv/bin/python
 projects/visible-axial-spectra/references/check_public_impact.py`.
 
@@ -105,6 +110,12 @@ After Task 8 the path-scoped preflight passed with `2978 passed, 16 skipped,
 `axial_radiation` carries 17 Rust unit tests. The literal commands are in
 `task-8-resolved-photons.md`.
 
+After Task 9 the path-scoped preflight passed with `3026 passed, 16 skipped,
+127 subtests passed`. The adapter suite
+`test/axial_vector_mediator/test_observation_adapters.py` has 11 tests, and
+the `deposition` and `box_edges` Rust unit tests number 5. The literal
+commands are in `task-9-observation-adapters.md`.
+
 ## Open questions
 
 Later tasks must reconcile external photon source prescriptions and identify
@@ -117,21 +128,25 @@ sums at threshold.
 
 ## Handoff to next task
 
-Read PLAN, ADR-0001 and
-`projects/visible-axial-spectra/adrs/ADR-0002-rust-kernels-and-numpy-oracle.md`,
-then the task notes and `references/scope-and-acceptance.md`. Task 9
-(observation adapters) should read the handoff in
-`task-8-resolved-photons.md` first: it feeds the resolved
-photons of the four `*_resolved_photon*` methods to the adapters with an
-explicit cut and must not add `include_fsr` on top. Task 8 built on
-`polarized_cascade::Cascade` and its `Yields` impl: a new channel needs an
-`Analyzer` (or, for a multibody decay, energy and alignment densities) and a
-`Decay` arm. The public contract is the "Polarized cascades" section of
-`docs/source/axial_vector_mediator.rst`. Binned three-pion photons are slow
-because radiative charged-pion photons are integrated over each bin inside
-the fold: about 20 ms per bin for 500 bins of 1.8 MeV and about 150 ms per
-bin for wide bins, with timings that vary with machine load. Task 14 should
-pass its threshold helicity fractions as `numpy.diag([F₊, F₀, F₋])`.
+Task 10 (fitted input overlays) is next and optional: if it is not done it
+moves to a follow-on project (`PLAN.md` Scope). Read PLAN Task 10, ADR-0001
+(provenance and the source-longitudinal versus helicity distinction), ADR-0002
+(Rust kernels and the NumPy oracle) and ADR-0003, then the Task 9 handoff in
+`task-9-observation-adapters.md`. An overlay changes the sources that Tasks
+2-4 build, so a derived yield or deposition reaches the gamma-ray and CMB
+limits only through the Task 6-9 spectra. Task 14 can route `"v v"` through
+`mediator_pair_f_eff`'s fold once it supplies the pair's density and sigma v,
+and the pair efficiency holds no prompt radiation.
+
+The public contract of the cascades is the "Polarized cascades" section of
+`docs/source/axial_vector_mediator.rst`. A new channel needs an `Analyzer`
+(or, for a multibody decay, energy and alignment densities) and a `Decay` arm
+in `polarized_cascade::Cascade`, and a branch or a zero in
+`AxialVectorMediator._radiation`. Binned three-pion photons are slow because
+radiative charged-pion photons are integrated over each bin inside the fold:
+about 20 ms per bin for 500 bins of 1.8 MeV and about 150 ms per bin for wide
+bins, with timings that vary with machine load. Task 14 should pass its
+threshold helicity fractions as `numpy.diag([F₊, F₀, F₋])`.
 
 Earlier handoffs still apply. `polarized_muon.rs` takes the effective
 polarization `P`: the μ⁻ helicity, which is minus the μ⁺ helicity, pinned by

@@ -56,6 +56,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [soft lab muon-decay neutrinos are signed rounding residue](todo/soft-muon-neutrinos-are-signed-residue.md) | 2026-10-24 | PR #133 review round 2 | cross-cutting |
 | [the deprecated Altarelli-Parisi functions keep the old endpoint](todo/deprecated-altarelli-parisi-keeps-the-old-endpoint.md) | 2026-10-24 | the AP endpoint repair | cross-cutting |
 | [`RHNeutrino`'s `ν ℓ ℓ'` invariant-mass distributions go negative](todo/rhn-three-body-invariant-mass-probabilities-go-negative.md) | 2026-10-24 | measuring the AP endpoint repair | cross-cutting |
+| [`SingleChannelAnn` line-energy tables are nested dicts](todo/single-channel-nested-line-dicts.md) | 2026-10-25 | PR #136 review | cross-cutting |
 
 ## Promoted / Done / Pruned
 
