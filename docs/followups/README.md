@@ -52,6 +52,7 @@ cp docs/followups/_template.md docs/followups/todo/<slug>.md
 | [thermal kernels lose accuracy below width `1e-13` of `m_x`](todo/thermal-kernels-lose-accuracy-below-width-1e-13.md) | 2026-10-01 | PR #122 review | cross-cutting |
 | [the axial mediator's three-pion yields omit the π⁰ Dalitz e±](todo/axial-mediator-pi0-dalitz-positrons.md) | 2026-10-23 | visible-axial-spectra Task 6 | project |
 | [the axial mediator's muon photons ignore the muon polarization](todo/axial-mediator-polarized-radiative-muon-photons.md) | 2026-10-23 | visible-axial-spectra Task 6 | project |
+| [the radiative-muon photon spectrum is negative just below its endpoint](todo/muon-photon-endpoint-approximation-is-signed.md) | 2026-10-24 | PR #132 review round 2 | cross-cutting |
 
 ## Promoted / Done / Pruned
 
