@@ -84,10 +84,11 @@ def dndx_photon_ap_fermion(
         Mass of the radiating fermion.
     charge: float
         Charge of the radiating fermion. Default is 1.
-    partner_mass: float, optional
+    partner_mass: float or None, optional
         Mass of Y, the particle the radiator recoils against, in MeV. It sets
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
-        `mass`, a radiating pair of equal masses.
+        None, which takes Y to have the radiator's own mass, as in a pair of
+        oppositely-charged particles.
     """
     return _dndx_photon_fsr(
         x, s, mass, _fermion_splitting, q=charge, partner_mass=partner_mass
@@ -110,10 +111,11 @@ def dndx_photon_ap_scalar(x, s, mass, charge=1.0, partner_mass: float | None = N
         Mass of the radiating scalar.
     charge: float
         Charge of the radiating scalar. Default is 1.
-    partner_mass: float, optional
+    partner_mass: float or None, optional
         Mass of Y, the particle the radiator recoils against, in MeV. It sets
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
-        `mass`, a radiating pair of equal masses.
+        None, which takes Y to have the radiator's own mass, as in a pair of
+        oppositely-charged particles.
     """
     return _dndx_photon_fsr(
         x, s, mass, _scalar_splitting, q=charge, partner_mass=partner_mass
@@ -136,10 +138,11 @@ def dnde_photon_ap_fermion(e, s, mass, charge=1.0, partner_mass: float | None = 
         Mass of the radiating fermion.
     charge: float
         Charge of the radiating fermion. Default is 1.
-    partner_mass: float, optional
+    partner_mass: float or None, optional
         Mass of Y, the particle the radiator recoils against, in MeV. It sets
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
-        `mass`, a radiating pair of equal masses.
+        None, which takes Y to have the radiator's own mass, as in a pair of
+        oppositely-charged particles.
     """
     return _dnde_photon_fsr(
         e, s, mass, _fermion_splitting, q=charge, partner_mass=partner_mass
@@ -162,10 +165,11 @@ def dnde_photon_ap_scalar(e, s, mass, charge=1.0, partner_mass: float | None = N
         Mass of the radiating scalar.
     charge: float
         Charge of the radiating scalar. Default is 1.
-    partner_mass: float, optional
+    partner_mass: float or None, optional
         Mass of Y, the particle the radiator recoils against, in MeV. It sets
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
-        `mass`, a radiating pair of equal masses.
+        None, which takes Y to have the radiator's own mass, as in a pair of
+        oppositely-charged particles.
     """
     return _dnde_photon_fsr(
         e, s, mass, _scalar_splitting, q=charge, partner_mass=partner_mass

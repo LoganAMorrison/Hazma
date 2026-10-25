@@ -78,21 +78,37 @@ def test_the_default_partner_is_the_radiator_itself(
     )
 
 
-@pytest.mark.parametrize(("dnde", "split", "mass", "sqrts"), CASES)
-def test_a_heavier_partner_moves_the_endpoint_inward(
+UNEQUAL_PAIRS = [
+    pytest.param(
+        spectra.dnde_photon_ap_fermion, _fermion_splitting, mmu, mpi, 300.0, id="mu-pi"
+    ),
+    pytest.param(
+        spectra.dnde_photon_ap_scalar, _scalar_splitting, mpi, mmu, 500.0, id="pi-mu"
+    ),
+]
+
+
+@pytest.mark.parametrize(("dnde", "split", "mass", "partner", "sqrts"), UNEQUAL_PAIRS)
+def test_an_unequal_pair_ends_in_a_step_at_its_recoil_endpoint(
     dnde: Callable[..., np.ndarray],
     split: Callable[[float], float],
     mass: float,
+    partner: float,
     sqrts: float,
 ) -> None:
-    partner = 2.0 * mass
+    # In a mu pi pair each leg recoils against the other, so both stop at
+    # x = 1 - (m_mu + m_pi)²/s. There s(1 - x)/m² = (1 + m_Y/m)², which is
+    # 5.39 for the muon and 3.09 for the pion, both above e, so the step is
+    # 2 ln(1 + m_Y/m) - 1: 0.684 for the muon and 0.127 for the pion. The
+    # probe's 1e-9 offset moves the pion's small bracket by 7.9e-9 relative,
+    # which is why the budget here is 1e-7 rather than 1e-8.
     s = sqrts**2
     x_end = 1.0 - (mass + partner) ** 2 / s
     below, above = dnde(_straddle(x_end, sqrts), s, mass, partner_mass=partner)
 
     pre = parameters.alpha_em / (2.0 * np.pi) * 2.0 / sqrts
-    step = pre * split(x_end) * (np.log(9.0) - 1.0)
-    assert below == pytest.approx(step, rel=1e-8)
+    step = pre * split(x_end) * (2.0 * np.log(1.0 + partner / mass) - 1.0)
+    assert below == pytest.approx(step, rel=1e-7)
     assert above == 0.0
 
 
