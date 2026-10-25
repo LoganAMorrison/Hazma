@@ -56,7 +56,7 @@ use super::polarized_muon::{
 /// Relative tolerance of every integral over a parent's energy and of a
 /// photon bin. The integrands are themselves adaptive integrals at
 /// 1e-10 or better.
-const FOLD_EPSREL: f64 = 1e-8;
+pub(super) const FOLD_EPSREL: f64 = 1e-8;
 
 /// Where a yield is evaluated, in lab energies in MeV.
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -69,7 +69,7 @@ pub enum Probe {
 
 impl Probe {
     /// Return the energies at which a parent integral can break.
-    fn edges(self) -> [f64; 2] {
+    pub(super) fn edges(self) -> [f64; 2] {
         match self {
             Self::Density(energy) => [energy, energy],
             Self::Bin(low, high) => [low, high],
@@ -78,7 +78,12 @@ impl Probe {
 }
 
 /// Return a muon's yield of `daughter` at `probe`.
-fn muon_response(daughter: Daughter, probe: Probe, energy: f64, polarization: f64) -> f64 {
+pub(super) fn muon_response(
+    daughter: Daughter,
+    probe: Probe,
+    energy: f64,
+    polarization: f64,
+) -> f64 {
     let decay = MuonDecay::PDG;
     match probe {
         Probe::Density(e) => decay.dnde(daughter, e, energy, polarization),
@@ -87,7 +92,7 @@ fn muon_response(daughter: Daughter, probe: Probe, energy: f64, polarization: f6
 }
 
 /// Return a charged pion's yield of `daughter` at `probe`.
-fn pion_response(daughter: Daughter, probe: Probe, energy: f64) -> f64 {
+pub(super) fn pion_response(daughter: Daughter, probe: Probe, energy: f64) -> f64 {
     let decay = PionDecay::PDG;
     match probe {
         Probe::Density(e) => decay.dnde(daughter, e, energy),
@@ -97,7 +102,7 @@ fn pion_response(daughter: Daughter, probe: Probe, energy: f64) -> f64 {
 
 /// Return a photon yield at `probe` from the density `dnde`, which
 /// vanishes above `endpoint`. A bin integrates it.
-fn photon_response(probe: Probe, dnde: impl Fn(f64) -> f64, endpoint: f64) -> f64 {
+pub(super) fn photon_response(probe: Probe, dnde: impl Fn(f64) -> f64, endpoint: f64) -> f64 {
     match probe {
         Probe::Density(energy) => dnde(energy),
         Probe::Bin(low, high) => {
@@ -114,7 +119,7 @@ fn photon_response(probe: Probe, dnde: impl Fn(f64) -> f64, endpoint: f64) -> f6
 /// Return the `γγ` yield at `probe` of a π⁰ with Lorentz factor `gamma`
 /// and `gamma_beta = γβ`. At rest the two photons are a line, which only
 /// a bin can hold.
-fn neutral_pion_photons(probe: Probe, gamma: f64, gamma_beta: f64) -> f64 {
+pub(super) fn neutral_pion_photons(probe: Probe, gamma: f64, gamma_beta: f64) -> f64 {
     let (count, energy) = (2.0 * BR_PI0_TO_A_A, MASS_PI0 / 2.0);
     if gamma_beta == 0.0 {
         return match probe {
@@ -143,11 +148,11 @@ fn neutral_pion_photons(probe: Probe, gamma: f64, gamma_beta: f64) -> f64 {
 /// threshold, where the whole Dalitz plot shrinks to a point.
 #[derive(Clone, Copy, Debug)]
 pub struct ThreePionParents {
-    channel: PionChannel,
+    pub(super) channel: PionChannel,
     /// Invariant energy `q` in MeV, above `3m`.
     energy: f64,
     /// Common production pion mass `m` in MeV, positive.
-    pion_mass: f64,
+    pub(super) pion_mass: f64,
     /// `q − 3m` in MeV.
     excess: f64,
     /// Fraction of the channel's `σv` from its transverse density, in
@@ -239,10 +244,8 @@ impl ThreePionParents {
     /// `A = s − m²` linear in `u`, `∫A² = L(A_a² + A_a A_b + A_b²)/3`.
     fn weight_integral(&self, kinetic: f64) -> f64 {
         let length = self.partner_length(kinetic);
-        let sum = self.excess - kinetic;
-        let (low, high) = ((sum - length) / 2.0, (sum + length) / 2.0);
-        let transverse =
-            length * (self.pion_mass * sum + (low * low + low * high + high * high) / 3.0);
+        let (low, high) = self.partner_range(kinetic, length);
+        let transverse = self.transverse_integral(kinetic, length);
         let longitudinal = match self.channel {
             PionChannel::Charged => {
                 let (a, b) = (self.pair_excess(low), self.pair_excess(high));
@@ -251,6 +254,44 @@ impl ThreePionParents {
             PionChannel::Neutral => length,
         };
         self.mix(transverse, longitudinal)
+    }
+
+    /// Return the π⁰ kinetic energies `(u_a, u_b)` compatible with a
+    /// charged pion of kinetic energy `u`, whose partners span `length`.
+    fn partner_range(&self, kinetic: f64, length: f64) -> (f64, f64) {
+        let sum = self.excess - kinetic;
+        ((sum - length) / 2.0, (sum + length) / 2.0)
+    }
+
+    /// Return `∫|p₀|² dE₀` over the π⁰ kinetic energies compatible with a
+    /// charged pion of kinetic energy `u`, whose partners span `length`.
+    fn transverse_integral(&self, kinetic: f64, length: f64) -> f64 {
+        let (low, high) = self.partner_range(kinetic, length);
+        let sum = self.excess - kinetic;
+        length * (self.pion_mass * sum + (low * low + low * high + high * high) / 3.0)
+    }
+
+    /// Return the unnormalized `P₂` moment `∫|p₀|² P₂(cos θ₀) dE₀` of a
+    /// charged pion of kinetic energy `u`, with `θ₀` the angle between it
+    /// and the π⁰.
+    ///
+    /// The transverse current `ε·p₀` aligns the π⁰ with the mediator's
+    /// polarization, and a charged pion inherits the alignment through
+    /// `P₂(cos θ₀)` (the addition theorem). Across the partner range
+    /// `E₀ = (q − E)/2 + tL/2` with `t ∈ [−1, 1]`, momentum conservation
+    /// gives `p₀ cos θ₀ = −(p + K t)/2` with `p` the charged pion's
+    /// momentum and `K = (q − E)v`, `v = √(1 − 4m²/s)`, so
+    /// `∫(p₀ cos θ₀)² dE₀ = L(p² + K²/3)/4` with no cancellation as
+    /// `p → 0`.
+    fn alignment_integral(&self, kinetic: f64) -> f64 {
+        let (q, m) = (self.energy, self.pion_mass);
+        let length = self.partner_length(kinetic);
+        let pair_mass2 = (q - m).powi(2) - 2.0 * q * kinetic;
+        let speed2 = (2.0 * q * (self.max_kinetic() - kinetic) / pair_mass2).max(0.0);
+        let momentum2 = kinetic * (2.0 * m + kinetic);
+        let recoil2 = (q - m - kinetic).powi(2) * speed2;
+        let parallel = length * (momentum2 + recoil2 / 3.0) / 4.0;
+        (3.0 * parallel - self.transverse_integral(kinetic, length)) / 2.0
     }
 
     /// Combine unnormalized transverse and longitudinal pieces in the
@@ -281,6 +322,29 @@ impl ThreePionParents {
     /// charged pion of the charged channel.
     pub fn charged_density(&self, kinetic: f64) -> f64 {
         self.weight_integral(kinetic)
+    }
+
+    /// Return the alignment density in MeV⁻¹ of the π⁰ of the charged
+    /// channel, or of each π⁰ of the neutral one, over kinetic energy.
+    ///
+    /// A pion of a mediator in helicity `λ` has the angular density
+    /// `[f + t_λ h P₂(cos θ)]/2` about the quantization axis, with `f` the
+    /// energy density, `h` this alignment density, `t₀ = 2` and
+    /// `t_± = −1`. Only the transverse current aligns: it is `ε·p₀`, so
+    /// the π⁰ has `h = f` within it, while the longitudinal current is
+    /// spin zero and leaves every pion isotropic.
+    pub fn spectator_alignment(&self, kinetic: f64) -> f64 {
+        self.mix(self.transverse_weight(kinetic), 0.0) * self.partner_length(kinetic)
+    }
+
+    /// Return the alignment density in MeV⁻¹ of each charged pion of the
+    /// charged channel over kinetic energy, as
+    /// [`Self::spectator_alignment`] defines it.
+    pub fn charged_alignment(&self, kinetic: f64) -> f64 {
+        match self.channel {
+            PionChannel::Charged => self.mix(self.alignment_integral(kinetic), 0.0),
+            PionChannel::Neutral => 0.0,
+        }
     }
 
     /// Integrate `density` times `response` over a pion's kinetic energy,
@@ -355,8 +419,22 @@ impl ThreePionParents {
                 charged_pion_photon_endpoint(decay_energy),
             )
         };
-        self.fold(Self::charged_density, response, probe, &[])
+        // The photon edge rides on the pion as a massless daughter's box does.
+        let features = [(charged_pion_photon_endpoint(MASS_PI), 0.0)];
+        self.fold(Self::charged_density, response, probe, &features)
     }
+}
+
+/// A source of stable-particle yields, each evaluated at a [`Probe`].
+pub trait Yields {
+    /// Return the photon yield at `probe`.
+    fn photons(&self, probe: Probe) -> f64;
+
+    /// Return the `[e⁺, e⁻]` yields at `probe`.
+    fn charged_leptons(&self, probe: Probe) -> [f64; 2];
+
+    /// Return the `ν + ν̄` yields `[e, μ, τ]` per flavor at `probe`.
+    fn neutrinos(&self, probe: Probe) -> [f64; 3];
 }
 
 /// A final state whose particles decay.
@@ -374,9 +452,8 @@ pub enum Channel {
     ThreePion(ThreePionParents),
 }
 
-impl Channel {
-    /// Return the photon yield at `probe`.
-    pub fn photons(&self, probe: Probe) -> f64 {
+impl Yields for Channel {
+    fn photons(&self, probe: Probe) -> f64 {
         match self {
             Self::MuonPair { muon_energy, .. } => {
                 let dnde = |photon: f64| dnde_photon_muon(photon, *muon_energy);
@@ -391,8 +468,7 @@ impl Channel {
         }
     }
 
-    /// Return the `[e⁺, e⁻]` yields at `probe`.
-    pub fn charged_leptons(&self, probe: Probe) -> [f64; 2] {
+    fn charged_leptons(&self, probe: Probe) -> [f64; 2] {
         let lepton = match self {
             Self::MuonPair {
                 muon_energy,
@@ -409,8 +485,7 @@ impl Channel {
         [lepton, lepton]
     }
 
-    /// Return the `ν + ν̄` yields `[e, μ, τ]` per flavor at `probe`.
-    pub fn neutrinos(&self, probe: Probe) -> [f64; 3] {
+    fn neutrinos(&self, probe: Probe) -> [f64; 3] {
         let per_parent = |daughter: Daughter| match self {
             Self::MuonPair {
                 muon_energy,
@@ -538,6 +613,75 @@ mod tests {
             }
             let neutral = ThreePionParents::new(PionChannel::Neutral, q, MASS_PI0, 0.0);
             assert_normalized(&neutral, 1e-10);
+        }
+    }
+
+    /// The charged pion's alignment is the π⁰-weighted mean of `P₂` of the
+    /// angle between the two pions' momenta.
+    #[test]
+    fn charged_pion_photons_reach_their_endpoint() {
+        // Near the endpoint only the fastest charged pions radiate; the oracle
+        // folds over them alone. The fold's tolerance is 1e-8.
+        let parents = charged(590.0, 0.6);
+        let mass = parents.pion_mass;
+        let top = parents.charged_decay_energy(parents.max_kinetic());
+        let endpoint = charged_pion_photon_endpoint(top);
+        let rest_edge = charged_pion_photon_endpoint(MASS_PI);
+        for gap in [1e-3, 1e-6] {
+            let low = endpoint * (1.0 - gap);
+            for probe in [
+                Probe::Density(low),
+                Probe::Bin(low, endpoint * (1.0 + 1e-3)),
+            ] {
+                let from = mass * (threshold_gamma(low, rest_edge, 0.0) - 1.0);
+                let mut integrand = |kinetic: f64| {
+                    let decay = parents.charged_decay_energy(kinetic);
+                    let dnde = |photon: f64| dnde_photon_charged_pion(photon, decay);
+                    parents.charged_density(kinetic)
+                        * photon_response(probe, dnde, charged_pion_photon_endpoint(decay))
+                };
+                let expected = integrate(&mut integrand, from, parents.max_kinetic(), &[], 1e-10);
+                assert!(expected > 0.0, "{probe:?}");
+                assert_close(parents.charged_pion_photons(probe), expected, 1e-7);
+            }
+        }
+    }
+
+    #[test]
+    fn charged_alignment_is_the_mean_p2_between_pions() {
+        // Brute force: the angle between the charged pion and the π⁰ from
+        // the third pion's momentum, |p₋|² = |p₊|² + |p₀|² + 2p₊·p₀.
+        for energy in [450.0, 600.0] {
+            let parents = charged(energy, 1.0);
+            let (q, m) = (parents.energy, parents.pion_mass);
+            for step in 1..20 {
+                let kinetic = parents.max_kinetic() * f64::from(step) / 20.0;
+                let length = parents.partner_length(kinetic);
+                let (low, high) = parents.partner_range(kinetic, length);
+                let charged2 = kinetic * (2.0 * m + kinetic);
+                let mut integrand = |neutral: f64| {
+                    let neutral2 = neutral * (2.0 * m + neutral);
+                    let third = q - 3.0 * m - kinetic - neutral;
+                    let third2 = third * (2.0 * m + third);
+                    let cosine =
+                        (third2 - charged2 - neutral2) / (2.0 * (charged2 * neutral2).sqrt());
+                    neutral2 * (3.0 * cosine * cosine - 1.0) / 2.0
+                };
+                let expected = integrate(&mut integrand, low, high, &[], 1e-12);
+                let scale = parents.transverse_integral(kinetic, length);
+                assert!((parents.alignment_integral(kinetic) - expected).abs() <= 1e-10 * scale);
+                // P₂ lies in [−1/2, 1], and the π⁰ is fully aligned.
+                let (density, alignment) = (
+                    parents.charged_density(kinetic),
+                    parents.charged_alignment(kinetic),
+                );
+                assert!(-0.5 * density <= alignment && alignment <= density);
+                assert_close(
+                    parents.spectator_alignment(kinetic),
+                    parents.spectator_density(kinetic),
+                    1e-15,
+                );
+            }
         }
     }
 

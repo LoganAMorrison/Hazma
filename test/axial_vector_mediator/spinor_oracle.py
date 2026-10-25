@@ -182,3 +182,55 @@ def _sigma_v_by_helicity(  # noqa: PLR0913 - one parameter point
     # 4 E1 E2 = s in the CM.
     factor = beta / (16.0 * np.pi) / s
     return float(factor * integral), float(factor * weighted)
+
+
+def _mediator_polarization(helicity: int) -> np.ndarray:
+    """Return the upper-index polarization of helicity ``helicity`` along ``z``."""
+    if helicity == 0:
+        return np.array([0.0, 0.0, 0.0, 1.0], dtype=complex)
+    return np.array([0.0, -helicity, -1j, 0.0], dtype=complex) / np.sqrt(2.0)
+
+
+def polarized_vector_decay(  # noqa: PLR0913 - one decay configuration
+    mv: float,
+    *,
+    mf: float,
+    gvf: float,
+    gaf: float,
+    helicity: int,
+    cos_theta: float,
+) -> tuple[float, np.ndarray, np.ndarray]:
+    """Return a polarized vector's decay into a fermion pair at one direction.
+
+    The vector at rest has ``helicity`` along ``z`` and decays to the fermion
+    along ``n = (sin(theta), 0, cos(theta))`` and the antifermion along ``-n``.
+    The result is the unnormalized squared amplitude summed over both spins,
+    and the rest-frame spin vector of the fermion and of the antifermion,
+    each reached from the vector's frame by a pure boost. The fermion's spin
+    is read from its two-spinor ``xi``; an antifermion built on ``eta`` has
+    physical spin ``-eta^dagger sigma eta``.
+    """
+    energy = mv / 2.0
+    pf = np.sqrt(energy**2 - mf**2)
+    sine = np.sqrt(1.0 - cos_theta**2)
+    n = np.array([sine, 0.0, cos_theta])
+    k1 = np.array([energy, *(pf * n)])
+    k2 = np.array([energy, *(-pf * n)])
+    polarization = _METRIC @ _mediator_polarization(helicity)
+    amplitudes = np.array(
+        [
+            [
+                polarization @ _current(_bar(_u(k1, mf, xi)), _v(k2, mf, eta), gvf, gaf)
+                for eta in _BASIS
+            ]
+            for xi in _BASIS
+        ]
+    )
+    fermion = amplitudes @ amplitudes.conj().T
+    antifermion = amplitudes.T @ amplitudes.conj()
+    rate = float(np.trace(fermion).real)
+    fermion_spin = np.array([np.trace(fermion @ s).real for s in _PAULI]) / rate
+    antifermion_spin = (
+        -np.array([np.trace(antifermion.T @ s).real for s in _PAULI]) / rate
+    )
+    return rate, fermion_spin, antifermion_spin
