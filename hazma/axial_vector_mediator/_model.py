@@ -952,7 +952,10 @@ class AxialVectorMediator(TheoryAnn):
         `rest_frame_yields`, and near threshold the yield is sensitive to
         that choice. ``"e e"`` and ``"mu mu"`` take the Altarelli-Parisi
         spectrum of `hazma.spectra.altarelli_parisi.dnde_photon_ap_fermion`
-        for each lepton, a leading-log approximation. Every final state
+        for each lepton up to the kinematic endpoint, a leading-log
+        approximation that needs :math:`\sqrt{s} \gg 2m`: near the
+        ``"mu mu"`` threshold its soft limit exceeds the exact eikonal one
+        9.2 times at 215 MeV and 1.67 times at 250 MeV. Every final state
         takes exactly one of the two, and Hazma's generic final-state
         radiation is never added, so no emission is counted twice. The
         virtual corrections, which cancel the logarithm of ``cut``, and the

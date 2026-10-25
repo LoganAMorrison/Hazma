@@ -85,9 +85,9 @@ user-facing change even when no signature did.
   densities, and keeps its helicity alignment in a moving mediator's decay;
   with physical pion masses it reproduces the mediator note's resolved
   fractions, about 9.1e-4 at 450 MeV and 3.1e-3 at 500 MeV. `e e` and `mu mu`
-  take the Altarelli-Parisi leading-log approximation. No final state takes
-  both, and virtual corrections are not included. Existing yields and public
-  values are unchanged.
+  take the Altarelli-Parisi leading-log approximation, valid for `√s ≫ 2m`.
+  No final state takes both, and virtual corrections are not included.
+  Existing yields and public values are unchanged.
 
 - **`TheoryAnn.annihilation_resonances()`** lists the `(mass, width)`
   of each resonance in a model's annihilation cross sections, in MeV.

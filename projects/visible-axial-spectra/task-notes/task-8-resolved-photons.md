@@ -86,14 +86,21 @@ emission and the Altarelli-Parisi approximation from double counting.
 - **Kernel:** `rust/src/kernels/axial_radiation.rs` (the plan's module name).
   It uses fixed Gauss-Legendre rules, 48 in `s` after the square-root
   substitution and 32 in `cos θ₀`. Doubling both moves a spectrum by less
-  than 1e-10 of its value. The lab fold reuses Task 7's `Boost`, the
+  than 1e-10 of its value through 600 MeV, the declared range. The emission
+  integrals carry `ω′²` and the bins integrate in `ln ω`, so a cut as small
+  as 1e-200 MeV neither overflows nor loses the `ln(1/cut)` growth. The lab
+  fold reuses Task 7's `Boost`, the
   `Helicities::alignment` and `[f + (3F₀ − 1)hP₂]/2`, now `pub(super)`.
-- **Polarized photons:** the on-shell 3π photon alignment density is `h`,
-  with weight `[(n̂·p₀)² − |p₀|²/3]/2` against `|p₀|²/3`; there is no `P₁`
-  term. AP photons are collinear with their lepton, so they take the
-  `PairDecay` analyzer's tensor power (the vector powers cancel between the
-  two leptons). This is a choice made while implementing; the alternative,
-  an isotropic boost, would drop a known alignment.
+- **Polarized photons:** the on-shell 3π photon alignment density is `h`, with
+  weight `[(n̂·p₀)² − |p₀|²/3]/2` against `|p₀|²/3`; there is no `P₁` term. AP
+  photons are collinear with their lepton, so they take the `PairDecay`
+  analyzer's tensor power (the vector powers cancel between the two leptons).
+  The AP spectrum is clipped at the kinematic endpoint `(Q² − 4m²)/2Q`, where
+  its bracket is still `ln 4 − 1`, not at `(Q² − e·m²)/2Q`, which lies past it.
+  AP needs `√s ≫ 2m`: for `mu mu` its soft limit is 9.2 times the exact eikonal
+  one at 215 MeV and 1.67 times at 250 MeV, and the docstring and docs say so.
+  The tensor power is a choice made while implementing; the alternative, an
+  isotropic boost, would drop a known alignment.
 - `α` is passed from Python as `hazma.parameters.alpha_em`, as
   `_poles.py` does. The benchmark tests pass the reference's
   `1/137.035999`.
@@ -104,7 +111,7 @@ emission and the Altarelli-Parisi approximation from double counting.
 
 ## Files Changed
 
-- `rust/src/kernels/axial_radiation.rs` — new kernel and 16 unit tests.
+- `rust/src/kernels/axial_radiation.rs` — new kernel and 17 unit tests.
 - `rust/src/axial_vector_mediator.rs` — four PyO3 entry points and a shared
   `probes` helper.
 - `rust/src/kernels.rs` — module registration and docs.
@@ -114,37 +121,49 @@ emission and the Altarelli-Parisi approximation from double counting.
 - `hazma/axial_vector_mediator/_model.py` — four public methods, docstring
   pointers from the Born methods.
 - `test/axial_vector_mediator/radiation_oracle.py`,
-  `test/axial_vector_mediator/test_radiation.py` — NumPy RAMBO oracle and 19
+  `test/axial_vector_mediator/test_radiation.py` — NumPy RAMBO oracle and 20
   tests.
 - `docs/source/axial_vector_mediator.rst`, `CHANGELOG.md` — user docs.
 
 ## Verification
 
 - `cargo test --manifest-path rust/Cargo.toml --no-default-features
-  --features test-probes axial_radiation`: 16 passed. These cover the
+  --features test-probes axial_radiation`: 17 passed. These cover the
   pair-angle eikonal against explicit four-vectors (1e-10), the Born
   integrals against `ThreePion::spectral_functions` (1e-12), the soft limit
   (1e-5), the rule convergence (1e-10), the
   reference fractions (2σ), alignment positivity, support, bin round trips,
   lab count and mean-energy conservation, the isotropic and slow-mediator
-  limits, and the AP pair formula and its tensor.
-- `pytest test/axial_vector_mediator/test_radiation.py -n 0`: 19 passed in
-  1.8 s. These cover the Ward identity of the explicit two-diagram amplitude
-  (1e-12) and its polarization sum (1e-10), the reference fractions (2σ of
-  the reference, and 4σ of a 4e5-event oracle), the rest spectrum for
-  transverse and longitudinal against the oracle (4σ per bin), the polarized
-  lab cascade for `F₀ = 1` and `F₀ = 0` against the boosted oracle (4σ),
-  the soft limit through the public method (1e-5), AP-only leptons against
-  `dnde_photon_ap_fermion` (1e-12), the isotropic lepton cascade against
-  `dnde_boost` (1e-5), shapes, cuts and refusals.
+  limits (1e-8), tiny cuts adding the soft logarithm, and the AP pair
+  formula, its kinematic endpoint and its tensor.
+- `pytest test/axial_vector_mediator/test_radiation.py -n 0`: 20 passed. These
+  cover the Ward identity of the explicit two-diagram amplitude (1e-12) and its
+  polarization sum (1e-10), the reference fractions (2σ of the reference, and 4σ
+  of a 4e5-event oracle), the rest spectrum for transverse and longitudinal
+  against the oracle (4σ per bin), the polarized lab cascade for `F₀ = 1` and
+  `F₀ = 0` against the boosted oracle (4σ), the soft limit through the public
+  method (1e-5), AP-only leptons against `dnde_photon_ap_fermion` (1e-12), the
+  isotropic lepton cascade against `dnde_boost` (1e-5), shapes, cuts, and
+  refusals including open `tau tau`.
 - `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths
   "hazma/axial_vector_mediator test/axial_vector_mediator"`: RESULT: PASS,
-  with pytest at `2976 passed, 16 skipped, 20 warnings, 127 subtests passed
-  in 59.75s`, and black, isort, ruff (0 new), cargo fmt, clippy and cargo
+  with pytest at `2977 passed, 16 skipped, 20 warnings, 127 subtests passed
+  in 58.65s`, and black, isort, ruff (0 new), cargo fmt, clippy and cargo
   test all passing.
 - Performance: 50 rest densities take 0.4 ms, 50 rest bins 5 ms, 50 lab
   densities 11 ms and 50 lab bins 14 ms, against 0.14 s for the 4e5-event
   NumPy oracle.
+
+## Review outcome
+
+PR review fixed: the AP endpoint (past the kinematic limit, now clipped),
+the AP validity statement, overflow and logarithm loss at tiny cuts, the
+Gauss-Legendre range statement, the slow-mediator tolerance (1e-4 to 1e-8)
+and an open-`tau tau` refusal test. Not changed: the common π⁰ mass in the
+public 3π fractions (the Task 6 convention, documented, with the reference
+pinned through the kernel at physical masses) and the 2-8% Monte Carlo pins
+(normalization is pinned separately by the soft limit, the Born integrals and
+the pair-angle eikonal).
 
 ## Numerical impact
 
@@ -226,9 +245,9 @@ the last prose edit. Counts for this note include this block.
 
 | Claim location | Command | Actual | Status |
 | --- | --- | --- | --- |
-| Verification, 16 Rust tests | `grep -c '#\[test\]' rust/src/kernels/axial_radiation.rs` | 16 | KEPT |
-| Verification, 19 radiation tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_radiation.py` | `19 tests collected` | KEPT |
-| README, model suite size | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator` | `96 tests collected` | KEPT |
+| Verification, 17 Rust tests | `grep -c '#\[test\]' rust/src/kernels/axial_radiation.rs` | 17 | KEPT |
+| Verification, 20 radiation tests | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator/test_radiation.py` | `20 tests collected` | KEPT |
+| README, model suite size | `.venv/bin/python -m pytest --collect-only -q -n 0 test/axial_vector_mediator` | `97 tests collected` | KEPT |
 | Numerical impact, 164 values | `check_public_impact.py` (below) | maximum absolute difference 0.0 | KEPT |
 
 - **Exit Criteria to test mapping.**

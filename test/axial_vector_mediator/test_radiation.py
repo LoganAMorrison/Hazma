@@ -189,14 +189,17 @@ def test_soft_limit_is_the_eikonal_radiator_over_the_born() -> None:
 def test_lepton_pairs_are_altarelli_parisi_alone() -> None:
     model = _model(mx=REST_MX)
     e_cm, cut = REST, 3.0
-    energies = np.array([1.0, 2.9, 3.0, 50.0, 200.0, 280.0])
+    energies = np.array([1.0, 2.9, 3.0, 50.0, 200.0, 251.0, 252.0, 280.0])
     photons = model.rest_frame_resolved_photons(energies, e_cm, cut=cut)
     for fs, mass in (
         ("e e", parameters.electron_mass),
         ("mu mu", parameters.muon_mass),
     ):
+        # The kinematic endpoint clips the leading-log spectrum's tail.
+        endpoint = (e_cm**2 - 4.0 * mass**2) / (2.0 * e_cm)
+        inside = (energies >= cut) & (energies < endpoint)
         expected = np.where(
-            energies >= cut, 2.0 * dnde_photon_ap_fermion(energies, e_cm**2, mass), 0.0
+            inside, 2.0 * dnde_photon_ap_fermion(energies, e_cm**2, mass), 0.0
         )
         np.testing.assert_allclose(photons[fs], expected, rtol=1e-12, atol=0.0)
     # The Born photons of a lepton pair hold no prompt radiation, so the
@@ -268,6 +271,32 @@ def test_photons_below_the_cut_vanish() -> None:
     photons = model.rest_frame_resolved_photons(np.array([0.5, 0.99]), REST, cut=1.0)
     for value in photons.values():
         np.testing.assert_array_equal(value, 0.0)
+
+
+def test_open_tau_pair_is_refused() -> None:
+    taus = LeptonCouplings(
+        gvee=0.0,
+        gaee=0.0,
+        gvmumu=0.0,
+        gamumu=0.0,
+        gvtautau=0.5,
+        gatautau=0.0,
+        gnue=0.0,
+        gnumu=0.0,
+        gnutau=0.0,
+    )
+    no_quarks = AxialCurrent(
+        0.0, 0.0, 0.0, qcd_scheme="MSbar", scale_mev=2000.0, provenance="test"
+    )
+    # A heavy mediator keeps the unmodeled "v v" closed.
+    rest = _model(mx=REST_MX, mv=5000.0, quarks=no_quarks, leptons=taus)
+    with pytest.raises(ValueError, match="tau tau"):
+        rest.rest_frame_resolved_photons(10.0, 3600.0, cut=1.0)
+    moving = _model(mv=4000.0, quarks=no_quarks, leptons=taus)
+    with pytest.raises(ValueError, match="tau tau"):
+        moving.mediator_decay_resolved_photons(
+            10.0, 5000.0, density=np.eye(3) / 3.0, cut=1.0
+        )
 
 
 @pytest.mark.parametrize("cut", [0.0, -1.0, np.inf, np.nan])

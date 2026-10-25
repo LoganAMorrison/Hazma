@@ -53,14 +53,18 @@
 //!
 //! `e⁺e⁻` and `μ⁺μ⁻` take the Altarelli–Parisi leading-log spectrum of
 //! `hazma/spectra/altarelli_parisi.py`, summed over both leptons:
-//! `(2α/πQ)[1 + (1 − x)²]/x [ln(Q²(1 − x)/m²) − 1]` at `x = 2ω/Q`, zero
-//! where the bracket is not positive. It is the collinear limit, so each
+//! `(2α/πQ)[1 + (1 − x)²]/x [ln(Q²(1 − x)/m²) − 1]` at `x = 2ω/Q`, up to the
+//! kinematic endpoint `(Q² − 4m²)/2Q`, where the bracket is still
+//! `ln 4 − 1`. It is the collinear limit, so each
 //! photon moves along its lepton and a moving mediator boosts it with the
 //! lepton's angular density: the [`super::polarized_cascade::PairDecay`]
 //! analyzer, whose vector powers cancel between the two leptons and leave
 //! the tensor power alone. It is an approximation that keeps no term
 //! without the collinear logarithm and no spin correlation of the
-//! emission itself.
+//! emission itself, and it needs `Q ≫ 2m`: its soft limit
+//! `(2α/π)[ln(Q²/m²) − 1]` exceeds the exact, spin-independent
+//! `(α/π)[(1 + β²)L/β − 2]` by 9.2 at `Q = 215` MeV for `μ⁺μ⁻` and by 1.67
+//! at 250 MeV.
 //!
 //! Masses and energies are in MeV, densities in MeV⁻¹ and counts are
 //! photons per Born decay. The caller validates every input: a source
@@ -75,7 +79,9 @@ use super::polarized_cascade::{Boost, Helicities, legendre2};
 use super::polarized_muon::{boost_range, integrate};
 
 /// Gauss–Legendre order of the pair-mass integral, taken after the
-/// substitution that removes its endpoint square roots.
+/// substitution that removes its endpoint square roots. With
+/// [`DIRECTION_ORDER`] it converges a spectrum to 1e-10 through 600 MeV,
+/// the declared range of the three-pion current, and degrades above it.
 const MASS_ORDER: usize = 48;
 
 /// Gauss–Legendre order of the π⁰-direction integral. Its integrand is
@@ -222,8 +228,9 @@ impl ThreePionRadiation {
 
     /// Return the emission integrals at photon energy `omega`: the
     /// transverse and longitudinal weights and the transverse alignment
-    /// weight, each integrated with `p₀β R(β)/(√P² ω_c²)` over `s` and
-    /// `cos θ₀`, in the recoil frame's `p₀`.
+    /// weight, each integrated with `p₀β R(β)ω′²/(√P² ω_c²)` over `s` and
+    /// `cos θ₀`, in the recoil frame's `p₀` and photon energy `ω′`. The
+    /// factor `ω′²` keeps a soft photon's `1/ω_c²` representable.
     fn emission_integrals(&self, omega: f64) -> [f64; 3] {
         let (q, m0) = (self.energy, self.neutral_mass);
         let recoil2 = q * (q - 2.0 * omega);
@@ -249,10 +256,11 @@ impl ThreePionRadiation {
             let beta = self.pair_speed(s);
             let outer = weight * jacobian * momentum * beta * eikonal_radiator(beta) / recoil;
             for &(cosine, direction_weight) in &self.direction_rule {
-                let pair_k = photon * (pair_energy + momentum * cosine);
+                // `P_c·k/ω′`, so that `ω′²/ω_c² = s/reduced²`.
+                let reduced = pair_energy + momentum * cosine;
+                let pair_k = photon * reduced;
                 let neutral_k = photon * (neutral_energy - momentum * cosine);
-                // `1/ω_c²`, with `ω_c = P_c·k/√s`.
-                let eikonal = s / (pair_k * pair_k);
+                let eikonal = s / (reduced * reduced);
                 let [transverse, longitudinal] = self.weights(s + 2.0 * pair_k);
                 // `n̂·p₀` in the source frame: `E₀ − k·p₀/ω`.
                 let neutral_source_energy = (recoil * neutral_energy + neutral_k) / q;
@@ -277,7 +285,9 @@ impl ThreePionRadiation {
             return [0.0; 3];
         }
         let [transverse, longitudinal, alignment] = self.emission_integrals(omega);
-        let scale = self.alpha * omega * self.energy / (2.0 * PI);
+        // `αωQ/2π` over the `ω′² = Q²ω²/P²` the integrals carry, with
+        // `P² = Q(Q − 2ω)`.
+        let scale = self.alpha * (self.energy - 2.0 * omega) / (2.0 * PI * omega);
         let per_born = |integral: f64, born: f64| {
             if born > 0.0 {
                 scale * integral / born
@@ -339,10 +349,10 @@ impl RestPhotons for PairRadiation {
         [density, self.tensor * density]
     }
 
-    /// The endpoint is where `ln(Q²(1 − x)/m²) = 1`.
+    /// The endpoint is kinematic, short of where `ln(Q²(1 − x)/m²) = 1`.
     fn support(&self) -> (f64, f64) {
         let q = self.energy;
-        let endpoint = (q * q - std::f64::consts::E * self.mass * self.mass) / (2.0 * q);
+        let endpoint = (q * q - 4.0 * self.mass * self.mass) / (2.0 * q);
         (self.cut, endpoint.max(0.0))
     }
 }
@@ -357,8 +367,12 @@ pub fn rest_photons(spectrum: &impl RestPhotons, probe: Probe) -> f64 {
             if low >= high {
                 return 0.0;
             }
-            let mut integrand = |omega: f64| spectrum.spectrum(omega)[0];
-            integrate(&mut integrand, low, high, &[], FOLD_EPSREL)
+            // In `t = ln ω`, where the soft `1/ω` is flat for any cut.
+            let mut integrand = |t: f64| {
+                let omega = t.exp();
+                omega * spectrum.spectrum(omega)[0]
+            };
+            integrate(&mut integrand, low.ln(), high.ln(), &[], FOLD_EPSREL)
         }
     }
 }
@@ -370,7 +384,7 @@ pub fn rest_photons(spectrum: &impl RestPhotons, probe: Probe) -> f64 {
 /// reaches `γω(1 + β cos θ)`, so a lab density integrates
 /// `[f + (3F₀ − 1)h P₂]/(2γβω)` over the `ω` whose box holds it, and a bin
 /// integrates the angular density over the cosines it spans, in closed
-/// form, at each `ω`.
+/// form, at each `ω`, over `ln ω` as [`rest_photons`] does.
 pub fn lab_photons(
     spectrum: &impl RestPhotons,
     boost: Boost,
@@ -402,16 +416,17 @@ pub fn lab_photons(
                 return 0.0;
             }
             // The cosine of either edge leaves [−1, 1] where its box ends.
-            let points = [low_upper, high_lower];
-            let mut integrand = |omega: f64| {
+            let points = [low_upper.ln(), high_lower.ln()];
+            let mut integrand = |t: f64| {
+                let omega = t.exp();
                 let [density, alignment] = spectrum.spectrum(omega);
                 let from = boost.cosine(low, omega, omega).clamp(-1.0, 1.0);
                 let to = boost.cosine(high, omega, omega).clamp(-1.0, 1.0);
                 // The antiderivative of P₂ is (c³ − c)/2.
                 let tensor = (to.powi(3) - to - from.powi(3) + from) / 2.0;
-                weight.mul_add(alignment * tensor, density * (to - from)) / 2.0
+                omega * weight.mul_add(alignment * tensor, density * (to - from)) / 2.0
             };
-            integrate(&mut integrand, lower, upper, &points, FOLD_EPSREL)
+            integrate(&mut integrand, lower.ln(), upper.ln(), &points, FOLD_EPSREL)
         }
     }
 }
@@ -615,6 +630,22 @@ mod tests {
         }
     }
 
+    /// A soft photon's density stays finite, and a cut moved down by forty
+    /// decades adds `(α/π)⟨R⟩ ln 10⁴⁰` photons, the soft spectrum's
+    /// logarithm.
+    #[test]
+    fn tiny_cuts_add_the_soft_logarithm() {
+        let energy = 500.0;
+        let coarse = ThreePionRadiation::new(energy, [M0, M0], 1.0, ALPHA, 1e-40);
+        let fine = ThreePionRadiation::new(energy, [M0, M0], 1.0, ALPHA, 1e-80);
+        let soft = 1e-60 * fine.spectra(1e-60)[0];
+        let deepest = ThreePionRadiation::new(energy, [M0, M0], 1.0, ALPHA, 1e-300);
+        assert_close(1e-200 * deepest.spectra(1e-200)[0], soft, 1e-12);
+        let top = Probe::Bin(1e-80, energy);
+        let added = rest_photons(&fine, top) - rest_photons(&coarse, top);
+        assert_close(added, soft * 40.0 * 10.0_f64.ln(), 1e-7);
+    }
+
     #[test]
     fn spectra_vanish_outside_the_support() {
         let radiation = ThreePionRadiation::new(500.0, [M0, M0], 0.5, ALPHA, 2.0);
@@ -773,7 +804,7 @@ mod tests {
             assert_close(
                 lab_photons(&radiation, boost, pure(1.0), Probe::Density(omega)),
                 radiation.spectrum(omega)[0],
-                1e-4,
+                1e-8,
             );
         }
     }

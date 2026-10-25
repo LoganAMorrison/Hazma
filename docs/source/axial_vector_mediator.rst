@@ -127,8 +127,9 @@ pions, so the amplitude is the Born current at :math:`\tilde s = (q - p_0)^2`
 times the eikonal factor, for the transverse and source-longitudinal densities
 alike. A photon from a moving mediator keeps its
 :math:`(3F_0 - 1)P_2` alignment. ``e e`` and ``mu mu`` take the
-Altarelli-Parisi leading-log spectrum of each lepton, an approximation whose
-photons follow their leptons' angular density. Each final state takes exactly
+Altarelli-Parisi leading-log spectrum of each lepton, an approximation that
+needs :math:`\sqrt{s} \gg 2m` and whose photons follow their leptons' angular
+density. Each final state takes exactly
 one of the two, so nothing is counted twice. The virtual corrections that
 cancel the logarithm of the cut, and the :math:`O(\alpha)` recoil and virtual
 corrections to the decay yields, are not included. With the physical pion
