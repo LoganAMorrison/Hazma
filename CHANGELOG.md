@@ -98,8 +98,10 @@ user-facing change even when no signature did.
   `dnde_photon_ap_fermion`, `dnde_photon_ap_scalar` and their `dndx_*`
   counterparts accept the mass, in MeV, of the particle the radiator
   recoils against, which sets the photon endpoint
-  `x = 1 - (mass + partner_mass)²/s`. The default is `mass`, a pair of
-  equal masses. The change to their values is listed under `Changed`.
+  `x = 1 - (mass + partner_mass)²/s`. The default, `None`, takes the
+  partner to have the radiator's own mass. A negative or nonfinite
+  `partner_mass` raises `ValueError`. The change to their values is
+  listed under `Changed`.
 
 ### Changed
 
@@ -119,14 +121,14 @@ user-facing change even when no signature did.
   radiator with its partner's mass, both for two-body states and for
   each pair of a many-body state. The FSR of a radiator paired with a
   light partner, such as a muon with a neutrino, is unchanged. The
-  photon energy per event falls by 1.0% for `mu mu` at 300 MeV, 0.98%
+  photon energy per event falls by 0.96% for `mu mu` at 300 MeV, 1.0%
   for `mu pi` at 400 MeV and 6.3% for `e mu pi` at 600 MeV, where the
   electron now stops at its endpoint against the heavier pair. For
   `VectorMediatorGeV` (`m_x = 100` MeV, `m_V = 1` GeV, unit quark and
-  lepton couplings) the total photon energy falls by 3.1e-3 at
+  lepton couplings) the total photon energy falls by 2.9e-3 at
   `e_cm = 250` MeV and by 5.8e-5 at 1 GeV. For `RHNeutrino` with
   `theta = 1e-3` it falls by 1.9% at `m_N = 300` MeV mixing with `e`,
-  by 0.26% mixing with `mu`, and by 0.23% at 600 MeV mixing with `mu`.
+  by 0.25% mixing with `mu`, and by 0.23% at 600 MeV mixing with `mu`.
   No parity-corpus value moves. Details:
   `docs/followups/done/altarelli-parisi-fsr-runs-past-its-endpoint.md`.
 - **Every thermal average now integrates at the true `x` past

@@ -17,6 +17,7 @@ from hazma import parameters, spectra
 from hazma.parameters import charged_pion_mass as mpi
 from hazma.parameters import muon_mass as mmu
 from hazma.parameters import neutral_pion_mass as mpi0
+from hazma.spectra import altarelli_parisi
 
 # Relative offset of the probe energies from the endpoint, as a fraction of
 # 1 - x_end, so the probes straddle the endpoint by far more than rounding
@@ -128,6 +129,25 @@ def test_a_massless_partner_ends_where_the_bracket_vanishes(
     peak = dnde(np.array([0.1 * sqrts]), s, mass, partner_mass=0.0)[0]
     assert 0.0 < below < 1e-8 * peak
     assert above == 0.0
+
+
+ENTRY_POINTS = [
+    pytest.param(spectra.dnde_photon_ap_fermion, 90.0, id="dnde_fermion"),
+    pytest.param(spectra.dnde_photon_ap_scalar, 90.0, id="dnde_scalar"),
+    pytest.param(altarelli_parisi.dndx_photon_ap_fermion, 0.6, id="dndx_fermion"),
+    pytest.param(altarelli_parisi.dndx_photon_ap_scalar, 0.6, id="dndx_scalar"),
+]
+
+
+@pytest.mark.parametrize(("ap", "point"), ENTRY_POINTS)
+@pytest.mark.parametrize("partner", [np.nan, np.inf, -mmu])
+def test_an_unphysical_partner_mass_raises(
+    ap: Callable[..., np.ndarray], point: float, partner: float
+) -> None:
+    # Each of these used to return a plausible value: NaN and -m_mu gave
+    # the massless-partner spectrum, and inf gave zero.
+    with pytest.raises(ValueError, match="partner_mass"):
+        ap(np.array([point]), 300.0**2, mmu, partner_mass=partner)
 
 
 def _fsr(es: np.ndarray, cme: float, final_states: Sequence[str]) -> np.ndarray:

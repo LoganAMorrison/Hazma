@@ -1530,6 +1530,15 @@ branch of the underlying kernel that "any" reaches.
   computed, and `test_pair_yields_refuse_a_zero_total_width` pins both
   methods.
 
+- PR #134 gave the Altarelli-Parisi spectra a `partner_mass` and cut them
+  at `s(1 − x)/m² ≥ max(e, (1 + m_Y/m)²)`. Review evaluated a muon at
+  `E = 90` MeV and `sqrt(s) = 300` MeV with `partner_mass=NaN` and with
+  `-m_μ`, and both returned the massless-partner value `2.55746e-6 MeV⁻¹`,
+  because Python's `max(np.e, nan)` returns `np.e`. `_dndx_photon_fsr`
+  now raises `ValueError` for a nonfinite or negative `partner_mass`, and
+  `test_an_unphysical_partner_mass_raises` pins NaN, inf and `-m_μ` across
+  all four public entry points.
+
 ### integration-window-anchored-at-the-first-feature
 
 - PR #112 moved both mediator thermal kernels from a fixed `[2, 150]` to
@@ -1739,3 +1748,17 @@ branch of the underlying kernel that "any" reaches.
   `charged_pion_photons_reach_their_lab_endpoint` and
   `charged_pion_photons_reach_their_endpoint` pin densities and bins just
   inside the endpoints, and all three fail without the break points.
+
+### one-protocol-stated-for-two-methods
+
+- PR #134's measurement note said every spectrum was sampled on 160
+  log-spaced energies, but its one-leg table came from adaptive
+  quadrature. Review recomputed the one-leg table on that grid and got
+  6.10% for a muon leg at 300 MeV and 0.718% for a pion leg at 500 MeV,
+  against the recorded 5.8% and 1.1%. Near `E = sqrt(s)/2` the grid is
+  spaced about as widely as the band the repair removes. The note now
+  states each table's method with a runnable one-leg command. The public
+  table, which had used the same coarse grid, was re-measured on 160 log
+  plus 4000 even energies. That moved `VectorMediatorGeV` at 250 MeV from
+  3.1e-3 to 2.9e-3, and the `RHNeutrino` `ν e μ` rise from 0.2% at 42
+  energies to 1.1% at 1723.

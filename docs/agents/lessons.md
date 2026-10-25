@@ -336,10 +336,11 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   factor before applying the term that regularizes it has the same zero set
   (PR #103, #118, #128, #132).
 - [float-clip-swallows-nan] A new clip written with Rust's `f64::min` or
-  `f64::max` returns the other operand when one is `NaN`, so a `NaN` input
-  becomes a finite limit and a finite result. Clip with a comparison that
-  keeps `NaN`, and pin a `NaN` input, scalar and in an array, against the
-  pre-change output (PR #105).
+  `f64::max`, or Python's `min` or `max`, returns the other operand when
+  one is `NaN`, so a `NaN` input becomes a finite limit and a finite
+  result. Clip with a comparison that keeps `NaN`, or reject the input at
+  the boundary, and pin a `NaN` input, scalar and in an array, against the
+  pre-change output (PR #105, #134).
 - [integration-window-anchored-at-the-first-feature] A truncated integral's
   tail bound holds only relative to what lies inside the window. Anchor a
   scaled cut at the *last* place the integrand can turn on (a channel
@@ -398,3 +399,9 @@ relevant `docs/agents/` checklist as a check, not here as a lesson.
   point where each response's support edge crosses each probe edge, at
   every fold site, and pin a density and a bin just inside each endpoint
   against an integral over the supported window alone (PR #132).
+- [one-protocol-stated-for-two-methods] A measurement note whose tables
+  come from different methods must state each table's method and a
+  command that reproduces it. A single protocol paragraph over all of them
+  misattributes the rest, and a fixed grid near a moving endpoint is not
+  interchangeable with adaptive quadrature: re-derive any table measured
+  on a grid as coarse as the feature that moved (PR #134).

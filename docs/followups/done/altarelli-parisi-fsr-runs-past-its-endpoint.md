@@ -39,47 +39,79 @@ including every `(ν, μ)` pair with invariant mass between `1.65 m_μ` and
 
 ## Measurement
 
-Measured against `origin/master` at `ac5484cc`, with "before" evaluated
-from a detached checkout of that commit sharing the same `hazma._core`.
-Monte-Carlo phase space was seeded identically in both runs. Spectra
-were sampled on 160 log-spaced energies from 0.01 MeV to half the
-center-of-mass energy, and "photon energy" is the trapezoidal
-`∫ E dN/dE` over that grid.
+The two tables come from different methods, because a coarse grid cannot
+resolve the band the repair removes. Near `E = sqrt(s)/2` a 160-point
+log grid is spaced about as widely as that band. On such a grid one muon
+leg at 300 MeV loses 6.10% rather than 5.75%, and one pion leg at
+500 MeV loses 0.718% rather than 1.06%.
 
-One leg, equal pair, share of the photon energy removed:
+**One leg, equal pair.** The share of the photon energy removed is
+`∫ E dN/dE` from the endpoint `E_end = (s − 4m²)/(2 sqrt(s))` to the old
+cut `E_old = (s − e m²)/(2 sqrt(s))`, divided by the same integral from 0
+to `E_old`, both by adaptive quadrature. A massless partner keeps exactly
+the pre-repair cut, so it stands in for the "before" spectrum, and the
+command runs on this tree alone:
+
+```python
+import numpy as np
+from scipy import integrate
+from hazma import spectra
+from hazma.parameters import muon_mass as m
+
+sqrts = 300.0
+s = sqrts**2
+e_end = (s - 4 * m**2) / (2 * sqrts)
+e_old = (s - np.e * m**2) / (2 * sqrts)
+
+def f(e):
+    return e * spectra.dnde_photon_ap_fermion(np.array([e]), s, m, partner_mass=0.0)[0]
+
+total = integrate.quad(f, 0.0, e_old, points=[e_end], limit=500)[0]
+removed = integrate.quad(f, e_end, e_old, limit=200)[0]
+print(removed / total)  # 5.75e-2
+```
 
 ```text
           sqrt(s)=2.2m  300 MeV   500 MeV   1 GeV     2 GeV
-e         3.5e-1        -         1.7e-8    3.9e-9    8.8e-10
-mu        3.5e-1        5.8e-2    6.6e-3    8.2e-4    1.3e-4
-pi        3.4e-1        -         1.1e-2    2.9e-4    1.1e-5
-k         3.4e-1        -         -         -         5.3e-3
+e         3.5e-1        5.3e-8    1.7e-8    3.9e-9    8.8e-10
+mu        3.5e-1        5.8e-2    6.6e-3    8.2e-4    1.4e-4
+pi        3.4e-1        4.3e-1    1.1e-2    2.9e-4    1.2e-5
+k         3.4e-1        -         -         8.5e-1    5.3e-3
 ```
 
-Public values, relative change of the photon energy:
+**Public values.** These are measured against `origin/master` at
+`ac5484cc`, with "before" evaluated from a detached checkout of that
+commit sharing the same `hazma._core`. Monte-Carlo phase space was seeded
+identically in both runs. Each spectrum was sampled from 0.01 MeV to half
+the center-of-mass energy on the union of 160 log-spaced and 4000
+evenly spaced energies, which resolves the removed band. "Photon energy"
+is the trapezoidal `∫ E dN/dE` over that grid. The table gives its
+relative change:
 
 ```text
-spectra.dnde_photon mu mu, cme=300            -1.0e-2
-spectra.dnde_photon pi pi, cme=500            -2.1e-3
-spectra.dnde_photon mu pi, cme=400            -9.8e-3
+spectra.dnde_photon mu mu, cme=300            -9.6e-3
+spectra.dnde_photon pi pi, cme=500            -3.0e-3
+spectra.dnde_photon mu pi, cme=400            -1.0e-2
 spectra.dnde_photon e mu pi, cme=600          -6.3e-2
-spectra.dnde_photon ve mu mu, cme=400         -3.0e-3
-spectra.dnde_photon pi pi pi0, cme=600        -4.0e-5
-VectorMediatorGeV total, e_cm=250             -3.1e-3   (mu mu -1.9e-2)
+spectra.dnde_photon ve mu mu, cme=400         -2.9e-3
+spectra.dnde_photon pi pi pi0, cme=600        -4.1e-5
+VectorMediatorGeV total, e_cm=250             -2.9e-3   (mu mu -1.8e-2)
 VectorMediatorGeV total, e_cm=500             -1.2e-3
 VectorMediatorGeV total, e_cm=1000            -5.8e-5
-VectorMediatorGeV total, e_cm=2000            -6.3e-6
-RHNeutrino(300, 1e-3, "e") total              -1.9e-2   (e pi -1.15e-1)
-RHNeutrino(300, 1e-3, "mu") total             -2.6e-3
+VectorMediatorGeV total, e_cm=2000            -7.2e-6
+RHNeutrino(300, 1e-3, "e") total              -1.9e-2   (e pi -1.14e-1)
+RHNeutrino(300, 1e-3, "mu") total             -2.5e-3
 RHNeutrino(600, 1e-3, "mu") total             -2.3e-3
 ```
 
 The model is `VectorMediatorGeV(mx=100, mv=1000, gvxx=1, gvuu=1,
 gvdd=-1, gvss=0, gvee=1, gvmumu=1)` with no neutrino couplings. Every
-moved value falls, except in `RHNeutrino`'s `ν e μ` channel, where 42 of
-160 energies rise by up to 0.2%. Its invariant-mass distributions carry
-negative probabilities, so removing FSR from those bins raises the sum;
-that defect is
+moved value falls, except in `RHNeutrino(300, 1e-3, "e")`'s `ν e μ`
+channel. There, 1723 of the 4158 energies between 3.3 and 148 MeV rise,
+by up to 1.1%, and the model's total rises at 661 energies by up to
+4.9e-4. The channel's invariant-mass distributions carry negative
+probabilities, so removing FSR from those bins raises the sum. That
+defect is
 [its own follow-up](../todo/rhn-three-body-invariant-mass-probabilities-go-negative.md).
 
 ## Entry points

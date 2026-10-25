@@ -35,6 +35,16 @@ def _dndx_photon_fsr(  # noqa: PLR0913 — internal, mirrors the public signatur
     q=1.0,
     partner_mass: float | None = None,
 ):
+    # A NaN would slip through the `max` below, which returns `np.e` when the
+    # other operand is NaN, and a negative mass would shrink the cutoff, so
+    # either would give a plausible spectrum for an unphysical partner.
+    if partner_mass is not None and not (
+        np.isfinite(partner_mass) and partner_mass >= 0.0
+    ):
+        raise ValueError(
+            f"partner_mass must be finite and nonnegative, got {partner_mass!r}."
+        )
+
     pre = q**2 * parameters.alpha_em / (2.0 * np.pi)
     xm = 1.0 - x
     kernel = np.zeros_like(x)
@@ -89,6 +99,11 @@ def dndx_photon_ap_fermion(
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
         None, which takes Y to have the radiator's own mass, as in a pair of
         oppositely-charged particles.
+
+    Raises
+    ------
+    ValueError
+        If `partner_mass` is negative or not finite.
     """
     return _dndx_photon_fsr(
         x, s, mass, _fermion_splitting, q=charge, partner_mass=partner_mass
@@ -116,6 +131,11 @@ def dndx_photon_ap_scalar(x, s, mass, charge=1.0, partner_mass: float | None = N
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
         None, which takes Y to have the radiator's own mass, as in a pair of
         oppositely-charged particles.
+
+    Raises
+    ------
+    ValueError
+        If `partner_mass` is negative or not finite.
     """
     return _dndx_photon_fsr(
         x, s, mass, _scalar_splitting, q=charge, partner_mass=partner_mass
@@ -143,6 +163,11 @@ def dnde_photon_ap_fermion(e, s, mass, charge=1.0, partner_mass: float | None = 
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
         None, which takes Y to have the radiator's own mass, as in a pair of
         oppositely-charged particles.
+
+    Raises
+    ------
+    ValueError
+        If `partner_mass` is negative or not finite.
     """
     return _dnde_photon_fsr(
         e, s, mass, _fermion_splitting, q=charge, partner_mass=partner_mass
@@ -170,6 +195,11 @@ def dnde_photon_ap_scalar(e, s, mass, charge=1.0, partner_mass: float | None = N
         the photon endpoint x = 1 - (mass + partner_mass)²/s. Default is
         None, which takes Y to have the radiator's own mass, as in a pair of
         oppositely-charged particles.
+
+    Raises
+    ------
+    ValueError
+        If `partner_mass` is negative or not finite.
     """
     return _dnde_photon_fsr(
         e, s, mass, _scalar_splitting, q=charge, partner_mass=partner_mass
