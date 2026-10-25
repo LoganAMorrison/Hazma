@@ -208,6 +208,15 @@ impl Boost {
     pub(super) fn cosine(self, lab_energy: f64, energy: f64, momentum: f64) -> f64 {
         (lab_energy - self.gamma * energy) / (self.gamma_beta * momentum)
     }
+
+    /// Return the mediator-frame energies `[E/(γ + γβ), (γ + γβ)E]` of the
+    /// massless daughters that reach `lab_energy`. Unlike [`boost_range`],
+    /// it never squares the energy, which underflows for the soft photons
+    /// of a radiative spectrum.
+    pub(super) fn massless_range(self, lab_energy: f64) -> (f64, f64) {
+        let doppler = self.gamma + self.gamma_beta;
+        (lab_energy / doppler, doppler * lab_energy)
+    }
 }
 
 /// A mediator's decay into a fermion pair coupled as
@@ -1368,6 +1377,19 @@ mod tests {
                 .collect();
             let tv = total_variation(&spectra[0], &spectra[2]);
             assert!((tv - expected_tv).abs() < 5e-5, "{tv}");
+        }
+    }
+
+    /// The massless Doppler edges are `E(γ ∓ γβ)`, here `E/2` and `2E`
+    /// exactly, even at energies whose square underflows.
+    #[test]
+    fn massless_range_survives_soft_energies() {
+        let boost = Boost {
+            gamma: 1.25,
+            gamma_beta: 0.75,
+        };
+        for energy in [1e-200, 1.0, 1e150] {
+            assert_eq!(boost.massless_range(energy), (energy * 0.5, energy * 2.0));
         }
     }
 }

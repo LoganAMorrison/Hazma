@@ -229,6 +229,29 @@ def test_isotropic_lepton_cascade_is_the_boosted_rest_frame() -> None:
     np.testing.assert_allclose(photons, expected, rtol=1e-5)
 
 
+def test_boosted_soft_photons_keep_the_soft_limit() -> None:
+    # Far below every scale a rest-frame spectrum is C/omega, which a boost
+    # carries to C/E, so E dN/dE and a bin's count over ln 2 both tend to C.
+    # The softest energies underflow when squared and overflow as 1/omega**2.
+    model = _model()
+    density, cut = np.eye(3) / 3.0, 1e-201
+    energies = np.array([1e-200, 1e-160, 1e-100])
+    lab = model.mediator_decay_resolved_photons(energies, LAB, density=density, cut=cut)
+    counts = model.mediator_decay_resolved_photon_counts(
+        np.array([1e-200, 2e-200]), LAB, density=density, cut=cut
+    )
+    electron = (
+        2.0 * ALPHA / np.pi * (np.log((MEDIATOR / parameters.electron_mass) ** 2) - 1.0)
+    )
+    for fs in ("e e", "mu mu", "pi pi pi0"):
+        # Without a closed form, C is E dN/dE at the largest energy, and the
+        # check is that it holds across a hundred decades.
+        soft = electron if fs == "e e" else energies[-1] * lab[fs][-1]
+        # The boost fold's quadrature tolerance is 1e-8.
+        np.testing.assert_allclose(energies * lab[fs], soft, rtol=1e-8)
+        np.testing.assert_allclose(counts[fs][0] / np.log(2.0), soft, rtol=1e-8)
+
+
 def test_shapes_keys_and_zeros() -> None:
     model = _model(mx=REST_MX)
     energies = np.array([[5.0, 20.0], [40.0, 80.0]])

@@ -1640,6 +1640,18 @@ branch of the underlying kernel that "any" reaches.
   `q → λq`, so the wrapper now rescales `q` by an exact power of two before
   validating it, and `test_projections_are_independent_of_the_momentum_scale`
   pins scalar and batch values from `2e-162` to `1e307`.
+- PR #133's first review round made tiny cuts safe in the rest-frame
+  resolved photons and pinned them there, and the note claimed a cut as
+  small as 1e-200 MeV neither overflows nor loses the soft logarithm. The
+  second round swept the boosted entry points, which reach the same soft
+  spectrum through a different fold: `mediator_decay_resolved_photons`
+  returned `inf` at 1e-160 MeV, because the lab integrand `f/(2γβω)` grows
+  as `1/ω²`, and the `e e` count in `[1e-200, 2e-200]` was 5.68% under the
+  analytic `(2α/π)(ln(M²/m_e²) − 1) ln 2`, because `boost_range` squares a
+  massless energy. The lab density now integrates in `ln ω` with edges from
+  `Boost::massless_range`, and
+  `test_boosted_soft_photons_keep_the_soft_limit` pins densities and a bin
+  from 1e-200 to 1e-100 MeV.
 
 ### offset-blamed-on-the-quadrature-before-the-inputs
 

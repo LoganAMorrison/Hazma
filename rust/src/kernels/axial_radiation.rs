@@ -76,7 +76,7 @@ use std::f64::consts::PI;
 use super::axial_three_pi::{angular_rule, gauss_legendre};
 use super::axial_yields::{FOLD_EPSREL, Probe};
 use super::polarized_cascade::{Boost, Helicities, legendre2};
-use super::polarized_muon::{boost_range, integrate};
+use super::polarized_muon::integrate;
 
 /// Gauss–Legendre order of the pair-mass integral, taken after the
 /// substitution that removes its endpoint square roots. With
@@ -384,7 +384,8 @@ pub fn rest_photons(spectrum: &impl RestPhotons, probe: Probe) -> f64 {
 /// reaches `γω(1 + β cos θ)`, so a lab density integrates
 /// `[f + (3F₀ − 1)h P₂]/(2γβω)` over the `ω` whose box holds it, and a bin
 /// integrates the angular density over the cosines it spans, in closed
-/// form, at each `ω`, over `ln ω` as [`rest_photons`] does.
+/// form, at each `ω`. Both integrate over `ln ω` as [`rest_photons`] does,
+/// which also keeps the soft `1/ω²` of a density from overflowing.
 pub fn lab_photons(
     spectrum: &impl RestPhotons,
     boost: Boost,
@@ -392,25 +393,25 @@ pub fn lab_photons(
     probe: Probe,
 ) -> f64 {
     let (from, to) = spectrum.support();
-    let (gamma, gamma_beta) = (boost.gamma, boost.gamma_beta);
     let weight = helicities.alignment();
     match probe {
         Probe::Density(energy) => {
-            let (lower, upper) = boost_range(energy, 0.0, gamma, gamma_beta);
+            let (lower, upper) = boost.massless_range(energy);
             let (lower, upper) = (lower.max(from), upper.min(to));
             if lower >= upper {
                 return 0.0;
             }
-            let mut integrand = |omega: f64| {
+            let mut integrand = |t: f64| {
+                let omega = t.exp();
                 let [density, alignment] = spectrum.spectrum(omega);
                 let cosine = boost.cosine(energy, omega, omega).clamp(-1.0, 1.0);
-                weight.mul_add(alignment * legendre2(cosine), density) / (2.0 * gamma_beta * omega)
+                weight.mul_add(alignment * legendre2(cosine), density) / (2.0 * boost.gamma_beta)
             };
-            integrate(&mut integrand, lower, upper, &[], FOLD_EPSREL)
+            integrate(&mut integrand, lower.ln(), upper.ln(), &[], FOLD_EPSREL)
         }
         Probe::Bin(low, high) => {
-            let (low_lower, low_upper) = boost_range(low, 0.0, gamma, gamma_beta);
-            let (high_lower, high_upper) = boost_range(high, 0.0, gamma, gamma_beta);
+            let (low_lower, low_upper) = boost.massless_range(low);
+            let (high_lower, high_upper) = boost.massless_range(high);
             let (lower, upper) = (low_lower.max(from), high_upper.min(to));
             if lower >= upper {
                 return 0.0;

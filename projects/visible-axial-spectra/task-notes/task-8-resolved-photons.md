@@ -89,8 +89,11 @@ emission and the Altarelli-Parisi approximation from double counting.
   than 1e-10 of its value through 600 MeV, the declared range. The emission
   integrals carry `ω′²` and the bins integrate in `ln ω`, so a cut as small
   as 1e-200 MeV neither overflows nor loses the `ln(1/cut)` growth. The lab
-  fold reuses Task 7's `Boost`, the
-  `Helicities::alignment` and `[f + (3F₀ − 1)hP₂]/2`, now `pub(super)`.
+  densities integrate in `ln ω` too, and the lab fold takes its edges from
+  `Boost::massless_range`, which never squares the photon energy, so lab
+  energies as soft as 1e-200 MeV keep the soft limit. The lab fold reuses
+  Task 7's `Boost`, the `Helicities::alignment` and
+  `[f + (3F₀ − 1)hP₂]/2`, now `pub(super)`.
 - **Polarized photons:** the on-shell 3π photon alignment density is `h`, with
   weight `[(n̂·p₀)² − |p₀|²/3]/2` against `|p₀|²/3`; there is no `P₁` term. AP
   photons are collinear with their lepton, so they take the `PairDecay`
@@ -117,11 +120,12 @@ emission and the Altarelli-Parisi approximation from double counting.
 - `rust/src/kernels.rs` — module registration and docs.
 - `rust/src/kernels/polarized_cascade.rs`, `axial_three_pi.rs` —
   `pub(super)` on `Boost` fields, `Boost::cosine`, `Helicities::alignment`,
-  `legendre2` and `gauss_legendre`.
+  `legendre2` and `gauss_legendre`, and the new `Boost::massless_range` with
+  one unit test.
 - `hazma/axial_vector_mediator/_model.py` — four public methods, docstring
   pointers from the Born methods.
 - `test/axial_vector_mediator/radiation_oracle.py`,
-  `test/axial_vector_mediator/test_radiation.py` — NumPy RAMBO oracle and 20
+  `test/axial_vector_mediator/test_radiation.py` — NumPy RAMBO oracle and 21
   tests.
 - `docs/source/axial_vector_mediator.rst`, `CHANGELOG.md` — user docs.
 
@@ -136,20 +140,22 @@ emission and the Altarelli-Parisi approximation from double counting.
   lab count and mean-energy conservation, the isotropic and slow-mediator
   limits (1e-8), tiny cuts adding the soft logarithm, and the AP pair
   formula, its kinematic endpoint and its tensor.
-- `pytest test/axial_vector_mediator/test_radiation.py -n 0`: 20 passed. These
+- `pytest test/axial_vector_mediator/test_radiation.py -n 0`: 21 passed. These
   cover the Ward identity of the explicit two-diagram amplitude (1e-12) and its
   polarization sum (1e-10), the reference fractions (2σ of the reference, and 4σ
   of a 4e5-event oracle), the rest spectrum for transverse and longitudinal
   against the oracle (4σ per bin), the polarized lab cascade for `F₀ = 1` and
   `F₀ = 0` against the boosted oracle (4σ), the soft limit through the public
   method (1e-5), AP-only leptons against `dnde_photon_ap_fermion` (1e-12), the
-  isotropic lepton cascade against `dnde_boost` (1e-5), shapes, cuts, and
-  refusals including open `tau tau`.
+  isotropic lepton cascade against `dnde_boost` (1e-5), the lab soft limit
+  at 1e-200 to 1e-100 MeV against `(2α/π)(ln(M²/m_e²) − 1)` for `e e` and
+  across those decades for the others, as densities and as a bin (1e-8),
+  shapes, cuts, and refusals including open `tau tau`.
 - `env PATH="$PWD/.venv/bin:$PATH" scripts/agents/preflight.sh --paths
   "hazma/axial_vector_mediator test/axial_vector_mediator"`: RESULT: PASS,
-  with pytest at `2977 passed, 16 skipped, 20 warnings, 127 subtests passed
-  in 58.65s`, and black, isort, ruff (0 new), cargo fmt, clippy and cargo
-  test all passing.
+  with pytest at `2978 passed, 16 skipped, 20 warnings, 127 subtests passed
+  in 65.82s (0:01:05)` after review round 2, and black, isort, ruff (0 new),
+  cargo fmt, clippy and cargo test all passing.
 - Performance: 50 rest densities take 0.4 ms, 50 rest bins 5 ms, 50 lab
   densities 11 ms and 50 lab bins 14 ms, against 0.14 s for the 4e5-event
   NumPy oracle.
@@ -164,6 +170,18 @@ public 3π fractions (the Task 6 convention, documented, with the reference
 pinned through the kernel at physical masses) and the 2-8% Monte Carlo pins
 (normalization is pinned separately by the soft limit, the Born integrals and
 the pair-angle eikonal).
+
+Review round 2 fixed the boosted soft end. A lab density integrated
+`[f + …]/(2γβω)` in `ω`, which overflowed to `inf` near 1e-160 MeV, and
+now integrates in `ln ω`. The lab edges came from `boost_range`, whose
+squared energy underflows below about 1e-154 MeV and left the `e e` count
+in `[1e-200, 2e-200]` 5.68% under its soft limit; they now come from
+`Boost::massless_range`. `boost_range` itself is unchanged, because its
+massless edges feed a neutrino endpoint reference that an ulp moves by
+3.2e-5. That and the signed soft neutrino residue it exposed are
+`docs/followups/todo/soft-muon-neutrinos-are-signed-residue.md`. The lab
+densities move by at most 3.8e-9 on a 2160-value grid, inside the fold's
+1e-8 tolerance, and lab counts by at most 6.7e-16.
 
 ## Numerical impact
 

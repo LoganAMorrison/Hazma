@@ -99,9 +99,9 @@ After Task 7 the path-scoped preflight passed with `2957 passed, 16 skipped,
 tests. The literal commands are in `task-7-polarized-cascades.md` and the
 gate output is `projects/visible-axial-spectra/task-notes/preflight-task-7.txt`.
 
-After Task 8 the path-scoped preflight passed with `2977 passed, 16 skipped,
+After Task 8 the path-scoped preflight passed with `2978 passed, 16 skipped,
 127 subtests passed`. The radiation suite
-`test/axial_vector_mediator/test_radiation.py` has 20 tests, and
+`test/axial_vector_mediator/test_radiation.py` has 21 tests, and
 `axial_radiation` carries 17 Rust unit tests. The literal commands are in
 `task-8-resolved-photons.md`.
 
